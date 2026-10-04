@@ -1,0 +1,61 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+.host/
+*.local
+
+# Local integration configuration; keep the documented template only.
+.env
+.env.*
+!.env.example
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Generated caches, tooling and private delivery data
+.cache/
+.vite/
+.vitest/
+coverage/
+test-results/
+playwright-report/
+*.tsbuildinfo
+tmp/
+temp/
+.hardening-backup/
+.delivery-private/
+*.bak
+*.backup
+*~
+*.zip
+
+# Credential exports and browser state
+credentials*.json
+client_secret*.json
+service-account*.json
+*.pem
+*.key
+*.p12
+*.pfx
+auth.json
+storage-state*.json
+localStorage*.json
+browser-profile/
+.browser/

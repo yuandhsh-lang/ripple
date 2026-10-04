@@ -1,0 +1,293 @@
+{
+  "createdAt": "2026-09-30T15:06:40.528668+08:00",
+  "productGitCommit": "UNKNOWN",
+  "hostCommit": "05daf9bdb05fafc6d8f04dcb312a35f1d46a661e",
+  "exclusions": [
+    "self",
+    ".git",
+    ".host",
+    "node_modules",
+    "dist",
+    "dist-ssr",
+    "local .env except .env.example",
+    "logs",
+    "tsbuildinfo"
+  ],
+  "files": [
+    {
+      "path": ".env.example",
+      "sha256": "a11a8377ae3adaf2f9ac9dab18c9a1f7f338d269df3c36b9528feeda42d9edfe",
+      "bytes": 156
+    },
+    {
+      "path": ".github/workflows/ci.yml",
+      "sha256": "ee91f66f477ebc1f6a09ed857eef11794bc2be187e660bc801a4bd93d49849c5",
+      "bytes": 431
+    },
+    {
+      "path": ".gitignore",
+      "sha256": "42cce37585253a00b4bbc171107dc799bb2c42f6e3120e2a759cffaf3236a118",
+      "bytes": 357
+    },
+    {
+      "path": ".oxlintrc.json",
+      "sha256": "b4d344818a1e1bf43997e4744a9153c8eef770c98b58229cd86363dabb85ded4",
+      "bytes": 245
+    },
+    {
+      "path": "LICENSE",
+      "sha256": "3ddf9be5c28fe27dad143a5dc76eea25222ad1dd68934a047064e56ed2fa40c5",
+      "bytes": 11560
+    },
+    {
+      "path": "README.md",
+      "sha256": "caf7c258a3fce92e2604ca94bdaa5e10820361d532df98d8ea974f85b1451975",
+      "bytes": 8636
+    },
+    {
+      "path": "docs/ARCHITECTURE.md",
+      "sha256": "c85821bdfc777b5eb68fde0964009de73d4e9dde00f5d9b0cb5b5628a14faabf",
+      "bytes": 4453
+    },
+    {
+      "path": "docs/DEMO.md",
+      "sha256": "51fe8752fefaa690f35921986fa96a0a2d5c545ab04c45debff28bd5ef46a72c",
+      "bytes": 2292
+    },
+    {
+      "path": "docs/hackathon/BASELINE.md",
+      "sha256": "95ccdd418853bf0466fdcb45f23d92e59d70edc67fac8c8e68265980ca1ce0f3",
+      "bytes": 3751
+    },
+    {
+      "path": "docs/hackathon/COMMANDS_RUN.md",
+      "sha256": "dc261b263cb7ae4e003d3624c2102627bdb2c73a69937191897c84febe730d9d",
+      "bytes": 4320
+    },
+    {
+      "path": "docs/hackathon/COMPLIANCE_MATRIX.md",
+      "sha256": "c1d6914ab6299e09cb88a24053f66166a96c27cf367a4aeca7693fab874cfc99",
+      "bytes": 6447
+    },
+    {
+      "path": "docs/hackathon/DEPENDENCY_LICENSES.json",
+      "sha256": "318841883010c4401a55177906a422dd3a989d3eeaa01308f594c70647ceacd3",
+      "bytes": 12162
+    },
+    {
+      "path": "docs/hackathon/FILES_CHANGED.json",
+      "sha256": "882c58f1c5cbf8db86603fb0a386630ab18f26a3ba1d27b0bb76d7fda1bc2e6d",
+      "bytes": 1590
+    },
+    {
+      "path": "docs/hackathon/LICENSE_AUDIT.md",
+      "sha256": "561f8787c6312b1374b43e7214027b612b672e755d985306cb39eea0e3a1cfa8",
+      "bytes": 2963
+    },
+    {
+      "path": "docs/hackathon/REPOSITORY_MAP.md",
+      "sha256": "884c316782b56bfdf7e63245d463a1468b82a1692d0278444a8b7ab5c292a5a3",
+      "bytes": 4070
+    },
+    {
+      "path": "docs/hackathon/ROLLBACK.md",
+      "sha256": "7f90e215c90a49d9fd1c08504e0d8868a960aced920172d2c9c4aee000ad7f83",
+      "bytes": 1398
+    },
+    {
+      "path": "docs/hackathon/SUBMISSION_CHECKLIST.md",
+      "sha256": "bfd1805cfe689c4636a9bb43edd3c268986bb2b50f220bfa9a210563808c7ddb",
+      "bytes": 1976
+    },
+    {
+      "path": "docs/hackathon/evidence/demo-completed.jpg",
+      "sha256": "1641196c422f424acfdb757e60c3fe51b6252eb3a28da5eaad9f7b83db408c65",
+      "bytes": 84649
+    },
+    {
+      "path": "docs/hackathon/evidence/demo-declined.jpg",
+      "sha256": "3b1a9e8f2dbebb805ffe200be7222ece260fa307acf7404e788c3cc989e6acb2",
+      "bytes": 80961
+    },
+    {
+      "path": "docs/hackathon/evidence/demo-execution-failed.jpg",
+      "sha256": "39f837e15213539c9b6c1b402eb9684bbd06e62ed7b28df5b61c11751d82083d",
+      "bytes": 81797
+    },
+    {
+      "path": "docs/hackathon/evidence/demo-stale.jpg",
+      "sha256": "4e226182350c4e584fd3610befa478459a709618f951a39e145052cd3eff13bc",
+      "bytes": 81362
+    },
+    {
+      "path": "docs/hackathon/evidence/demo-verification-failed.jpg",
+      "sha256": "32d7bce20414cb2949b09b80fdf62138cc19a2b10067d4a9ebe47a654fe2cb03",
+      "bytes": 84252
+    },
+    {
+      "path": "docs/hackathon/evidence/hardening.diff",
+      "sha256": "e524cf72e42e6ca0847d831e77a467b36dcd24e3bc993eea646d69e16836a4e6",
+      "bytes": 88621
+    },
+    {
+      "path": "host-baseline.json",
+      "sha256": "cfd7bfdabe593f6aef72945ba492c3296d7553836e9ab7e3029fb8f359808ee3",
+      "bytes": 237
+    },
+    {
+      "path": "index.html",
+      "sha256": "5f9dd2259730ee4521b0e023dd70ab4ceaf15547bd2a508d798a6cfa47e4c505",
+      "bytes": 559
+    },
+    {
+      "path": "package-lock.json",
+      "sha256": "cd5a98f110b465948c01ab05869e75b2ded484343e89e92b5cbf0bd6403c63d9",
+      "bytes": 51526
+    },
+    {
+      "path": "package.json",
+      "sha256": "2d510b2e6312089cf4d5719e17984b5ef4092989dabc6f187ac8ac813800336c",
+      "bytes": 914
+    },
+    {
+      "path": "public/favicon.svg",
+      "sha256": "87df7c23a4bc5d74014c9dde982c3c847dd50aafe3c86207946107a9d1649280",
+      "bytes": 405
+    },
+    {
+      "path": "public/third-party-notices.txt",
+      "sha256": "71da7f9ebe414df6ed2d12ea56573b064eed65152c3003f743f06a6677039633",
+      "bytes": 3478
+    },
+    {
+      "path": "scripts/prepare-host.ps1",
+      "sha256": "59792f68cdc1d9fd53ba33787bc77aad69e794c84a8d489e53f11d4e80d56694",
+      "bytes": 1424
+    },
+    {
+      "path": "src/App.css",
+      "sha256": "1f680f13242896705148c29f432f4acc1fb0cc219ac4292db45868c0a82909e3",
+      "bytes": 35130
+    },
+    {
+      "path": "src/App.tsx",
+      "sha256": "0760a2d5efe38878e607de992db306bfd3b35819fa549466936a2d742b3bc6b7",
+      "bytes": 35999
+    },
+    {
+      "path": "src/domain/capability.ts",
+      "sha256": "25481f46b1a7111920f4d2d9b68e2d091bb2dcb34f7357a309cab2867753db8e",
+      "bytes": 1272
+    },
+    {
+      "path": "src/domain/engine.test.ts",
+      "sha256": "a31dba9ee7336af809d40c15c44dfe96b77e50b81e1df2aba0b29bbd467496f0",
+      "bytes": 5522
+    },
+    {
+      "path": "src/domain/engine.ts",
+      "sha256": "953f1b731fff8378ec4e46032962a491ce936346079b904f7a1693465509ae08",
+      "bytes": 9584
+    },
+    {
+      "path": "src/domain/errors.ts",
+      "sha256": "a240dfeff25b3e83faf48bb7c14d2a15e0440e72f23b1f3acb0f965a4f6d0c30",
+      "bytes": 964
+    },
+    {
+      "path": "src/domain/model.ts",
+      "sha256": "ef25f905d69530b47b0138fb0b9d9e794877fa1c4029088214a35f922fa31754",
+      "bytes": 2896
+    },
+    {
+      "path": "src/domain/stateMachine.test.ts",
+      "sha256": "5af3de78dce1da52636013fc7b1aa495386455a011fb120cfccc322e03b0aadb",
+      "bytes": 1237
+    },
+    {
+      "path": "src/domain/stateMachine.ts",
+      "sha256": "73028f0a09dc91edd2dd4aacf15ecfd577856dbd525807e689d2330cf509270f",
+      "bytes": 880
+    },
+    {
+      "path": "src/domain/workflow.test.ts",
+      "sha256": "faf227509628152a6de1e5f84ad47b667f7ba26d8b609130fd33c6bfdedd22da",
+      "bytes": 12149
+    },
+    {
+      "path": "src/domain/workflow.ts",
+      "sha256": "1af365a6f1d666d55ea867fa8e9011df7cd597bc842ee2597c0e8ff270fd8603",
+      "bytes": 6976
+    },
+    {
+      "path": "src/index.css",
+      "sha256": "79a3665311c9ad86a0f09d8266c841229dc605d7778ffe6920d4ada13672ee64",
+      "bytes": 908
+    },
+    {
+      "path": "src/integrations/adapters.test.ts",
+      "sha256": "5781bb795c26f8d8897c14812e03fccc0e0db76eb213c416046124714ee37965",
+      "bytes": 7489
+    },
+    {
+      "path": "src/integrations/calendarCapability.ts",
+      "sha256": "55728ae0ad1628fe830a1619ec9a8367c8f353251b9820140e388e5ce187749d",
+      "bytes": 5472
+    },
+    {
+      "path": "src/integrations/demoCalendar.ts",
+      "sha256": "426466e4ae25a9d1ec2e048e900e9e5798d8b01c9600dd514a4d2802a7e8a1d5",
+      "bytes": 3101
+    },
+    {
+      "path": "src/integrations/demoDay.ts",
+      "sha256": "4011dd7660b1b4310620d4af2be2efc675cf17c2b466791b37bd5288a7e01b85",
+      "bytes": 331
+    },
+    {
+      "path": "src/integrations/demoWeather.ts",
+      "sha256": "c4f0f19ca10afa7ed5a1a5520e4eedc40650322a93f8a899126683d51a8f32e1",
+      "bytes": 1699
+    },
+    {
+      "path": "src/integrations/googleCalendar.hardening.test.ts",
+      "sha256": "13fbea93d68aa4e760145b119e0cc946af1d867f41d499ab2c01c22a530de5bd",
+      "bytes": 5469
+    },
+    {
+      "path": "src/integrations/googleCalendar.ts",
+      "sha256": "67d52d9ec7f335da53ac5ee03c5e0f22089973a44084ad1f4e53ecf5c39752a7",
+      "bytes": 8606
+    },
+    {
+      "path": "src/integrations/openMeteo.ts",
+      "sha256": "ec456742685486e8ea724d0cf1873229a427d70d3fb3eb75968ba4a30f3230db",
+      "bytes": 3072
+    },
+    {
+      "path": "src/main.tsx",
+      "sha256": "6e9e5807fcbd48b75a96db5cbef36c996262196be42e6d4760dc86babbe61ad2",
+      "bytes": 230
+    },
+    {
+      "path": "tsconfig.app.json",
+      "sha256": "8e5d12ba330e7d86409edec74b95451e0db22ee09b9426c94b5bf817571eddb0",
+      "bytes": 655
+    },
+    {
+      "path": "tsconfig.json",
+      "sha256": "770b4140bbb581e2dfd9ea9946ffc9c75a1d86ba7d2db5f77c83e37cbdf9d808",
+      "bytes": 119
+    },
+    {
+      "path": "tsconfig.node.json",
+      "sha256": "d366cc0827139db39c61815f22491bbfda56c654354a42ad7795143d314e45e8",
+      "bytes": 558
+    },
+    {
+      "path": "vite.config.ts",
+      "sha256": "e1eefd0ed1639c88d1213884ef760516884db9e168190e223fee6b063ad3e088",
+      "bytes": 161
+    }
+  ]
+}

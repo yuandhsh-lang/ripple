@@ -1,0 +1,417 @@
+diff --git "a/before/README.md" b/README.md
+index cc24f19..83765da 100644
+--- "a/before/README.md"	
++++ b/README.md
+@@ -51,6 +51,8 @@ Demo Mode loads one local sample event and a fixed forecast window. It performs
+ 
+ Use **Reset demo** to restore 15:00 Outdoor Tennis and replay the same proposal. Open **Settings → Demo scenarios** to exercise permission denial, Calendar write failure, read-back mismatch, and proposal expiration. These controls only affect Demo Mode.
+ 
++The cached sample is renewed when its scenario day no longer matches the forecast or its stored record is invalid. After 11:45 local time, both demo sources use tomorrow so the suggested time remains in the future. A detected conflict stays visible even when there is no available alternative.
++
+ ### Real integrations
+ 
+ Weather is read from Open-Meteo's keyless hourly forecast API. Google Calendar uses the browser OAuth token flow and the `calendar.events` scope. The OAuth client ID is public configuration; no client secret is used or embedded.
+@@ -73,7 +75,7 @@ npm run typecheck
+ npm run build
+ ```
+ 
+-Tests cover overlap and severity, material source changes, proposal expiration, state transitions, mock Calendar read/update/read-back behavior, injected denied/failed/unverified outcomes, and Open-Meteo response normalization. A manual browser flow is documented in [`docs/DEMO.md`](docs/DEMO.md).
++Tests cover overlap and severity (including thunderstorms), material source changes, proposal expiration, state transitions, mock Calendar read/update/read-back behavior, demo cache renewal and recovery, conflicts without an alternative, injected denied/failed/unverified outcomes, and Open-Meteo response normalization. Real hourly precipitation is aligned to the preceding hour described by the API, and forecast gaps cannot become invented dry windows. A manual browser flow is documented in [`docs/DEMO.md`](docs/DEMO.md).
+ 
+ ## Scenario mapping
+ 
+@@ -88,6 +90,7 @@ Tests cover overlap and severity, material source changes, proposal expiration,
+ ## Known limitations
+ 
+ - The Google Calendar adapter is implemented but needs the entrant's Google OAuth client ID and consent setup. Real Calendar authorization and writes have not been verified in this workspace.
++- The real Open-Meteo read was verified on 2026-10-04. The app checks on startup and manual refresh; it has no background monitoring or push notifications.
+ - The original sibling host lacks mini-app entry points; the separately prepared official mini-app host retains them. Its Windows Web route uses an external browser; authenticated host execution remains unverified.
+ - This focused version handles timed events on the user's current local day, one forecast location, and known outdoor activity terms. It does not create or delete events.
+ - A local server URL is only reachable by the same computer unless the user starts it on the LAN or deploys it. No deployment is included.
+@@ -99,3 +102,5 @@ Apache License 2.0 for Ripple source. See [`LICENSE`](LICENSE), [license audit](
+ ## Hardening evidence
+ 
+ See [repository map](docs/hackathon/REPOSITORY_MAP.md), [compliance matrix](docs/hackathon/COMPLIANCE_MATRIX.md), [commands and results](docs/hackathon/COMMANDS_RUN.md), and [submission checklist](docs/hackathon/SUBMISSION_CHECKLIST.md). Ripple is currently a local directory without Git provenance; public source and a frozen entrant commit remain TODO.
++
++The latest functionality review, bug fixes, current verification results, and rollback instructions are in [the 2026-10-04 review](docs/hackathon/REVIEW_2026-10-04.zh-CN.md). Earlier evidence remains dated to its original run.
+diff --git "a/before/src\\App.tsx" "b/src\\App.tsx"
+index 9f454ad..4838f38 100644
+--- "a/before/src\\App.tsx"	
++++ "b/src\\App.tsx"
+@@ -38,6 +38,7 @@ function statusLabel(status: AgentStatus): string {
+ }
+ 
+ function severityLabel(severity?: string): string {
++  if (severity === "thunderstorm") return "雷暴";
+   if (severity === "heavy rain") return "大雨";
+   if (severity === "rain") return "降雨";
+   return severity ?? "";
+@@ -117,7 +118,7 @@ function App() {
+   const statusMessage = snapshot?.message;
+   const activeEvent = useMemo(() => {
+     const events = snapshot?.sources?.events ?? [];
+-    return events.find((event) => event.id === snapshot?.proposal?.calendarEventId)
++    return events.find((event) => event.id === snapshot?.eventId)
+       ?? events.find((event) => event.id === "demo-outdoor-tennis") ?? events[0];
+   }, [snapshot]);
+ 
+@@ -248,7 +249,7 @@ function App() {
+   };
+ 
+   const displayEvent = activeEvent;
+-  const impact = status === "STALE" ? undefined : proposal?.impact;
++  const impact = status === "STALE" ? undefined : proposal?.impact ?? snapshot?.impact;
+   const sampleFallback = mode === "demo";
+   const eventTitle = displayEvent?.title ?? (sampleFallback ? "户外网球" : "未选择活动");
+   const planDay = displayEvent ? relativeDay(displayEvent.start, displayEvent.timeZone) : "今天";
+@@ -286,7 +287,7 @@ function App() {
+           <div className="intro-copy">
+             <p className="kicker"><span className="kicker-line" /> 让每一天，都有准备</p>
+             <h1 id="page-title">让计划<br className="desktop-break" /> 从容应变。</h1>
+-            <p className="intro-subtitle">Ripple 持续关注计划周围的变化。<br />情况有变时，决定权仍在你手中。</p>
++            <p className="intro-subtitle">刷新数据，核对天气与计划的变化。<br />情况有变时，决定权仍在你手中。</p>
+           </div>
+           <div className="intro-art" aria-hidden="true">
+             <div className="ripple-orbit orbit-one" />
+@@ -301,7 +302,7 @@ function App() {
+         <section className="day-heading">
+           <div>
+             <p className="kicker">{planDay.toUpperCase()} <span className="today-dot" /></p>
+-            <h2>{status === "PROPOSED" ? "降雨打乱了午后安排。" : status === "COMPLETED" ? "午后计划已重新安排。" : "今日安排一览。"}</h2>
++            <h2>{status === "PROPOSED" ? "天气影响了这项安排。" : status === "COMPLETED" ? `${planDay}计划已重新安排。` : `${planDay}安排一览。`}</h2>
+           </div>
+           <div className="day-actions">
+             <button className="text-button" onClick={() => void checkFreshness()} disabled={busy}>
+@@ -319,7 +320,7 @@ function App() {
+             <div className="impact-banner-top"><span className="impact-label">{impact ? "发现计划冲突" : "数据已同步"}</span><span className="impact-now">{weather ? `更新于 ${sourceClock(weather.fetchedAt)}` : "正在读取数据"}</span></div>
+               <div className="impact-message-row">
+                 <span className="weather-stamp" aria-hidden="true"><span>{impact ? "降雨" : "天气"}</span><b>{impact ? "〰" : "∿"}</b></span>
+-                <div><h3>{status === "COMPLETED" ? "网球活动已调整至降雨前。" : status === "STALE" ? "天气条件已变化，请重新评估。" : impact ? "强降雨即将到来。" : "当前没有可执行的调整建议。"}</h3><p>{impact ? `${hourLabel(impact.weatherStart, displayEvent?.timeZone ?? "Asia/Shanghai")} – ${hourLabel(impact.weatherEnd, displayEvent?.timeZone ?? "Asia/Shanghai")} · 可能影响户外安排` : sources ? "显示最近读取的数据，调整建议需以当前状态重新计算。" : "正在等待可验证的数据。"}</p></div>
++                <div><h3>{status === "COMPLETED" ? `${eventTitle}已调整至天气影响前。` : status === "STALE" ? "天气条件已变化，请重新评估。" : impact ? `${severityLabel(impact.severity)}可能影响这项安排。` : "当前没有可执行的调整建议。"}</h3><p>{impact ? `${hourLabel(impact.weatherStart, displayEvent?.timeZone ?? "Asia/Shanghai")} – ${hourLabel(impact.weatherEnd, displayEvent?.timeZone ?? "Asia/Shanghai")} · 可能影响户外安排` : sources ? "显示最近读取的数据，调整建议需以当前状态重新计算。" : "正在等待可验证的数据。"}</p></div>
+               </div>
+               <div className="rain-track" aria-label={impact ? `${severityLabel(impact.severity)}预报：${hourLabel(impact.weatherStart, displayEvent?.timeZone ?? "Asia/Shanghai")} 至 ${hourLabel(impact.weatherEnd, displayEvent?.timeZone ?? "Asia/Shanghai")}` : "逐小时天气预报与日历活动时间"}>
+                 <div className="rain-track-label"><span>{weatherHour ? hourLabel(new Date(trackStart).toISOString(), displayEvent?.timeZone ?? "Asia/Shanghai") : "今天"}</span><span>{impact ? hourLabel(impact.weatherEnd, displayEvent?.timeZone ?? "Asia/Shanghai") : "天气预报"}</span><span>{weatherHour ? hourLabel(new Date(trackEnd).toISOString(), displayEvent?.timeZone ?? "Asia/Shanghai") : ""}</span></div>
+@@ -336,7 +337,7 @@ function App() {
+                 <div className="causal-connector"><span>时间重叠</span><i /></div>
+                 <div className="causal-node event-node"><span className="node-symbol court-symbol">T</span><div><small>日历</small><strong>{eventTitle}</strong><em>{status === "COMPLETED" ? proposedStart : eventStart} · {displayEvent?.location ?? (sampleFallback ? "滨江球场" : "今天没有定时活动")}</em></div></div>
+               </div>
+-              <div className="causal-note"><span className="note-dash" />{status === "COMPLETED" ? "调整后的活动已避开天气预报中的降雨时段。" : impact ? "Ripple 已将降雨时段与现有活动时间进行比对。" : "目前没有户外活动与降雨时段重叠。"}</div>
++              <div className="causal-note"><span className="note-dash" />{status === "COMPLETED" ? "调整后的活动已避开天气预报中的影响时段。" : impact ? proposal ? "Ripple 已将天气影响时段与现有活动时间进行比对。" : statusMessage : sources ? "目前没有检测到户外活动与天气影响时段重叠。" : "正在等待天气与日历数据。"}</div>
+             </div>
+ 
+             <div className="timeline-section">
+@@ -355,7 +356,7 @@ function App() {
+             <div className={`proposal-panel status-${status.toLowerCase()}`}>
+               <div className="proposal-topline"><span className="proposal-index">R / 01</span><span className={`state-chip state-${status.toLowerCase()}`}><span className="state-pulse" />{statusLabel(status)}</span></div>
+               <p className="kicker proposal-kicker">调整建议</p>
+-              <h3>{status === "COMPLETED" ? "计划已回到正轨。" : status === "PARTIAL" ? "更改结果尚未确认。" : status === "CANCELLED" ? "本次更改已取消。" : status === "FAILED" ? "更改未能验证。" : status === "DECLINED" ? "已保留原计划。" : status === "STALE" ? "计划需要重新评估。" : "将活动调整到降雨前。"}</h3>
++              <h3>{status === "COMPLETED" ? "计划已回到正轨。" : status === "PARTIAL" ? "更改结果尚未确认。" : status === "CANCELLED" ? "本次更改已取消。" : status === "FAILED" ? "更改未能验证。" : status === "DECLINED" ? "已保留原计划。" : status === "STALE" ? "计划需要重新评估。" : status === "UNDERSTOOD" && !proposal ? impact ? "发现冲突，暂无可用时段。" : "当前没有调整建议。" : "将活动调整到天气影响前。"}</h3>
+               {status === "COMPLETED" ? (
+                 <div className="time-change completed-change"><div><small>调整后时间</small><strong>{proposedStart}</strong></div><span className="change-arrow">✓</span><div><small>验证结果</small><strong className="verified-copy">已确认</strong></div></div>
+               ) : status === "FAILED" || status === "PARTIAL" || status === "DECLINED" || status === "STALE" || status === "CANCELLED" ? (
+@@ -378,7 +379,7 @@ function App() {
+ 
+               <div className="panel-rule" />
+               <div className="source-list">
+-                <div className="source-row"><span className="source-glyph calendar-glyph">▦</span><div><strong>{mode === "demo" ? "演示日历" : "Google Calendar"}</strong><small>{events.length ? `${events.length} 项活动 · 读取于 ${sourceClock(sources?.sourceState.calendarFetchedAt)}` : "正在读取日历"}</small></div><span className="source-live">{mode === "demo" ? "演示数据" : connected ? "已连接" : "未连接"}</span></div>
++                <div className="source-row"><span className="source-glyph calendar-glyph">▦</span><div><strong>{mode === "demo" ? "演示日历" : "Google Calendar"}</strong><small>{sources ? `${events.length} 项活动 · 读取于 ${sourceClock(sources.sourceState.calendarFetchedAt)}` : "正在读取日历"}</small></div><span className="source-live">{mode === "demo" ? "演示数据" : connected ? "已连接" : "未连接"}</span></div>
+                 <div className="source-row"><span className="source-glyph weather-glyph">≈</span><div><strong>{sourceLabel(weather?.source ?? (mode === "demo" ? "Demo forecast" : "Open-Meteo"))}</strong><small>{locationLabel(weather?.location ?? location)} · 读取于 {sourceClock(weather?.fetchedAt)}</small></div><span className="source-live">{weather ? mode === "demo" ? "演示数据" : "实时读取" : "等待读取"}</span></div>
+               </div>
+               <div className="freshness-note"><span className="freshness-dot" />建议基于当前数据状态生成。</div>
+diff --git "a/before/src\\domain\\engine.test.ts" "b/src\\domain\\engine.test.ts"
+index 2cc8d87..8644454 100644
+--- "a/before/src\\domain\\engine.test.ts"	
++++ "b/src\\domain\\engine.test.ts"
+@@ -73,6 +73,17 @@ describe("weather and event reasoning", () => {
+     expect(weatherSeverity(hours[0])).toBeUndefined();
+   });
+ 
++  it.each([95, 96, 97, 99])("recognizes thunderstorm code %s even with low rainfall estimates", (weatherCode) => {
++    const storm = { ...hours[0], start: event.start, end: event.end, weatherCode };
++    expect(weatherSeverity(storm)).toBe("thunderstorm");
++    expect(detectImpact(event, [storm])?.severity).toBe("thunderstorm");
++  });
++
++  it("never recommends a thunderstorm window as a dry alternative", () => {
++    const stormy = weather({ hours: hours.map((hour) => ({ ...hour, weatherCode: 95, precipitationMm: 0, precipitationProbability: 5 })) });
++    expect(findAlternative(event, [event], stormy, Date.parse("2026-09-29T09:00:00+08:00"))).toBeUndefined();
++  });
++
+   it("finds the latest dry half-hour slot and preserves event duration", () => {
+     const alternative = findAlternative(event, [event], weather(), Date.parse("2026-09-29T09:00:00+08:00"));
+     expect(alternative?.start).toBe("2026-09-29T04:30:00.000Z");
+diff --git "a/before/src\\domain\\engine.ts" "b/src\\domain\\engine.ts"
+index dcc0b13..2d9e294 100644
+--- "a/before/src\\domain\\engine.ts"	
++++ "b/src\\domain\\engine.ts"
+@@ -12,6 +12,7 @@ import type {
+ const OUTDOOR_TERMS = /\b(tennis|run(?:ning)?|soccer|football|golf|picnic|hike|hiking|walk|cycling|bike|baseball|basketball|outdoor|garden|beach|trail)\b|网球|跑步|足球|高尔夫|野餐|徒步|散步|骑行|户外|花园|海滩|步道/i;
+ const RAIN_CODES = new Set([51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 80, 81, 82]);
+ const HEAVY_RAIN_CODES = new Set([65, 67, 82]);
++const THUNDERSTORM_CODES = new Set([95, 96, 97, 99]);
+ 
+ export function overlaps(startA: string, endA: string, startB: string, endB: string): boolean {
+   const a0 = Date.parse(startA);
+@@ -26,6 +27,7 @@ export function isOutdoorActivity(event: CalendarEvent): boolean {
+ }
+ 
+ export function weatherSeverity(hour: WeatherHour): Impact["severity"] | undefined {
++  if (THUNDERSTORM_CODES.has(hour.weatherCode)) return "thunderstorm";
+   if (HEAVY_RAIN_CODES.has(hour.weatherCode) || hour.precipitationMm >= 7) return "heavy rain";
+   if (RAIN_CODES.has(hour.weatherCode) || hour.precipitationMm >= 1 || hour.precipitationProbability >= 50) return "rain";
+   return undefined;
+@@ -45,7 +47,8 @@ export function detectImpact(event: CalendarEvent, hours: WeatherHour[]): Impact
+     eventTitle: event.title,
+     weatherStart: first.start,
+     weatherEnd: last.end,
+-    severity: relevant.some((hour) => weatherSeverity(hour) === "heavy rain") ? "heavy rain" : "rain",
++    severity: relevant.some((hour) => weatherSeverity(hour) === "thunderstorm") ? "thunderstorm"
++      : relevant.some((hour) => weatherSeverity(hour) === "heavy rain") ? "heavy rain" : "rain",
+     peakPrecipitationProbability: Math.max(...relevant.map((hour) => hour.precipitationProbability)),
+   };
+ }
+@@ -181,7 +184,7 @@ export function createProposal(sources: ObservedSources, event: CalendarEvent, n
+     calendarEventId: event.id,
+     currentState: { start: event.start, end: event.end },
+     proposedState,
+-    reason: `${impact.severity === "heavy rain" ? "预计有大雨" : "预计有雨"}，${window} 与这项户外安排重叠。`,
++    reason: `${impact.severity === "thunderstorm" ? "预计有雷暴" : impact.severity === "heavy rain" ? "预计有大雨" : "预计有雨"}，${window} 与这项户外安排重叠。`,
+     impact,
+     status: "PROPOSED",
+   };
+diff --git "a/before/src\\domain\\model.ts" "b/src\\domain\\model.ts"
+index 42d966c..68337bf 100644
+--- "a/before/src\\domain\\model.ts"	
++++ "b/src\\domain\\model.ts"
+@@ -49,7 +49,7 @@ export interface Impact {
+   eventTitle: string;
+   weatherStart: string;
+   weatherEnd: string;
+-  severity: "rain" | "heavy rain";
++  severity: "rain" | "heavy rain" | "thunderstorm";
+   peakPrecipitationProbability: number;
+ }
+ 
+diff --git "a/before/src\\domain\\workflow.test.ts" "b/src\\domain\\workflow.test.ts"
+index 4df793b..4089630 100644
+--- "a/before/src\\domain\\workflow.test.ts"	
++++ "b/src\\domain\\workflow.test.ts"
+@@ -28,10 +28,22 @@ function fixture(fault: DemoFault = "none", permission: Exclude<Permission, "REA
+   let weather = demoWeatherSnapshot(new Date(now));
+   const capability = new CalendarWorkflowCapability(() => adapter, async () => weather, permission);
+   const workflow = new CalendarWorkflow(capability);
+-  return { adapter, write, capability, workflow, changeWeather: () => { weather = changeDemoWeather(weather); } };
++  return { adapter, write, capability, workflow, changeWeather: () => { weather = changeDemoWeather(weather); },
++    blockDrySlots: () => { weather = { ...weather, hours: weather.hours.map((hour) => ({ ...hour, weatherCode: 65 })) }; } };
+ }
+ 
+ describe("competition calendar workflow", () => {
++  it("reports a detected conflict even when there is no dry alternative and makes no write", async () => {
++    const f = fixture();
++    f.blockDrySlots();
++    await f.workflow.detect();
++    expect(f.workflow.snapshot()).toMatchObject({ status: "UNDERSTOOD", eventId: "demo-outdoor-tennis",
++      impact: { eventId: "demo-outdoor-tennis", severity: "heavy rain" } });
++    expect(f.workflow.snapshot().message).toContain("冲突");
++    expect(f.workflow.snapshot().proposal).toBeUndefined();
++    expect(f.write).not.toHaveBeenCalled();
++  });
++
+   it("happy-path executes only after consent and completes only after an independent state read", async () => {
+     const f = fixture();
+     const reads = vi.spyOn(f.capability, "readState");
+diff --git "a/before/src\\domain\\workflow.ts" "b/src\\domain\\workflow.ts"
+index b6c4072..97f2055 100644
+--- "a/before/src\\domain\\workflow.ts"	
++++ "b/src\\domain\\workflow.ts"
+@@ -1,13 +1,14 @@
+ // SPDX-License-Identifier: Apache-2.0
+ import type { CalendarCapability, Consent, PreparedAction } from "./capability";
+-import type { ActionRecord, AgentRun, AgentStatus, ObservedSources, Proposal, VerificationResult } from "./model";
++import type { ActionRecord, AgentRun, AgentStatus, Impact, ObservedSources, Proposal, VerificationResult } from "./model";
+ import { WorkflowError, workflowError } from "./errors";
+-import { proposalExpired, verifyEvent } from "./engine";
++import { detectImpact, proposalExpired, verifyEvent } from "./engine";
+ import { transition } from "./stateMachine";
+ 
+ export interface WorkflowSnapshot extends AgentRun {
+   sources?: ObservedSources;
+   proposal?: Proposal;
++  impact?: Impact;
+   error?: { code: WorkflowError["code"]; retryable: boolean; message: string };
+   history: AgentStatus[];
+   canRecheck?: boolean;
+@@ -56,8 +57,13 @@ export class CalendarWorkflow {
+       this.state.sources = await this.capability.readState();
+       this.move("UNDERSTOOD");
+       this.prepared = this.capability.prepareAction(this.state.sources);
++      this.state.impact = this.prepared?.proposal.impact ?? this.state.sources.events
++        .map((event) => detectImpact(event, this.state.sources!.weather.hours)).find((impact) => impact);
+       if (!this.prepared) {
+-        this.state.message = "没有找到可执行的天气调整建议，日历未更改。";
++        this.state.eventId = this.state.impact?.eventId;
++        this.state.message = this.state.impact
++          ? "检测到天气与户外活动冲突，但没有找到有完整预报且空闲的可用时段；日历未更改。"
++          : "没有找到可执行的天气调整建议，日历未更改。";
+         this.publish();
+         return;
+       }
+diff --git "a/before/src\\integrations\\adapters.test.ts" "b/src\\integrations\\adapters.test.ts"
+index 05ed4c9..5d9645e 100644
+--- "a/before/src\\integrations\\adapters.test.ts"	
++++ "b/src\\integrations\\adapters.test.ts"
+@@ -1,4 +1,4 @@
+-import { beforeEach, describe, expect, it, vi } from "vitest";
++import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+ import { verifyEvent } from "../domain/engine";
+ import { CalendarApiError, CalendarPermissionError } from "../domain/model";
+ import { DemoCalendarAdapter, resetDemoCalendar } from "./demoCalendar";
+@@ -9,6 +9,8 @@ const localStore = new Map<string, string>();
+ 
+ beforeEach(() => {
+   localStore.clear();
++  vi.useFakeTimers();
++  vi.setSystemTime(new Date(2026, 8, 29, 8));
+   vi.stubGlobal("window", {
+     localStorage: {
+       getItem: (key: string) => localStore.get(key) ?? null,
+@@ -18,8 +20,29 @@ beforeEach(() => {
+     setTimeout,
+   });
+ });
++afterEach(() => { vi.useRealTimers(); vi.restoreAllMocks(); vi.unstubAllGlobals(); vi.unstubAllEnvs(); });
+ 
+ describe("Demo Calendar adapter", () => {
++  it("refreshes yesterday's cached sample to match the current demo forecast day", async () => {
++    resetDemoCalendar(new Date(2026, 8, 28, 8));
++    const [event] = await new DemoCalendarAdapter().listEvents();
++    expect(event.start).toBe(new Date(2026, 8, 29, 15).toISOString());
++  });
++
++  it("rolls calendar and weather to tomorrow after the same-day review cutoff", async () => {
++    resetDemoCalendar();
++    vi.setSystemTime(new Date(2026, 8, 29, 11, 45));
++    const [event] = await new DemoCalendarAdapter().listEvents();
++    expect(event.start).toBe(new Date(2026, 8, 30, 15).toISOString());
++  });
++
++  it("replaces a syntactically valid but malformed cached record", async () => {
++    localStore.set("ripple-demo-event-v1", JSON.stringify([{ id: "demo-outdoor-tennis", title: "户外网球", start: "invalid" }]));
++    const [event] = await new DemoCalendarAdapter().listEvents();
++    expect(event.start).toBe(new Date(2026, 8, 29, 15).toISOString());
++    expect(event.source).toBe("Demo calendar");
++  });
++
+   it("reads the repeatable sample, writes it, then verifies the re-read value", async () => {
+     resetDemoCalendar(new Date(2026, 8, 29, 8, 0));
+     const calendar = new DemoCalendarAdapter();
+@@ -132,7 +155,7 @@ describe("Open-Meteo response normalization", () => {
+   it("normalizes hourly values as UTC instants and keeps source freshness", async () => {
+     const responseBodies = [
+       { results: [{ name: "Shanghai", country: "China", latitude: 31.23, longitude: 121.47, timezone: "Asia/Shanghai" }] },
+-      { hourly: { time: ["2026-09-29T06:00"], precipitation: [8.2], precipitation_probability: [91], weather_code: [65] } },
++      { hourly: { time: ["2026-09-29T06:00", "2026-09-29T07:00"], precipitation: [0, 8.2], precipitation_probability: [5, 91], weather_code: [65, 65] } },
+     ];
+     const fetchMock = vi.fn(async () => ({ ok: true, json: async () => responseBodies.shift() }));
+     vi.stubGlobal("fetch", fetchMock);
+@@ -150,6 +173,26 @@ describe("Open-Meteo response normalization", () => {
+     expect(fetchMock).toHaveBeenCalledTimes(2);
+   });
+ 
++  it("assigns precipitation to the preceding hour and never invents the last interval", async () => {
++    const responseBodies = [
++      { results: [{ name: "Shanghai", latitude: 31.23, longitude: 121.47 }] },
++      { hourly: { time: ["2026-09-29T06:00", "2026-09-29T07:00"], precipitation: [8.2, 0], precipitation_probability: [91, 5], weather_code: [1, 1] } },
++    ];
++    vi.stubGlobal("fetch", vi.fn(async () => ({ ok: true, json: async () => responseBodies.shift() })));
++    const snapshot = await fetchOpenMeteo("Shanghai");
++    expect(snapshot.hours).toHaveLength(1);
++    expect(snapshot.hours[0]).toMatchObject({ start: "2026-09-29T06:00:00.000Z", end: "2026-09-29T07:00:00.000Z", precipitationMm: 0, precipitationProbability: 5 });
++  });
++
++  it("does not combine precipitation across a missing forecast timestamp", async () => {
++    const responseBodies = [
++      { results: [{ name: "Shanghai", latitude: 31.23, longitude: 121.47 }] },
++      { hourly: { time: ["2026-09-29T06:00", "2026-09-29T08:00"], precipitation: [0, 0], precipitation_probability: [5, 5], weather_code: [1, 1] } },
++    ];
++    vi.stubGlobal("fetch", vi.fn(async () => ({ ok: true, json: async () => responseBodies.shift() })));
++    expect((await fetchOpenMeteo("Shanghai")).hours).toEqual([]);
++  });
++
+   it("reports unavailable weather responses rather than fabricating an empty forecast", async () => {
+     vi.stubGlobal("fetch", vi.fn(async () => ({ ok: false, status: 503, json: async () => ({}) })));
+     await expect(fetchOpenMeteo("Shanghai")).rejects.toThrow("HTTP 503");
+diff --git "a/before/src\\integrations\\demoCalendar.ts" "b/src\\integrations\\demoCalendar.ts"
+index 88041ad..88139a8 100644
+--- "a/before/src\\integrations\\demoCalendar.ts"	
++++ "b/src\\integrations\\demoCalendar.ts"
+@@ -9,6 +9,18 @@ function localEventTime(day: Date, hour: number, minute = 0): string {
+   return new Date(day.getFullYear(), day.getMonth(), day.getDate(), hour, minute).toISOString();
+ }
+ 
++function validDemoEvent(value: unknown): value is CalendarEvent {
++  if (!value || typeof value !== "object") return false;
++  const event = value as Partial<CalendarEvent>;
++  if (typeof event.id !== "string" || !event.id || typeof event.title !== "string"
++    || typeof event.start !== "string" || typeof event.end !== "string" || typeof event.timeZone !== "string"
++    || event.source !== "Demo calendar" || !Number.isFinite(Date.parse(event.start))
++    || !Number.isFinite(Date.parse(event.end)) || Date.parse(event.end) <= Date.parse(event.start)) return false;
++  try { new Intl.DateTimeFormat("en", { timeZone: event.timeZone }).format(); }
++  catch { return false; }
++  return true;
++}
++
+ export function resetDemoCalendar(now = new Date()): CalendarEvent[] {
+   const day = demoScenarioDay(now);
+   const event: CalendarEvent = {
+@@ -26,8 +38,14 @@ export function resetDemoCalendar(now = new Date()): CalendarEvent[] {
+ 
+ function readEvents(): CalendarEvent[] {
+   try {
+-    const events = JSON.parse(window.localStorage.getItem(STORAGE_KEY) ?? "null") as CalendarEvent[] | null;
+-    if (Array.isArray(events) && events.length) {
++    const events: unknown = JSON.parse(window.localStorage.getItem(STORAGE_KEY) ?? "null");
++    if (Array.isArray(events) && events.length && events.every(validDemoEvent)) {
++      const sample = events.find((event) => event.id === "demo-outdoor-tennis");
++      const sampleDay = sample ? new Date(sample.start) : undefined;
++      const day = demoScenarioDay();
++      // The calendar and forecast must describe the same repeatable scenario day.
++      if (!sampleDay || sampleDay.getFullYear() !== day.getFullYear() || sampleDay.getMonth() !== day.getMonth()
++        || sampleDay.getDate() !== day.getDate()) return resetDemoCalendar();
+       const localizedEvents = events.map((event) => event.id === "demo-outdoor-tennis" && event.title === "Outdoor Tennis"
+         ? { ...event, title: "户外网球", location: event.location === "Riverside courts" ? "滨江球场" : event.location }
+         : event);
+diff --git "a/before/src\\integrations\\openMeteo.ts" "b/src\\integrations\\openMeteo.ts"
+index cbc9507..2f00321 100644
+--- "a/before/src\\integrations\\openMeteo.ts"	
++++ "b/src\\integrations\\openMeteo.ts"
+@@ -42,15 +42,22 @@ export async function fetchOpenMeteo(city: string): Promise<WeatherSnapshot> {
+     throw new WorkflowError("DEPENDENCY_UNAVAILABLE", "Open-Meteo 返回的逐小时预报数据不完整。", true);
+   }
+ 
++  const utcInstant = (time: string): number => Date.parse(/T.*(?:Z|[+-]\d{2}:?\d{2})$/.test(time) ? time : `${time}Z`);
+   const hours: WeatherHour[] = hourly.time.flatMap((time, index) => {
+-    const instant = /T.*(?:Z|[+-]\d{2}:?\d{2})$/.test(time) ? new Date(time) : new Date(`${time}Z`);
++    const instant = utcInstant(time);
++    const nextTime = hourly.time?.[index + 1];
++    if (!nextTime) return [];
++    const endInstant = utcInstant(nextTime);
+     const code = hourly.weather_code?.[index];
+-    const mm = hourly.precipitation?.[index];
+-    const probability = hourly.precipitation_probability?.[index];
+-    // Missing observations do not become invented dry hours.
+-    if (!Number.isFinite(instant.getTime()) || ![code, mm, probability].every((value) => typeof value === "number" && Number.isFinite(value))) return [];
+-    const start = instant.toISOString();
+-    const end = new Date(instant.getTime() + 60 * 60_000).toISOString();
++    // Open-Meteo's precipitation fields describe the preceding hour; the code is instantaneous.
++    // Use the code at the interval's start and precipitation at its end.
++    const mm = hourly.precipitation?.[index + 1];
++    const probability = hourly.precipitation_probability?.[index + 1];
++    // Gaps and missing observations must not become invented dry hours.
++    if (!Number.isFinite(instant) || endInstant - instant !== 60 * 60_000
++      || ![code, mm, probability].every((value) => typeof value === "number" && Number.isFinite(value))) return [];
++    const start = new Date(instant).toISOString();
++    const end = new Date(endInstant).toISOString();
+     return [{
+       start,
+       end,
