@@ -10,6 +10,18 @@ The reviewed rules do not explicitly mandate an LLM, Octos runtime or OctoScript
 
 [App Design Flow](https://github.com/OctoSense-org/OctoScript-App-Design-Flow) and its [publishing guide](https://github.com/OctoSense-org/OctoScript-App-Design-Flow/blob/main/docs/PUBLISHING.md) describe native App Hub packaging/admission. No current contest rule was found requiring Web entries to produce `main.splash`, publisher keys, signed bundles or an App Hub submission issue. Those publishing operations were not performed.
 
+### Additional organizer-repository audit
+
+Reviewed organizer repository HEAD **`0db87b582438f0f01534435b8537e8c89bcd303d`** on 2026-10-04: README, Rinx/SSO guides, submission/schedule guides and participant-facing source components. This audits entry requirements, not the website's security.
+
+**Correction:** [current Rinx baseline guide](https://github.com/gosimfoundation/hackathon-agenticapp26/blob/0db87b582438f0f01534435b8537e8c89bcd303d/docs/rinx-miniapps.md) names **hagency-org/Rinx** and cites the same complete host SHA as Ripple. GitHub's Rinx commit API confirms `05daf9bdb05fafc6d8f04dcb312a35f1d46a661e` exists there. Repository IDs differ (robrix2: 1379088495; Rinx: 1380738107): shared commit provenance does not mean identical repositories or prove the old branch exists in Rinx. Existing host checkout remains untouched; current Rinx runtime and URL-card journey are unverified.
+
+[Submission guide](https://github.com/gosimfoundation/hackathon-agenticapp26/blob/0db87b582438f0f01534435b8537e8c89bcd303d/docs/app-hub-submission.md) permits Web source/page/URL-card delivery and does not require prior Hub listing. Icon, author/support and privacy/permission details are required materials. Ripple has an icon and source/permission/failure descriptions; registered author/team, support channel and actual host URL-card evidence remain incomplete. Real-input/action evaluation is not fully established by a demo Calendar plus mocked Google tests.
+
+[Rinx guide](https://github.com/gosimfoundation/hackathon-agenticapp26/blob/main/docs/rinx-guide.md) describes Matrix/SSO account setup; it adds no Rust, OctoScript or model-API mandate. The reviewed runtime criteria support describing deterministic task automation as agentic, subject to organizer judgment. No registration, login or messages were performed.
+
+**Confirmed collection channel:** [issue #13](https://github.com/gosimfoundation/hackathon-agenticapp26/issues/13), requesting team name and entrant repository URL in a comment. This is not Ripple's source repository. No comment was posted; public repository and team identity are not finalized.
+
 ## PASS
 
 | Item | Scoped evidence |
@@ -26,6 +38,7 @@ The reviewed rules do not explicitly mandate an LLM, Octos runtime or OctoScript
 | Source audit | Source/config/docs/patches reviewed; dummy test tokens distinguished from runtime variables; no secret identified for staging; generated/cache/credential paths ignored |
 | Independent Git | Initialized Ripple as its own main repository; upstream checkouts excluded |
 | Exact host baseline | Local clean checkout and remote branch both match the immutable pin below |
+| Frozen tracked-file completeness | Local clone of tag/source SHA outside Ripple passed installation and all checks; this does not verify GitHub cloning |
 
 ### Host observation
 
@@ -48,6 +61,8 @@ Actual checkout: **Ripple/.host/robrix2**. The requested sibling `.host/robrix2`
 | Demo delivery | Local runnable rehearsal and screenshots supplied; hosted URL/video not produced |
 | License provenance | Standard source license and runtime notices retained; older third-party audit remains partial, and entrant ownership not independently attested |
 | Submission material | SUBMISSION.md prepared; repository identity/publication fields cannot be finalized without the target URL |
+| Current Rinx requirement | Immutable source commit present in Rinx; runtime, URL-card demonstration and classroom release unverified |
+| Required application metadata | Icon exists; registered author/team and usable support channel still need completion |
 
 ## NOT VERIFIED
 
@@ -60,12 +75,14 @@ Actual checkout: **Ripple/.host/robrix2**. The requested sibling `.host/robrix2`
 
 ## BLOCKED
 
+- Status update, 2026-10-05 Beijing time: the published October 4 23:59 qualifying deadline has passed. Ripple was frozen locally on October 4, but no public push or issue #13 submission receipt exists. Whether a late repository/comment is accepted requires organizer confirmation; no extension or timely submission is claimed.
+
 - Public source and push: no origin existed; connected GitHub owner repositories contain no identifiable Ripple target. No repository was guessed or created. Entrant must provide the intended GitHub URL.
 - Repository visibility, remote README/LICENSE and remote commit/tag cannot be verified before that push.
 - Overall contest source-delivery PASS therefore remains blocked. Local tests are not competition approval, and a local tag is not formal submission.
 
 ## Freeze and rollback
 
-Freeze tag: `qualifying-2026-10-04` when created; resolve the immutable source SHA with `git rev-parse qualifying-2026-10-04^{commit}`. SUBMISSION.md records the concrete SHA after freezing. A separate documentation receipt may record the source commit without changing that tag; a file cannot contain its own enclosing Git commit hash.
+Freeze tag: **`qualifying-2026-10-04`**, created locally on 2026-10-04, points to source commit **`19ac9b54ee46e5e6bda34ebcfc654637d3edcb87`**. Resolve it with `git rev-parse qualifying-2026-10-04^{commit}`. SUBMISSION.md records this hash in a separate documentation-only receipt without moving the tag: a file cannot contain its own enclosing Git commit hash. This tag does not establish GitHub publication or submission.
 
 Restore the source using a separate checkout of the tag, or inspect/revert later delivery documentation commits. Keep earlier reports/screenshots. Sanitized historical machine paths have originals in a sibling `.hardening-backup` directory outside the repository; no credentials, upstream code or production data changed.

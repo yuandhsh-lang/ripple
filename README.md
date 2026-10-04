@@ -66,6 +66,8 @@ npm run preview
 
 Host: [OctoSense-org/robrix2](https://github.com/OctoSense-org/robrix2/tree/dev/wechat-octoscript-miniapps), branch `dev/wechat-octoscript-miniapps`, exact commit **`05daf9bdb05fafc6d8f04dcb312a35f1d46a661e`**, recorded in [host-baseline.json](host-baseline.json).
 
+**Current organizer update:** [Rinx baseline guide](https://github.com/gosimfoundation/hackathon-agenticapp26/blob/main/docs/rinx-miniapps.md) names [hagency-org/Rinx](https://github.com/hagency-org/Rinx) and cites this same complete commit. Its existence in Rinx was verified; these are different repositories sharing a commit. Existing checkout unchanged; current Rinx runtime and actual URL-card journey remain unverified.
+
 PowerShell: `./scripts/prepare-host.ps1` prepares project-relative **`.host/robrix2`**, validates the remote/clean tree and exact pin. Host native prerequisites and startup are covered by [upstream instructions](https://github.com/OctoSense-org/robrix2/tree/dev/wechat-octoscript-miniapps). The host is not included in Ripple source.
 
 Use the host's **+ → Share mini app** with a reachable Ripple HTTP(S) URL. Windows opens an external browser; macOS/iOS embed a WebView. The website receives no Matrix account authority. Localhost reaches only its own machine; recipients need an independently reachable server. No deployment or host messages were performed. Ripple is a React/Vite Web mini app, not an OctoScript native app. The pin is not asserted to be an organizer-issued release package.
@@ -94,5 +96,7 @@ The [functionality review](docs/hackathon/REVIEW_2026-10-04.zh-CN.md) and older 
 One existing timed event at a time, current local day, one weather city and known outdoor activity terms. Searches 2.5–8 hours earlier in half-hour steps, preserving duration. No event creation/deletion, arbitrary multi-day optimization, continuous background monitoring or notifications. Reload loses workflow history; demo Calendar is browser-local. Real Google access and host execution remain unverified; an earlier Windows host build lacked MSVC `link.exe`.
 
 ## License
+
+Author/team and support: registered entrant identity and a public Ripple repository support channel remain **NOT VERIFIED**, pending confirmed repository/roster. Icon: `public/favicon.svg`. Keep private registration records out of source.
 
 Ripple source: **Apache-2.0**, unmodified standard [LICENSE](LICENSE). Appendix placeholders are instructions, not an invented copyright holder. [Third-party notices](public/third-party-notices.txt) retain runtime MIT notices; upstream host licenses remain intact. See the dated [license audit](docs/hackathon/LICENSE_AUDIT.md).
