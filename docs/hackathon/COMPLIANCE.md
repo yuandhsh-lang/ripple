@@ -60,7 +60,7 @@ Actual checkout: **Ripple/.host/robrix2**. The requested sibling `.host/robrix2`
 | Real integrations | Real weather verified; Google adapter has mocked coverage only |
 | Demo delivery | Local runnable rehearsal and screenshots supplied; hosted URL/video not produced |
 | License provenance | Standard source license and runtime notices retained; older third-party audit remains partial, and entrant ownership not independently attested |
-| Submission material | SUBMISSION.md prepared; repository identity/publication fields cannot be finalized without the target URL |
+| Submission material | SUBMISSION.md includes the published repository and frozen source; registered roster and formal submission receipt remain unverified |
 | Current Rinx requirement | Immutable source commit present in Rinx; runtime, URL-card demonstration and classroom release unverified |
 | Required application metadata | Icon and repository support channel exist; registered author/team remains unverified |
 
