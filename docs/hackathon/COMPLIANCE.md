@@ -1,6 +1,6 @@
 # Qualifying source-delivery compliance
 
-Reviewed: 2026-10-04 (Beijing time). Overall source delivery: **BLOCKED** pending the entrant's GitHub repository URL and verified public push. Local PASS rows are scoped evidence, never organizer acceptance. This document supersedes the older dated delivery matrix/checklist.
+Reviewed: 2026-10-04 (Beijing time); publication preparation updated 2026-10-05. Overall source delivery: **BLOCKED** pending verified public push. The entrant confirmed [yuandhsh-lang/ripple](https://github.com/yuandhsh-lang/ripple) as the target. Local PASS rows are scoped evidence, never organizer acceptance. This document supersedes the older dated delivery matrix/checklist.
 
 ## Official requirements and scope
 
@@ -77,7 +77,7 @@ Actual checkout: **Ripple/.host/robrix2**. The requested sibling `.host/robrix2`
 
 - Status update, 2026-10-05 Beijing time: the published October 4 23:59 qualifying deadline has passed. Ripple was frozen locally on October 4, but no public push or issue #13 submission receipt exists. Whether a late repository/comment is accepted requires organizer confirmation; no extension or timely submission is claimed.
 
-- Public source and push: no origin existed; connected GitHub owner repositories contain no identifiable Ripple target. No repository was guessed or created. Entrant must provide the intended GitHub URL.
+- Public source and push: target confirmed as `yuandhsh-lang/ripple` on 2026-10-05. Local checks passed; browser is waiting for the entrant's GitHub login. Repository creation, push and remote verification remain pending.
 - Repository visibility, remote README/LICENSE and remote commit/tag cannot be verified before that push.
 - Overall contest source-delivery PASS therefore remains blocked. Local tests are not competition approval, and a local tag is not formal submission.
 

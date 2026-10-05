@@ -1,6 +1,6 @@
 # Ripple qualifying submission
 
-Status: **BLOCKED — target GitHub URL not confirmed; not formally submitted.** Replace the repository field only with the entrant's actual confirmed repository after publication. Do not paste a local-only draft as a completed submission.
+Status: **BLOCKED — GitHub publication verification pending; not formally submitted.** The entrant confirmed the target repository on 2026-10-05. Do not paste a local-only draft as a completed submission.
 
 Status update, 2026-10-05 Beijing time: the published qualifying deadline has passed. The source tag was created locally on October 4, but there is no public-push or qualifying-comment receipt. Late acceptance is NOT VERIFIED and must be confirmed with organizers.
 
@@ -12,7 +12,7 @@ Short description:
 
 Ripple is a deterministic agentic calendar workflow that combines existing events with weather context to detect risky outdoor plans and propose a feasible earlier time. It waits for explicit approval, reads state again before making a change, and verifies the resulting Calendar state through an independent read-back. Its runnable demo exposes stale proposals, denied permission, failed writes and uncertain outcomes without presenting them as success.
 
-Repository: **BLOCKED — entrant GitHub repository URL required**
+Repository: [yuandhsh-lang/ripple](https://github.com/yuandhsh-lang/ripple). Target confirmed by the entrant; push/public visibility verification pending.
 
 Commit (frozen source): **19ac9b54ee46e5e6bda34ebcfc654637d3edcb87**
 
@@ -59,7 +59,7 @@ License: Apache-2.0
 
 Team/registered members: **NOT VERIFIED — entrant must use the registered captain and member roster in the organizer's form; no private participant details included in source.**
 
-Author/support: NOT VERIFIED; complete registered author/team identity and actual Ripple repository support channel. Icon: public/favicon.svg. Privacy: demo Calendar persists browser-local sample state; real tokens remain in memory; Google events are fetched after authorization; no credentials or real Calendar dumps are included.
+Source maintainer: [yuandhsh-lang](https://github.com/yuandhsh-lang). Support: [repository issues](https://github.com/yuandhsh-lang/ripple/issues), pending publication. Registered author/team identity remains NOT VERIFIED. Icon: public/favicon.svg. Privacy: demo Calendar persists browser-local sample state; real tokens remain in memory; Google events are fetched after authorization; no credentials or real Calendar dumps are included.
 
 Formal submission: **NOT VERIFIED**. Confirmed collection channel: [organizer issue #13](https://github.com/gosimfoundation/hackathon-agenticapp26/issues/13), opened September 30. Comment format:
 

@@ -1,5 +1,17 @@
 # Qualifying validation
 
+## Publication preparation, 2026-10-05
+
+Actual local rerun: lint, typecheck and production build exited 0; `npm test` passed 63/63 tests in five files; `npm run test:integration` passed 45/45 tests in three files (a subset, including mocks). Runtime: Node v24.14.0, npm 11.9.0. `scripts/prepare-host.ps1` verified the existing clean host checkout at `05daf9bdb05fafc6d8f04dcb312a35f1d46a661e`.
+
+Upload audit before documentation updates: 71 tracked files and 75 unique blobs across both reachable commits; no forbidden upload paths or credential-prefix/private-key/credential-URL/JWT pattern findings. Local Markdown links resolved. The largest file was 415,290 bytes. Only `.host/`, `dist/` and `node_modules/` were ignored existing directories; no nonignored untracked files existed. `.env.example` contains an empty public client-ID setting. Two test token strings are fixed mock fixtures. The thirteen retained screenshots show Demo Calendar evidence, with no observed private account data.
+
+Current official [submission guide](https://github.com/gosimfoundation/hackathon-agenticapp26/blob/main/docs/app-hub-submission.md) was reread. `hub stamp`, `hub check` and `hub scan` apply to Hub card packages; Ripple is delivered as a Web mini app and has no Hub package to check. Native article-editor verification in the Rinx guide checks the upstream editor, not Ripple. Real Google Calendar and authenticated host URL-card execution remain unverified. GitHub publication and remote clean-clone checks are pending login.
+
+The manifest and dated reports from September 30/October 4 are historical snapshots, not hashes or receipts for the latest publication commit.
+
+## October 4 frozen-source checks
+
 Run date: 2026-10-04, Beijing time. These are this delivery's actual reruns, not copied success claims from an old report.
 
 Environment: Windows; Node v24.14.0; npm 11.9.0; locked React 19.3.0, TypeScript 6.0.3, Vite 8.3.1, Vitest 5.0.2, oxlint 1.86.0.

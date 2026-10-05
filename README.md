@@ -1,5 +1,7 @@
 # Ripple
 
+Source repository: [yuandhsh-lang/ripple](https://github.com/yuandhsh-lang/ripple). Maintainer: [yuandhsh-lang](https://github.com/yuandhsh-lang). Support: [repository issues](https://github.com/yuandhsh-lang/ripple/issues). Publication verification is recorded in [COMPLIANCE.md](docs/hackathon/COMPLIANCE.md).
+
 Ripple is a deterministic agentic calendar workflow that combines calendar state with weather context to detect risky outdoor plans, propose a safer time, require explicit user approval, execute the change, and verify the resulting calendar state.
 
 **Primary scenario: Calendar. Weather: external context signal.**
@@ -97,6 +99,6 @@ One existing timed event at a time, current local day, one weather city and know
 
 ## License
 
-Author/team and support: registered entrant identity and a public Ripple repository support channel remain **NOT VERIFIED**, pending confirmed repository/roster. Icon: `public/favicon.svg`. Keep private registration records out of source.
+Registered entrant/team roster remains **NOT VERIFIED**; the source maintainer and intended support channel are linked above. Icon: `public/favicon.svg`. Keep private registration records out of source.
 
 Ripple source: **Apache-2.0**, unmodified standard [LICENSE](LICENSE). Appendix placeholders are instructions, not an invented copyright holder. [Third-party notices](public/third-party-notices.txt) retain runtime MIT notices; upstream host licenses remain intact. See the dated [license audit](docs/hackathon/LICENSE_AUDIT.md).
