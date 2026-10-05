@@ -1,6 +1,6 @@
 # Qualifying source-delivery compliance
 
-Reviewed: 2026-10-04 (Beijing time); publication preparation updated 2026-10-05. Overall source delivery: **BLOCKED** pending verified public push. The entrant confirmed [yuandhsh-lang/ripple](https://github.com/yuandhsh-lang/ripple) as the target. Local PASS rows are scoped evidence, never organizer acceptance. This document supersedes the older dated delivery matrix/checklist.
+Reviewed: 2026-10-04 (Beijing time); GitHub publication verified 2026-10-05. Public source publication: **PASS** at [yuandhsh-lang/ripple](https://github.com/yuandhsh-lang/ripple), default branch `main`. Competition submission/acceptance remains **BLOCKED** for the reasons below. Local PASS rows are scoped evidence, never organizer acceptance. This document supersedes the older dated delivery matrix/checklist.
 
 ## Official requirements and scope
 
@@ -62,7 +62,7 @@ Actual checkout: **Ripple/.host/robrix2**. The requested sibling `.host/robrix2`
 | License provenance | Standard source license and runtime notices retained; older third-party audit remains partial, and entrant ownership not independently attested |
 | Submission material | SUBMISSION.md prepared; repository identity/publication fields cannot be finalized without the target URL |
 | Current Rinx requirement | Immutable source commit present in Rinx; runtime, URL-card demonstration and classroom release unverified |
-| Required application metadata | Icon exists; registered author/team and usable support channel still need completion |
+| Required application metadata | Icon and repository support channel exist; registered author/team remains unverified |
 
 ## NOT VERIFIED
 
@@ -70,19 +70,21 @@ Actual checkout: **Ripple/.host/robrix2**. The requested sibling `.host/robrix2`
 - robrix2 sender → recipient real-account journey and native host runtime.
 - Android/iOS physical devices; mobile screenshot means browser viewport only.
 - Organizer release package identity, team registration/roster, and formal qualifying submission/receipt.
-- Clean clone **from the pushed GitHub repository**: impossible before a confirmed remote/push. Local clean-clone validation is separately identified if performed.
-- GitHub Actions execution (workflow exists; no remote run observed).
+
+## Publication verification, 2026-10-05
+
+- GitHub clean clone: **VERIFIED** at publication commit `de67d0f0ddf3575eeebe0fe918a72f865a27a937`; all 71 Git blobs matched the local source and every project check passed after `npm ci`. See VALIDATION.md for the subsequent timezone-test correction.
+- GitHub Actions: initial run observed and failed a timezone-dependent test. Its assertion was corrected and tested locally in Asia/Shanghai and UTC; current remote status is available in [Actions](https://github.com/yuandhsh-lang/ripple/actions).
 
 ## BLOCKED
 
-- Status update, 2026-10-05 Beijing time: the published October 4 23:59 qualifying deadline has passed. Ripple was frozen locally on October 4, but no public push or issue #13 submission receipt exists. Whether a late repository/comment is accepted requires organizer confirmation; no extension or timely submission is claimed.
+- Status update, 2026-10-05 Beijing time: the published October 4 23:59 qualifying deadline has passed. Ripple was frozen locally on October 4 and published on October 5; no issue #13 submission receipt exists. Whether a late repository/comment is accepted requires organizer confirmation; no extension or timely submission is claimed.
 
-- Public source and push: target confirmed as `yuandhsh-lang/ripple` on 2026-10-05. Local checks passed; browser is waiting for the entrant's GitHub login. Repository creation, push and remote verification remain pending.
-- Repository visibility, remote README/LICENSE and remote commit/tag cannot be verified before that push.
-- Overall contest source-delivery PASS therefore remains blocked. Local tests are not competition approval, and a local tag is not formal submission.
+- Public source, default `main`, README/LICENSE, commit and freeze tag were verified through the GitHub API, `git ls-remote` and an independent remote clone. This publication does not resolve the competition acceptance, registration, real Calendar or host-runtime evidence gaps.
+- Overall competition acceptance remains blocked. Passing source checks and a published tag are not formal submission or organizer approval.
 
 ## Freeze and rollback
 
-Freeze tag: **`qualifying-2026-10-04`**, created locally on 2026-10-04, points to source commit **`19ac9b54ee46e5e6bda34ebcfc654637d3edcb87`**. Resolve it with `git rev-parse qualifying-2026-10-04^{commit}`. SUBMISSION.md records this hash in a separate documentation-only receipt without moving the tag: a file cannot contain its own enclosing Git commit hash. This tag does not establish GitHub publication or submission.
+Freeze tag: **`qualifying-2026-10-04`**, created locally on 2026-10-04 and pushed on 2026-10-05, points to source commit **`19ac9b54ee46e5e6bda34ebcfc654637d3edcb87`**. Resolve it with `git rev-parse qualifying-2026-10-04^{commit}`. SUBMISSION.md records this hash without moving the tag: a file cannot contain its own enclosing Git commit hash. The local freeze date does not establish timely public publication or formal submission.
 
 Restore the source using a separate checkout of the tag, or inspect/revert later delivery documentation commits. Keep earlier reports/screenshots. Sanitized historical machine paths have originals in a sibling `.hardening-backup` directory outside the repository; no credentials, upstream code or production data changed.

@@ -131,12 +131,12 @@ describe("Google Calendar adapter", () => {
 
     await connectGoogleCalendar();
     const adapter = new GoogleCalendarAdapter();
-    const now = new Date("2026-09-29T12:00:00.000Z");
+    const now = new Date(2026, 8, 29, 20);
     const [listed] = await adapter.listEvents(now);
     expect(listed).toMatchObject({ id: event.id, title: event.summary, timeZone: "Asia/Shanghai" });
     const listUrl = new URL(String(fetchMock.mock.calls[0][0]));
     expect(listUrl.searchParams.get("timeMin")).toBe(now.toISOString());
-    expect(listUrl.searchParams.get("timeMax")).toBe("2026-09-29T16:00:00.000Z");
+    expect(listUrl.searchParams.get("timeMax")).toBe(new Date(2026, 8, 30).toISOString());
 
     const expected = { start: "2026-09-29T04:30:00.000Z", end: "2026-09-29T05:30:00.000Z" };
     await adapter.updateEvent(event.id, expected, "Asia/Shanghai");

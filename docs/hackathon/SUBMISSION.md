@@ -1,8 +1,8 @@
 # Ripple qualifying submission
 
-Status: **BLOCKED — GitHub publication verification pending; not formally submitted.** The entrant confirmed the target repository on 2026-10-05. Do not paste a local-only draft as a completed submission.
+Status: **BLOCKED — source published; formal competition submission/acceptance not verified.** Public GitHub source and an independent remote clone were verified on 2026-10-05.
 
-Status update, 2026-10-05 Beijing time: the published qualifying deadline has passed. The source tag was created locally on October 4, but there is no public-push or qualifying-comment receipt. Late acceptance is NOT VERIFIED and must be confirmed with organizers.
+Status update, 2026-10-05 Beijing time: the published qualifying deadline has passed. The source tag was created locally on October 4 and publicly pushed on October 5, but there is no qualifying-comment receipt. Late acceptance is NOT VERIFIED and must be confirmed with organizers.
 
 Project: Ripple
 
@@ -12,13 +12,13 @@ Short description:
 
 Ripple is a deterministic agentic calendar workflow that combines existing events with weather context to detect risky outdoor plans and propose a feasible earlier time. It waits for explicit approval, reads state again before making a change, and verifies the resulting Calendar state through an independent read-back. Its runnable demo exposes stale proposals, denied permission, failed writes and uncertain outcomes without presenting them as success.
 
-Repository: [yuandhsh-lang/ripple](https://github.com/yuandhsh-lang/ripple). Target confirmed by the entrant; push/public visibility verification pending.
+Repository: [yuandhsh-lang/ripple](https://github.com/yuandhsh-lang/ripple). Public, default branch `main`; GitHub API, remote refs and clean clone verified.
 
 Commit (frozen source): **19ac9b54ee46e5e6bda34ebcfc654637d3edcb87**
 
 Tag: qualifying-2026-10-04
 
-Freeze provenance: the tag points to the tested source commit above. A subsequent documentation-only receipt records its hash and clone results without moving the tag. GitHub push and remote visibility remain BLOCKED; this local tag is not formal submission.
+Freeze provenance: the remote tag points to the tested source commit above and was not moved. `main` also includes publication documentation and a timezone-independent test correction. The tag and public push do not prove timely competition submission.
 
 Host: OctoSense-org/robrix2
 
@@ -39,7 +39,7 @@ Real integrations:
 - Open-Meteo: **verified real network read** on 2026-10-04.
 - Google Calendar: adapter implemented and mock-tested; **OAuth end to end and real write/read-back NOT VERIFIED**. No configured credential is included.
 
-Tests (rerun 2026-10-04): npm ci retry exit 0; npm test 63/63, integration subset 45/45; lint/typecheck/build exit 0. First npm ci failed from a loaded native binding; retry passed after stopping own Vite processes. A separate local clone of the frozen tag passed npm ci, 63 tests, 45 integration tests, lint/typecheck/build, all exit 0. **Remote GitHub clean clone: NOT VERIFIED** pending publication. See [VALIDATION.md](VALIDATION.md).
+Tests (rerun 2026-10-04): npm ci retry exit 0; npm test 63/63, integration subset 45/45; lint/typecheck/build exit 0. First npm ci failed from a loaded native binding; retry passed after stopping own Vite processes. A separate local clone of the frozen tag passed all checks. **Remote GitHub clean clone: VERIFIED** on 2026-10-05 at publication commit `de67d0f`; installation and all checks passed. The subsequent timezone-test correction passed 63 tests in both Asia/Shanghai and UTC. See [VALIDATION.md](VALIDATION.md).
 
 Evidence (all are actual **demo Calendar** screenshots):
 
@@ -59,7 +59,7 @@ License: Apache-2.0
 
 Team/registered members: **NOT VERIFIED — entrant must use the registered captain and member roster in the organizer's form; no private participant details included in source.**
 
-Source maintainer: [yuandhsh-lang](https://github.com/yuandhsh-lang). Support: [repository issues](https://github.com/yuandhsh-lang/ripple/issues), pending publication. Registered author/team identity remains NOT VERIFIED. Icon: public/favicon.svg. Privacy: demo Calendar persists browser-local sample state; real tokens remain in memory; Google events are fetched after authorization; no credentials or real Calendar dumps are included.
+Source maintainer: [yuandhsh-lang](https://github.com/yuandhsh-lang). Support: [repository issues](https://github.com/yuandhsh-lang/ripple/issues). Registered author/team identity remains NOT VERIFIED. Icon: public/favicon.svg. Privacy: demo Calendar persists browser-local sample state; real tokens remain in memory; Google events are fetched after authorization; no credentials or real Calendar dumps are included.
 
 Formal submission: **NOT VERIFIED**. Confirmed collection channel: [organizer issue #13](https://github.com/gosimfoundation/hackathon-agenticapp26/issues/13), opened September 30. Comment format:
 
