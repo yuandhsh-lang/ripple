@@ -4,6 +4,8 @@ Status: **BLOCKED — source published; formal competition submission/acceptance
 
 Status update, 2026-10-05 Beijing time: the published qualifying deadline has passed. The source tag was created locally on October 4 and publicly pushed on October 5, but there is no qualifying-comment receipt. Late acceptance is NOT VERIFIED and must be confirmed with organizers.
 
+Closure attempt, 2026-10-05: issue #13 remains open; 39 comments were checked and none matched this entrant/repository. The real registered team name is still missing, so no submission comment was posted. Google Cloud reached its first-use terms screen; Calendar OAuth and real write/read-back remain NOT VERIFIED. Host source mapping checks passed 8/8 in an LF checkout, while native compilation is blocked by missing MSVC `link.exe`; Ripple URL-card execution remains NOT VERIFIED. Registration/roster evidence and a 2–3 minute video were not present in audited project materials. See [actual closure evidence](evidence/closure-20261005.json).
+
 Project: Ripple
 
 Primary scenario: Calendar
@@ -69,3 +71,5 @@ GitHub 仓库地址：<confirmed public Ripple repository URL>
 ```
 
 This organizer repository is not Ripple's source repository. No comment was posted. Deadline remains October 4, 2026, 23:59 Beijing time. The questionnaire is registration. Submit only with real publication fields and retain the comment receipt.
+
+Current source checks, 2026-10-05: lint, typecheck, 63/63 tests, 45/45 integration-subset tests and build passed. Before this documentation update, local/remote `main` matched `2b2360b071f45f33a8dd1c511510f5e02c1f813f`, with [successful GitHub Actions](https://github.com/yuandhsh-lang/ripple/actions/runs/37327114136). Automated and host source checks do not substitute for real Calendar/Rinx evidence or organizer acceptance.

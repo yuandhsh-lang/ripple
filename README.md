@@ -2,6 +2,8 @@
 
 Source repository: [yuandhsh-lang/ripple](https://github.com/yuandhsh-lang/ripple). Maintainer: [yuandhsh-lang](https://github.com/yuandhsh-lang). Support: [repository issues](https://github.com/yuandhsh-lang/ripple/issues). Publication verification is recorded in [COMPLIANCE.md](docs/hackathon/COMPLIANCE.md).
 
+Competition closure review, **2026-10-05: BLOCKED**. Issue #13 is open and requests a real team name plus repository URL; no matching submission comment was found. Registered team details are not supplied or verified. Google Cloud reached its first-use terms screen, but Calendar OAuth, a real event change and read-back have not run. The pinned host's eight source mapping checks passed in an LF checkout; native build lacks MSVC `link.exe`, and the Ripple URL-card journey has not run. These source checks do not establish real runtime acceptance. See [closure evidence](docs/hackathon/evidence/closure-20261005.json).
+
 Ripple is a deterministic agentic calendar workflow that combines calendar state with weather context to detect risky outdoor plans, propose a safer time, require explicit user approval, execute the change, and verify the resulting calendar state.
 
 **Primary scenario: Calendar. Weather: external context signal.**

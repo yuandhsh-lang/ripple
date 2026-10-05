@@ -1,0 +1,60 @@
+{
+  "review_date": "2026-10-05",
+  "timezone": "Asia/Shanghai",
+  "overall_status": "BLOCKED",
+  "source_commit_checked": "2b2360b071f45f33a8dd1c511510f5e02c1f813f",
+  "repository": "https://github.com/yuandhsh-lang/ripple",
+  "product_source_changed_in_this_attempt": false,
+  "official_submission": {
+    "issue": "https://github.com/gosimfoundation/hackathon-agenticapp26/issues/13",
+    "issue_state": "open",
+    "comments_checked": 39,
+    "matching_comments": 0,
+    "team_name_verified": false,
+    "comment_posted": false,
+    "receipt": null,
+    "late_acceptance_verified": false
+  },
+  "registration": {
+    "registered_team_and_roster_verified": false,
+    "record_location_supplied": false,
+    "video_in_docs_or_public": false
+  },
+  "google_calendar": {
+    "public_client_id_configured": false,
+    "interface_reached": "Google Cloud first-use country and service terms",
+    "requires_user_action": true,
+    "oauth_completed": false,
+    "real_event_modified": false,
+    "post_write_read_back_verified": false,
+    "screenshot_published": false
+  },
+  "host": {
+    "commit": "05daf9bdb05fafc6d8f04dcb312a35f1d46a661e",
+    "build_command": "cargo build --locked --release",
+    "build_exit_code": 1,
+    "build_blocker": "MSVC link.exe missing",
+    "mapping_command": "python lab/article-editor/verify_native.py",
+    "mapping_checkout": "independent LF checkout; same source commit",
+    "mapping_exit_code": 0,
+    "mappings": 8,
+    "behavior_passed": null,
+    "visual_acceptance": false,
+    "native_host_started": false,
+    "ripple_url_card_flow_completed": false,
+    "real_runtime_screenshots": []
+  },
+  "local_checks": {
+    "npm_run_lint": { "exit_code": 0 },
+    "npm_run_typecheck": { "exit_code": 0 },
+    "npm_test": { "exit_code": 0, "passed": 63 },
+    "npm_run_test_integration": { "exit_code": 0, "passed": 45, "subset_of_all_tests": true, "includes_mocked_google_http": true },
+    "npm_run_build": { "exit_code": 0 }
+  },
+  "github_actions_before_documentation_update": {
+    "head_sha": "2b2360b071f45f33a8dd1c511510f5e02c1f813f",
+    "url": "https://github.com/yuandhsh-lang/ripple/actions/runs/37327114136",
+    "status": "completed",
+    "conclusion": "success"
+  }
+}

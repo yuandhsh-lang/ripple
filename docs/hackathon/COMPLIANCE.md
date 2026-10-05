@@ -20,7 +20,7 @@ Reviewed organizer repository HEAD **`0db87b582438f0f01534435b8537e8c89bcd303d`*
 
 [Rinx guide](https://github.com/gosimfoundation/hackathon-agenticapp26/blob/main/docs/rinx-guide.md) describes Matrix/SSO account setup; it adds no Rust, OctoScript or model-API mandate. The reviewed runtime criteria support describing deterministic task automation as agentic, subject to organizer judgment. No registration, login or messages were performed.
 
-**Confirmed collection channel:** [issue #13](https://github.com/gosimfoundation/hackathon-agenticapp26/issues/13), requesting team name and entrant repository URL in a comment. This is not Ripple's source repository. No comment was posted; public repository and team identity are not finalized.
+**Confirmed collection channel:** [issue #13](https://github.com/gosimfoundation/hackathon-agenticapp26/issues/13), requesting team name and entrant repository URL in a comment. Rechecked on 2026-10-05: open, 39 comments, no comment by `yuandhsh-lang` or containing the Ripple repository URL. No comment was posted. The public repository is confirmed; the registered team name has not been supplied or verified.
 
 ## PASS
 
@@ -52,6 +52,8 @@ Commands: `git status --short`, `git branch --show-current`, `git rev-parse HEAD
 
 Actual checkout: **Ripple/.host/robrix2**. The requested sibling `.host/robrix2` does not exist. This matches the project's prepare-host script. No host source, checkout state or branch was changed. A development pin alone does not establish the organizer's released package identity.
 
+2026-10-05 closure check: `cargo build --locked --release` actually failed because MSVC `link.exe` is missing. The first official Build Tools bootstrapper download was cancelled; no installed toolchain was detected after retry. Neither the Rinx nor robrix2 repository exposed a GitHub release package during this check. The organizer-documented `python lab/article-editor/verify_native.py` initially failed from Windows CRLF conversion; all eight contract Git blobs matched the expected hashes. Repeating the unmodified script in an independent LF checkout of the same SHA passed eight mappings, with `behavior_passed: null` and `visual_acceptance: false`. This checks the host's article-editor source mappings, not Ripple execution. No native host, authenticated session, card send/open/refresh/re-share or recipient journey was completed.
+
 ## PARTIAL
 
 | Item | Remaining boundary |
@@ -75,6 +77,10 @@ Actual checkout: **Ripple/.host/robrix2**. The requested sibling `.host/robrix2`
 
 - GitHub clean clone: **VERIFIED** at publication commit `de67d0f0ddf3575eeebe0fe918a72f865a27a937`; all 71 Git blobs matched the local source and every project check passed after `npm ci`. See VALIDATION.md for the subsequent timezone-test correction.
 - GitHub Actions: initial run observed and failed a timezone-dependent test. Its assertion was corrected and tested locally in Asia/Shanghai and UTC; current remote status is available in [Actions](https://github.com/yuandhsh-lang/ripple/actions).
+
+- Latest remote verification before this closure documentation update: local and remote `main` both `2b2360b071f45f33a8dd1c511510f5e02c1f813f`; [its Actions run](https://github.com/yuandhsh-lang/ripple/actions/runs/37327114136) completed successfully. This does not verify a later commit until its own run completes.
+- This closure attempt reran lint, typecheck, all 63 tests, the 45-test integration subset and build successfully. Google Cloud was already signed in but stopped at its first-use country/terms screen. No OAuth client ID is configured, and no Calendar grant, real mutation or read-back was performed. The terms screenshot stays outside the public repository because it contains account information.
+- Registration records/roster were not found in the project materials. A real registered team name and the location of registration evidence have been requested; no team name, roster or successful registration is inferred. Existing screenshots are Demo evidence; no 2–3 minute video file exists in the audited `docs/` and `public/` materials. See [closure evidence](evidence/closure-20261005.json).
 
 ## BLOCKED
 
