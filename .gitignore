@@ -59,3 +59,9 @@ storage-state*.json
 localStorage*.json
 browser-profile/
 .browser/
+
+# Native OctoScript delivery artifacts and isolated runtime data
+/build/
+/.local-state/
+__pycache__/
+*.py[cod]

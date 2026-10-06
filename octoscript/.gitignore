@@ -1,0 +1,14 @@
+build/
+target/
+.local-state/
+*.key
+*.cert
+.DS_Store
+__pycache__/
+*.py[cod]
+
+# Preserved local prior-stage candidate and its historical acceptance harnesses.
+# The canonical delivered app is ../bundle/; these files remain in the rescue archive.
+/bundle/
+/tools/acceptance_native.py
+/tools/final_acceptance.py

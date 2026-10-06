@@ -1,0 +1,18 @@
+{
+  "schema": 1,
+  "subtitle": "Weather-aware test schedules with approval and read-back",
+  "description": "Ripple is an OctoSense script app prototype for reviewing weather conflicts before changing an outdoor test schedule. It retrieves real hourly forecasts from Open-Meteo for coordinates you enter, creates one synthetic 60-minute test schedule in its own storage, and proposes a dry earlier time on the same UTC+8 day. Analysis does not change the schedule. You can confirm, decline, or cancel a proposal. Confirmation checks that the source schedule and weather are still current, writes the approved time, then independently reads the stored record. COMPLETED appears only when the read-back matches the expected schedule. Empty, failure, and stale states are visible, and a verified stored result survives app restart. This preliminary version uses only app-owned test data; it does not access Google Calendar or your personal calendar. It has been exercised on Windows card-host; other platforms and the full OctoSense shell have not been verified.",
+  "category": "productivity",
+  "keywords": ["schedule", "weather", "approval", "read-back"],
+  "screenshots": ["screenshots/01-pending.png", "screenshots/02-completed.png", "screenshots/03-declined.png", "screenshots/04-cancelled.png", "screenshots/05-stale.png", "screenshots/06-empty.png", "screenshots/07-failed.png", "screenshots/08-restart.png"],
+  "icon": "assets/icon.svg",
+  "platforms": ["windows"],
+  "publisher": {
+    "name": "yuandhsh-lang",
+    "support": "https://github.com/yuandhsh-lang/ripple/issues",
+    "privacy_policy_url": "https://github.com/yuandhsh-lang/ripple/blob/main/PRIVACY.md"
+  },
+  "release_notes": "Initial native OctoScript prototype: live Open-Meteo weather, app-owned synthetic schedule, pending proposals, explicit approval, independent storage read-back, decline/cancel/stale/failure/empty states, and restart persistence. Windows card-host tested.",
+  "age_rating": "all",
+  "license": "Apache-2.0"
+}

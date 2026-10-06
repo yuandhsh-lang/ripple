@@ -1,5 +1,29 @@
 # Ripple
 
+## OctoSense App Hub delivery
+
+The native OctoScript app is in **[bundle/](bundle/manifest.json)**, version **0.1.0**. Entry: [main.splash](bundle/main.splash). It uses app-owned synthetic test schedules and real Open-Meteo weather, with pending proposals, explicit approval and independent storage read-back. Only Windows card-host has been tested. [Privacy notice](PRIVACY.md). [Actual 2:51 native demo](submission/video/Ripple-OctoScript-Demo-v0.1.0.mp4).
+
+This version is unsigned. From the repository root in the prepared local workspace, launch the real visible app:
+
+```powershell
+$env:PYTHONUTF8='1'
+$env:PYTHONIOENCODING='utf-8'
+$env:RUSTUP_TOOLCHAIN='stable'
+$env:OCTO_HUB=(Resolve-Path '.host/octo-workspace/OctoSense-App-Hub/target/release/hub.exe').Path
+$env:OCTO_CARD_HOST=(Resolve-Path '.host/octo-workspace/OctoSense-App-Hub/target/release/card-host.exe').Path
+python .host/octo-workspace/OctoScript-App-Design-Flow/tools/octo doctor
+python .host/octo-workspace/OctoScript-App-Design-Flow/tools/octo run bundle --port 8141 --app-data octoscript/.local-state --detach
+```
+
+For a fresh checkout, prepare and build the official pinned workspace using the [official Quickstart](https://github.com/OctoSense-org/OctoScript-App-Design-Flow/blob/main/docs/QUICKSTART.md). Exact source revisions and the Windows gate limitation are in [the native runtime notes](octoscript/README.md). Generated check outputs, review packets and runtime data stay outside `bundle/` and Git. Publisher signing and the Hub Issue remain separate delivery steps; a local gate pass and a public Git version are not organizer approval.
+
+Windows runtime launch stamps a platform-specific manifest digest. Re-run the official Linux gate as documented in the runtime notes before committing the final bundle. Source, listing, assets and screenshots are unchanged. The pinned reference card-host does not verify publisher signatures; once a future delivery is signed, run an unsigned preview copy outside the delivery and do not mutate the signed bundle.
+
+`octoscript/bundle/` is the preserved, Git-ignored local prior-stage candidate. **Submit only root `bundle/`.** The existing React files and the dated documentation below remain as historical references.
+
+## Legacy React prototype and earlier competition records
+
 Source repository: [yuandhsh-lang/ripple](https://github.com/yuandhsh-lang/ripple). Maintainer: [yuandhsh-lang](https://github.com/yuandhsh-lang). Support: [repository issues](https://github.com/yuandhsh-lang/ripple/issues). Publication verification is recorded in [COMPLIANCE.md](docs/hackathon/COMPLIANCE.md).
 
 Competition closure review, **2026-10-05: BLOCKED**. Issue #13 is open and requests a real team name plus repository URL; no matching submission comment was found. Registered team details are not supplied or verified. Google Cloud reached its first-use terms screen, but Calendar OAuth, a real event change and read-back have not run. The pinned host's eight source mapping checks passed in an LF checkout; native build lacks MSVC `link.exe`, and the Ripple URL-card journey has not run. These source checks do not establish real runtime acceptance. See [closure evidence](docs/hackathon/evidence/closure-20261005.json).

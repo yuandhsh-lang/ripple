@@ -1,0 +1,21 @@
+{
+  "capabilities": [
+    "storage",
+    "net"
+  ],
+  "id": "ripple",
+  "integrity": {
+    "bundle_blake3": "fdfdd22c731d50d987587aa2f7286ab2b9f21922ec32661c62559c7dbddf3338"
+  },
+  "name": "Ripple",
+  "network": {
+    "hosts": [
+      "api.open-meteo.com"
+    ]
+  },
+  "schema": 1,
+  "storage": {
+    "max_bytes": 65536
+  },
+  "version": "0.1.0"
+}

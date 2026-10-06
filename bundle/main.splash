@@ -1,0 +1,320 @@
+// SPDX-License-Identifier: Apache-2.0
+// Native Splash. API references live outside bundle.
+let event = nil
+let weather = []
+let weather_lat = 0
+let weather_lon = 0
+let fetched_at = 0
+let weather_revision = 0
+let proposal = nil
+let status = "EMPTY"
+let message = "Your test schedule stays in this app. Load real weather to begin."
+let weather_message = "Open-Meteo has not been contacted yet."
+let network_detail = ""
+let busy = false
+let verified = false
+let expected_record = ""
+let ink = #x173b36
+let muted = #x58746e
+let accent = #x087f6d
+
+fn pad(n){ if n < 10 { return "0" + n } "" + n }
+fn stamp(t){
+    let d = local_time(t + 28800)
+    "" + d.month + "/" + d.day + " " + pad(d.hour) + ":" + pad(d.minute)
+}
+fn day(t){ floor((t + 28800) / 86400) }
+fn field(obj, key){
+    let answer = nil
+    for k v in obj { if k == key { answer = v } }
+    answer
+}
+fn record(e){
+    "ripple-test-v1|" + e.start + "|" + e.end + "|" + e.lat + "|" + e.lon + "|" + e.revision
+}
+fn read_event(){
+    if !fs.exists("schedule.txt") { return nil }
+    let parts = fs.read("schedule.txt").split("|")
+    if parts.len() != 6 || parts[0] != "ripple-test-v1" { return nil }
+    let s = parts[1].to_f64()
+    let e = parts[2].to_f64()
+    let lat = parts[3].to_f64()
+    let lon = parts[4].to_f64()
+    let rev = parts[5].to_f64()
+    if !(s >= 0 && e > s && e - s == 3600 && lat >= -90 && lat <= 90 && lon >= -180 && lon <= 180 && rev >= 0) { return nil }
+    {start: s end: e lat: lat lon: lon revision: rev}
+}
+fn repaint(){
+    ui.weather_panel.render()
+    ui.schedule_panel.render()
+    ui.workflow_panel.render()
+}
+fn audit(state){
+    if fs.exists("audit.log") && fs.read("audit.log").len() > 24000 { fs.write("audit.log", "") }
+    fs.append("audit.log", "" + time_now() + " " + state + "\n")
+}
+fn move(state, text){ status = state message = text if state != "COMPLETED" { verified = false } audit(state) repaint() }
+fn boot(){
+    event = read_event()
+    if event != nil {
+        ui.latitude.set_text("" + event.lat)
+        ui.longitude.set_text("" + event.lon)
+        status = "READY"
+        message = "Stored outdoor test schedule loaded. Old approvals are never resumed."
+        if fs.exists("outcome.txt") {
+            let saved = fs.read("outcome.txt").split("\n")
+            if saved.len() == 2 && saved[0] == "COMPLETED" && saved[1] == record(event) {
+                verified = true expected_record = saved[1] status = "COMPLETED"
+                message = "Restart read-back matches the previously verified schedule."
+            }
+        }
+    } else {
+        if fs.exists("schedule.txt") { status = "FAILED" message = "Stored test schedule is invalid. Delete it and create a new test schedule." }
+    }
+    repaint()
+}
+fn request_weather(url){
+    let p = promise()
+    let done = false
+    start_timeout(15, || { if !done { done = true p.resolve(nil) } })
+    net.http_request(net.HttpRequest{url: url method: net.HttpMethod.GET}) do net.HttpEvents{
+        on_response: |res| { if !done { done = true p.resolve(res) } }
+        on_error: |_err| { if !done { network_detail = _err.message done = true p.resolve(nil) } }
+    }
+    p
+}
+fn load_weather(){
+    if busy { return }
+    let lat = ui.latitude.text().trim().to_f64()
+    let lon = ui.longitude.text().trim().to_f64()
+    if !(lat >= -90 && lat <= 90 && lon >= -180 && lon <= 180) {
+        move("FAILED", "Enter valid coordinates. No schedule was changed.")
+        return
+    }
+    busy = true network_detail = "" weather_message = "Fetching live hourly weather..." repaint()
+    let url = "https://api.open-meteo.com/v1/forecast?latitude=" + lat + "&longitude=" + lon + "&hourly=weather_code,precipitation,precipitation_probability&forecast_days=7&timeformat=unixtime&timezone=GMT"
+    let res = request_weather(url).await()
+    busy = false
+    if res == nil || res.status_code != 200 {
+        weather = [] fetched_at = 0
+        weather_message = "Weather request failed: " + network_detail
+        if res != nil { weather_message = "Weather request failed: HTTP " + res.status_code }
+        move("FAILED", "Live weather unavailable. No schedule was changed.")
+        return
+    }
+    let data = res.body.to_string().parse_json()
+    let hourly = field(data, "hourly")
+    if hourly == nil {
+        weather = [] fetched_at = 0 weather_message = "Weather response has no hourly data."
+        move("FAILED", "Incomplete forecast. No schedule was changed.") return
+    }
+    let times = field(hourly, "time")
+    let codes = field(hourly, "weather_code")
+    let rain = field(hourly, "precipitation")
+    let chance = field(hourly, "precipitation_probability")
+    if times == nil || codes == nil || rain == nil || chance == nil {
+        weather = [] fetched_at = 0 weather_message = "Weather response is missing required fields."
+        move("FAILED", "Incomplete forecast. No schedule was changed.") return
+    }
+    weather = []
+    let count = min(min(times.len(), codes.len()), min(rain.len(), chance.len()))
+    if count < 2 { fetched_at = 0 move("FAILED", "No complete forecast intervals.") return }
+    for i in (count - 1) {
+        if times[i] >= 0 && times[i + 1] - times[i] == 3600 && codes[i] >= 0 && rain[i + 1] >= 0 && chance[i + 1] >= 0 && chance[i + 1] <= 100 {
+            weather.push({start: times[i] end: times[i + 1] code: codes[i] rain: rain[i + 1] chance: chance[i + 1]})
+        }
+    }
+    if weather.len() == 0 {
+        fetched_at = 0 weather_message = "No complete forecast intervals returned."
+        move("FAILED", "Unknown coverage is never treated as dry.") return
+    }
+    weather_lat = lat weather_lon = lon fetched_at = time_now()
+    weather_revision = weather_revision + 1
+    weather_message = "Live Open-Meteo: " + weather.len() + " complete hourly intervals. Updated " + stamp(fetched_at) + " UTC+8."
+    if status == "AWAITING_APPROVAL" { move("STALE", "Weather was refreshed. Analyze again before approving.") }
+    else { if event == nil { move("EMPTY", "Weather loaded. Create an app-owned outdoor test schedule.") } else { move("READY", "Real weather loaded. Analyze the stored test schedule.") } }
+}
+fn wet(h){
+    h.rain >= 1 || h.chance >= 50 || (h.code >= 51 && h.code <= 67) || (h.code >= 80 && h.code <= 82) || h.code >= 95
+}
+fn coverage(s, e){
+    let result = {covered: 0 conflict: false reason: "" complete: false}
+    if weather.len() == 0 || e - s != 3600 { return result }
+    let first = floor((s - weather[0].start) / 3600)
+    for offset in 2 {
+        let index = first + offset
+        if index >= 0 && index < weather.len() {
+            let h = weather[index]
+            if h.start == weather[0].start + index * 3600 && h.start < e && h.end > s {
+                let bounds = {left: s right: e}
+                if h.start > bounds.left { bounds.left = h.start }
+                if h.end < bounds.right { bounds.right = h.end }
+                result.covered = result.covered + bounds.right - bounds.left
+                if wet(h) { result.conflict = true result.reason = "Rain " + h.rain + " mm; probability " + h.chance + "%; WMO " + h.code }
+            }
+        }
+    }
+    result.complete = result.covered == e - s
+    result
+}
+fn alternative(s){
+    for step in 12 {
+        let candidate = s - (2.5 + step * 0.5) * 3600
+        if candidate > time_now() && day(candidate) == day(s) {
+            let forecast = coverage(candidate, candidate + 3600)
+            if forecast.complete && !forecast.conflict { return candidate }
+        }
+    }
+    nil
+}
+fn create_test(){
+    if busy { return }
+    if event != nil { move("FAILED", "Delete the existing test schedule before creating another.") return }
+    if fetched_at == 0 || time_now() - fetched_at > 600 { move("FAILED", "Load fresh real weather first.") return }
+    let chosen = nil
+    for h in weather {
+        let hour = floor((h.start + 28800) / 3600) % 24
+        if chosen == nil && h.start > time_now() && hour >= 9 && hour <= 21 && wet(h) && alternative(h.start) != nil { chosen = h.start }
+    }
+    if chosen == nil { move("EMPTY", "The live forecast has no rainy test hour with a safe earlier slot. Try another location or refresh later.") return }
+    let next = {start: chosen end: chosen + 3600 lat: weather_lat lon: weather_lon revision: time_now()}
+    let result = fs.write("schedule.txt", record(next))
+    let after = read_event()
+    if result != nil || after == nil || record(after) != record(next) { move("FAILED", "Test schedule creation could not be verified.") return }
+    event = after proposal = nil verified = false
+    move("READY", "Outdoor test schedule created from an actual rainy forecast hour. Analyze to request a proposal.")
+}
+fn analyze(){
+    if busy { return }
+    event = read_event() proposal = nil verified = false
+    if event == nil { move("EMPTY", "No test schedule. Create one after loading real weather.") return }
+    if fetched_at == 0 || time_now() - fetched_at > 600 || event.lat != weather_lat || event.lon != weather_lon { move("FAILED", "Load fresh weather for this schedule's coordinates first.") return }
+    let impact = coverage(event.start, event.end)
+    if !impact.complete { move("FAILED", "Forecast does not cover the full schedule. Nothing changed.") return }
+    if !impact.conflict { move("READY", "No weather conflict detected. The schedule was not changed.") return }
+    let slot = alternative(event.start)
+    if slot == nil { move("READY", "Rain conflicts with the schedule, but no complete dry alternative exists. Nothing changed.") return }
+    let proposed = {start: slot end: slot + 3600 lat: event.lat lon: event.lon revision: event.revision}
+    proposal = {before: record(event) expected: record(proposed) start: proposed.start end: proposed.end created: time_now() weather_revision: weather_revision reason: impact.reason}
+    move("AWAITING_APPROVAL", "Pending proposal. Confirm explicitly to change this app's test schedule.")
+}
+fn decline(){ if !busy && status == "AWAITING_APPROVAL" { move("DECLINED", "You declined. Original schedule kept; no schedule write.") } }
+fn cancel(){ if !busy && status == "AWAITING_APPROVAL" { move("CANCELLED", "Proposal cancelled. No schedule write.") } }
+fn edit_test(){
+    if busy { return }
+    let current = read_event()
+    if current == nil { move("EMPTY", "No test schedule to edit.") return }
+    let changed = {start: current.start + 1800 end: current.end + 1800 lat: current.lat lon: current.lon revision: current.revision + 1}
+    let result = fs.write("schedule.txt", record(changed))
+    let after = read_event()
+    if result != nil || after == nil || record(after) != record(changed) { move("FAILED", "Manual test edit could not be verified.") return }
+    event = after verified = false
+    if status == "AWAITING_APPROVAL" { message = "You manually edited the source schedule. Confirming the old proposal must reject it as stale." audit("MANUAL_SOURCE_EDIT") repaint() }
+    else { move("READY", "Manual test edit saved and read back: +30 minutes.") }
+}
+fn clear_test(){
+    if busy { return }
+    if fs.exists("schedule.txt") { fs.remove("schedule.txt") }
+    if fs.exists("outcome.txt") { fs.remove("outcome.txt") }
+    if fs.exists("schedule.txt") { move("FAILED", "Could not delete the test schedule.") return }
+    event = nil proposal = nil verified = false expected_record = ""
+    move("EMPTY", "App-owned test schedule deleted.")
+}
+fn finish_verify(){
+    let after = read_event()
+    if after == nil || record(after) != expected_record {
+        busy = false verified = false
+        move("FAILED", "Read-back did not match the expected record. Execution is not completed.") return
+    }
+    event = after verified = true busy = false
+    fs.write("outcome.txt", "COMPLETED\n" + expected_record)
+    move("COMPLETED", "Independent storage read-back matches the complete expected schedule. Time change verified.")
+}
+fn execute(){
+    let current = read_event()
+    if current == nil || record(current) != proposal.before || time_now() - proposal.created > 600 || weather_revision != proposal.weather_revision || time_now() - fetched_at > 600 || proposal.start <= time_now() {
+        busy = false move("STALE", "Preflight rejected the old proposal. No proposal write occurred. Analyze again.") return
+    }
+    let dry = coverage(proposal.start, proposal.end)
+    if !dry.complete || dry.conflict { busy = false move("FAILED", "Alternative no longer has complete dry coverage. Nothing changed.") return }
+    expected_record = proposal.expected
+    let result = fs.write("schedule.txt", expected_record)
+    if result != nil { busy = false move("FAILED", "Storage write failed; outcome unverified. Inspect the stored schedule.") return }
+    move("VERIFYING", "Write returned. Reading the schedule independently before completion...")
+    start_timeout(0.25, || finish_verify())
+}
+fn confirm(){
+    if busy || status != "AWAITING_APPROVAL" || proposal == nil { return }
+    busy = true verified = false
+    move("EXECUTING", "Explicit user approval recorded. Checking current source before the write...")
+    start_timeout(0.25, || execute())
+}
+
+start_timeout(0.05, || boot())
+
+SolidView{width: Fill height: Fill flow: Down padding: 16 spacing: 12 draw_bg.color: #xf3f8f5
+    Label{text: "Ripple" draw_text.color: ink draw_text.text_style: theme.font_bold{font_size: 30}}
+    Label{width: Fill text: "Weather changes plans. You decide." draw_text.color: muted draw_text.text_style.font_size: 14}
+    content := ScrollYView{width: Fill height: Fill flow: Down spacing: 12
+        RoundedView{width: Fill height: Fit flow: Down padding: 14 spacing: 10 draw_bg.color: #xffffff
+            Label{text: "1  REAL WEATHER" draw_text.color: accent draw_text.text_style: theme.font_bold{font_size: 13}}
+            View{width: Fill height: Fit flow: Right spacing: 8
+                latitude := TextInput{width: Fill height: 40 text: "31.23" empty_text: "Latitude"
+                    draw_bg +: {color: #xf0f5f2 color_hover: #xf0f5f2 color_focus: #xe0eee7 color_empty: #xf0f5f2 border_radius: 8.0}
+                    draw_text +: {color: ink color_hover: ink color_focus: ink color_empty: muted color_empty_hover: muted}}
+                longitude := TextInput{width: Fill height: 40 text: "121.47" empty_text: "Longitude"
+                    draw_bg +: {color: #xf0f5f2 color_hover: #xf0f5f2 color_focus: #xe0eee7 color_empty: #xf0f5f2 border_radius: 8.0}
+                    draw_text +: {color: ink color_hover: ink color_focus: ink color_empty: muted color_empty_hover: muted}}
+            }
+            ButtonFlat{text: "Load real weather" width: Fill height: 42 on_click: || load_weather()
+                draw_bg +: {color: accent color_hover: #x12947f color_down: #x066957 color_focus: accent border_radius: 10.0 border_size: 0.0}
+                draw_text +: {color: #xffffff color_hover: #xffffff color_down: #xffffff color_focus: #xffffff}}
+            weather_panel := View{width: Fill height: Fit flow: Down spacing: 5 on_render: || {
+                Label{width: Fill text: weather_message draw_text.color: muted draw_text.text_style.font_size: 12}
+                Label{width: Fill text: "Source: Open-Meteo. All times: UTC+8. Coordinates are sent only to its forecast API." draw_text.color: muted draw_text.text_style.font_size: 11}
+            }}
+        }
+        RoundedView{width: Fill height: Fit flow: Down padding: 14 spacing: 10 draw_bg.color: #xffffff
+            Label{text: "2  YOUR TEST SCHEDULE" draw_text.color: accent draw_text.text_style: theme.font_bold{font_size: 13}}
+            schedule_panel := View{width: Fill height: Fit flow: Down spacing: 6 on_render: || {
+                if event == nil { Label{width: Fill text: "No schedule yet." draw_text.color: ink} }
+                else {
+                    Label{width: Fill text: "Outdoor test schedule" draw_text.color: ink draw_text.text_style: theme.font_bold{font_size: 16}}
+                    Label{width: Fill text: stamp(event.start) + " - " + stamp(event.end) + " UTC+8" draw_text.color: ink draw_text.text_style.font_size: 15}
+                    Label{width: Fill text: "60 minutes · " + event.lat + ", " + event.lon draw_text.color: muted draw_text.text_style.font_size: 12}
+                }
+                Label{width: Fill text: "Synthetic schedule in this app's storage. It does not access your personal calendar." draw_text.color: muted draw_text.text_style.font_size: 11}
+            }}
+            ButtonFlat{text: "Create rainy test schedule" width: Fill height: 40 on_click: || create_test()
+                draw_bg +: {color: #xdeeee6 color_hover: #xcfe7db color_down: #xbce0cf color_focus: #xdeeee6 border_radius: 10.0 border_size: 0.0}
+                draw_text +: {color: ink color_hover: ink color_down: ink color_focus: ink}}
+            View{width: Fill height: Fit flow: Right spacing: 8
+                ButtonFlat{text: "Edit time +30m" width: Fill height: 38 on_click: || edit_test() draw_text +: {color: ink color_hover: ink color_down: ink color_focus: ink}}
+                ButtonFlat{text: "Delete test" width: Fill height: 38 on_click: || clear_test() draw_text +: {color: ink color_hover: ink color_down: ink color_focus: ink}}
+            }
+        }
+        RoundedView{width: Fill height: Fit flow: Down padding: 14 spacing: 10 draw_bg.color: #xffffff
+            Label{text: "3  REVIEW BEFORE CHANGING" draw_text.color: accent draw_text.text_style: theme.font_bold{font_size: 13}}
+            ButtonFlat{text: "Analyze schedule" width: Fill height: 42 on_click: || analyze()
+                draw_bg +: {color: accent color_hover: #x12947f color_down: #x066957 color_focus: accent border_radius: 10.0 border_size: 0.0}
+                draw_text +: {color: #xffffff color_hover: #xffffff color_down: #xffffff color_focus: #xffffff}}
+            workflow_panel := View{width: Fill height: Fit flow: Down spacing: 8 on_render: || {
+                Label{width: Fill text: status draw_text.color: accent draw_text.text_style: theme.font_bold{font_size: 17}}
+                Label{width: Fill text: message draw_text.color: ink draw_text.text_style.font_size: 13}
+                if proposal != nil && status == "AWAITING_APPROVAL" {
+                    Label{width: Fill text: proposal.reason draw_text.color: muted draw_text.text_style.font_size: 12}
+                    Label{width: Fill text: "Suggested: " + stamp(proposal.start) + " - " + stamp(proposal.end) + " UTC+8" draw_text.color: ink draw_text.text_style.font_size: 14}
+                    Label{width: Fill text: "Same day, complete dry forecast, duration unchanged. Expires after 10 minutes." draw_text.color: muted draw_text.text_style.font_size: 11}
+                    ButtonFlat{text: "Confirm time change" width: Fill height: 44 on_click: || confirm()
+                        draw_bg +: {color: accent color_hover: #x12947f color_down: #x066957 color_focus: accent border_radius: 10.0 border_size: 0.0}
+                        draw_text +: {color: #xffffff color_hover: #xffffff color_down: #xffffff color_focus: #xffffff}}
+                    View{width: Fill height: Fit flow: Right spacing: 8
+                        ButtonFlat{text: "Decline" width: Fill height: 40 on_click: || decline() draw_text +: {color: ink color_hover: ink color_down: ink color_focus: ink}}
+                        ButtonFlat{text: "Cancel" width: Fill height: 40 on_click: || cancel() draw_text +: {color: ink color_hover: ink color_down: ink color_focus: ink}}
+                    }
+                }
+                if verified { Label{width: Fill text: "READ-BACK VERIFIED: expected time, identity, coordinates and duration match." draw_text.color: accent draw_text.text_style.font_size: 12} }
+            }}
+        }
+    }
+}
