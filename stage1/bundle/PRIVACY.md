@@ -1,8 +1,8 @@
-# Ripple 0.2.2-stage1 local privacy notice
+# Ripple 0.2.3-stage2 local privacy notice
 
 This unpublished local build manages one activity entered by the user. It has no external calendar integration or publisher backend.
 
-Ripple stores the activity title, UTC start/end, coordinates, stable identity and revision in its host sandbox. It also stores one forecast, one pending choice, one execution receipt and diagnostic records capped at approximately 24 KB. The manifest storage grant is 1 MiB. The host may additionally persist Agent conversations and tool records; those records are subject to host retention, which Ripple does not delete.
+Ripple stores the activity title, UTC start/end, coordinates, stable identity and revision in its host sandbox. It also stores one forecast, one compact choice receipt, one execution receipt including the original record, and diagnostic records capped at 24 KB. The manifest storage grant is 1 MiB; storage denial stops saves or forecast updates without claiming success. The host additionally persists Agent conversations and tool records; Ripple preserves those records. Host history retention remains a host responsibility. Existing historical files are not deleted.
 
 Selecting Analyze fetches live Open-Meteo weather using the entered coordinates. Open-Meteo receives coordinates and connection metadata. After host permission, the selected Provider receives the activity title, times and location, verified weather impact, and search candidates through private App Tools. Ripple does not read or change Provider credentials.
 

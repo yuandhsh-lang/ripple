@@ -15,6 +15,7 @@ R = ROOT / 'runtime'
 PORT = 8165
 HUB = WORK / 'phase1/toolchain/OctoSense-App-Hub/target/release/hub.exe'
 RC2 = WORK / 'phase1/runtime/rc2'
+CORE = WORK / 'phase1/runtime/kernel-core'
 
 def now(): return datetime.datetime.now(datetime.timezone.utc).isoformat()
 def sha(p): return hashlib.sha256(p.read_bytes()).hexdigest()
@@ -58,7 +59,7 @@ def start(label, reuse=False, no_provider=False,revision=''):
     home=R/(prefix+'-home');apps=R/(prefix+'-apps')
     if not reuse: home.mkdir();apps.mkdir()
     receipt=json.loads((E/(revision+'mirror-receipt.json')).read_text())
-    overrides={'OCTOSENSE_HOME':str(home),'OCTOSENSE_APP_DATA':str(apps),'OCTOS_APP_CORE_DIR':str(WORK/'phase1/runtime/kernel-core') if not no_provider else str(R/'no-provider-core'),'OCTOSENSE_HUB_CATALOG':'legacy','OCTOSENSE_HUB':receipt['mirror'],'OCTOSENSE_HUB_ANCHOR':receipt['anchor_public_hex'],'MAKEPAD_REMOTE':str(PORT),'MAKEPAD_HIDE_WINDOWS':'1'}
+    overrides={'OCTOSENSE_HOME':str(home),'OCTOSENSE_APP_DATA':str(apps),'OCTOS_APP_CORE_DIR':str(CORE) if not no_provider else str(R/'no-provider-core'),'OCTOSENSE_HUB_CATALOG':'legacy','OCTOSENSE_HUB':receipt['mirror'],'OCTOSENSE_HUB_ANCHOR':receipt['anchor_public_hex'],'MAKEPAD_REMOTE':str(PORT),'MAKEPAD_HIDE_WINDOWS':'1'}
     env={k:v for k,v in os.environ.items() if not k.startswith(('OCTOS','MAKEPAD','RINX_'))};env.update(overrides)
     p=subprocess.Popen([str(RC2/'octosense.exe')],cwd=RC2,env=env,stdout=(E/(label+'-shell.log')).open('x',encoding='utf-8'),stderr=subprocess.STDOUT,creationflags=subprocess.CREATE_NO_WINDOW)
     save(label+'-process.json',{'at_utc':now(),'pid':p.pid,'environment':overrides,'shell_sha256':sha(RC2/'octosense.exe'),'kernel_sha256':sha(RC2/'octos-kernel.exe'),'preopened_card':False})
@@ -96,7 +97,7 @@ def enter(widget, text):
     request('/t?t='+urllib.parse.quote(text)+'&wait=1')
 def capture(label, turn=None):
     # Only tool/turn records for Ripple's latest session; no credential stores.
-    core=WORK/'phase1/runtime/kernel-core'
+    core=CORE
     audit_path=core/'profiles/_main/data/peers/ripple-22a12f906cd27b73/tool_audit.jsonl'
     audits=[json.loads(s) for s in audit_path.read_text(encoding='utf-8').splitlines() if s.strip()]
     last=next(a for a in reversed(audits) if turn is None or a['turn_id']==turn)

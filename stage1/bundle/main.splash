@@ -11,7 +11,6 @@ let task_generation = 0
 let active_task = ""
 let last_read = nil
 let last_search = nil
-let last_weather_fingerprint = nil
 let search_sequence = 0
 let proposal = nil
 let expected_record = ""
@@ -22,10 +21,17 @@ let ink = #x173b36
 let muted = #x58746e
 let accent = #x087f6d
 fn field(obj,key){ let answer = nil for k v in obj { if k == key { answer = v } } answer }
+// SDK storage failures throw; they do not return an error value.
+fn read_text(path){ try { if fs.exists(path) { fs.read(path) } else { nil } } catch { nil } }
+fn read_json(path){ let text = read_text(path) if text == nil { return nil } try { text.parse_json() } catch { nil } }
+fn write_text(path,text){ try { fs.write(path,text) true } catch { false } }
 fn record_evidence(line){
     // Stop diagnostics at a fixed budget; never erase old evidence to make space.
-    if fs.exists("agent-audit.log") && fs.read("agent-audit.log").len() > 24000 { return }
-    fs.append("agent-audit.log", "" + time_now() + " " + line + "\n")
+    let text = "" + time_now() + " " + line + "\n"
+    let previous = read_text("agent-audit.log") let size = 0
+    if previous != nil { size = previous.len() }
+    if size + text.len() > 24000 { return }
+    try { fs.append("agent-audit.log",text) } catch { nil }
 }
 fn repaint(){ ui.schedule_panel.render() ui.workflow_panel.render() ui.weather_label.set_text(weather_message) }
 fn move(state,text){ status = state message = text if state != "COMPLETED" { verified = false } repaint() }
@@ -71,14 +77,17 @@ fn valid_event(e){
 }
 fn read_event(){
     if !fs.exists("schedule.txt") { return nil }
-    let e = fs.read("schedule.txt").parse_json()
+    let e = read_json("schedule.txt")
     if !valid_event(e) { return nil }
     e
 }
-fn schedule_fingerprint(){ if fs.exists("schedule.txt") { return fs.read("schedule.txt") } "EMPTY" }
-fn write_event(e){
+fn schedule_fingerprint(){ if fs.exists("schedule.txt") { return read_text("schedule.txt") } "EMPTY" }
+fn write_event(e,kind){
     // The only schedule mutation entry, shared by explicit save and approval.
-    fs.write("schedule.txt",record(e))
+    // Persist the original record before any potentially partial OS write.
+    let intent = {kind:kind operation_id:active_task before:schedule_fingerprint() expected:record(e)}.to_json()
+    if !write_text("execution.json",intent) || read_text("execution.json") != intent { return false }
+    write_text("schedule.txt",record(e))
 }
 fn parse_start(text){
     let p = text.trim().split(" ")
@@ -111,12 +120,26 @@ fn save_activity(){
     let next = {schema:2 event_id:id title:title start:s end:s + duration*60 lat:lat lon:lon revision:revision data_source:"ripple-local-activity"}
     if !valid_event(next) { move("FAILED","Invalid activity; nothing changed.") return }
     let was_pending = status == "AWAITING_APPROVAL"
-    let result = write_event(next) let after = read_event()
-    if after == nil || record(after) != record(next) { move("PARTIAL","Save outcome uncertain. Inspect disk; do not repeat the write.") return }
+    let before = schedule_fingerprint()
+    expected_record = record(next) busy = true
+    move("SAVING","Saving the activity; success requires an independent read.")
+    // Arm read-back before blocking OS I/O, so an interrupted callback cannot
+    // leave a previous success displayed or omit reconciliation after a write.
+    start_timeout(0.05,|| finish_save(before,was_pending))
+    write_event(next,"SAVE")
+}
+fn finish_save(before,was_pending){
+    if status != "SAVING" { return }
+    let after = read_event() busy = false
+    if after == nil || record(after) != expected_record {
+        if schedule_fingerprint() == before { move("FAILED","Save rejected by storage. Original activity preserved. Check app storage/access, then save explicitly again.") }
+        else { move("PARTIAL","Save outcome uncertain. Inspect actual result before any new write; original record is in the execution receipt.") }
+        return
+    }
     event = after verified = false
-    record_evidence("USER_SAVE event=" + record(after))
     if was_pending { move("STALE","Activity changed. Old approval is invalid; replan once for new approval.") }
     else { proposal = nil move("READY","Activity saved and independently read back. Analyze with Agent.") }
+    record_evidence("USER_SAVE event=" + record(after))
 }
 fn boot(){
     event = read_event()
@@ -127,10 +150,10 @@ fn boot(){
     ui.latitude.set_text("" + event.lat) ui.longitude.set_text("" + event.lon)
     move("READY","Stored activity loaded. Old approvals are never resumed.")
     if fs.exists("execution.json") {
-        let saved = fs.read("execution.json").parse_json()
+        let saved = read_json("execution.json")
         if saved.is_object() && field(saved,"expected") != nil {
             expected_record = saved.expected
-            if record(event) == expected_record { finish_verify() }
+            if record(event) == expected_record { if saved.kind != "SAVE" { finish_verify() } }
             else if field(saved,"status") != "COMPLETED" && field(saved,"before") != schedule_fingerprint() { move("PARTIAL","Previous write is uncertain. Inspect actual state before any new write.") }
         }
     }
@@ -160,11 +183,9 @@ fn coverage(s, e){
 }
 
 // Pure candidate generation. All accepted times and IDs originate in this code.
-fn read_weather_snapshot(event, now){
-    if !fs.exists("weather.json") { return nil }
-    let w = fs.read("weather.json").parse_json()
+fn valid_weather(w,event,now){
     if !w.is_object() { return nil }
-    for k in ["source", "provider", "timezone", "utc_offset_seconds", "request_lat", "request_lon", "fetched_at", "revision", "hours"] { if field(w,k) == nil { return nil } }
+    if w.source == nil || w.provider == nil || w.timezone == nil || w.utc_offset_seconds == nil || w.request_lat == nil || w.request_lon == nil || w.fetched_at == nil || w.revision == nil || w.hours == nil { return nil }
     if !w.revision.is_string() || w.revision.len() == 0 || w.revision.len() > 96 { return nil }
     if w.source != "LIVE" && w.source != "FIXTURE" { return nil }
     if w.provider != "Open-Meteo" || w.timezone != "GMT" || w.utc_offset_seconds != 0 || w.request_lat != event.lat || w.request_lon != event.lon { return nil }
@@ -173,7 +194,7 @@ fn read_weather_snapshot(event, now){
     let previous_end = nil
     for h in w.hours {
         if !h.is_object() { return nil }
-        for k in ["start", "end", "code", "rain", "chance"] { if field(h,k) == nil { return nil } }
+        if h.start == nil || h.end == nil || h.code == nil || h.rain == nil || h.chance == nil { return nil }
         if !valid_epoch(h.start) || !valid_epoch(h.end) || h.end - h.start != 3600 { return nil }
         if previous_end != nil && h.start != previous_end { return nil }
         if !(h.code >= 0 && h.code <= 99 && whole(h.code) == h.code && h.rain >= 0 && h.chance >= 0 && h.chance <= 100) { return nil }
@@ -181,9 +202,10 @@ fn read_weather_snapshot(event, now){
     }
     w
 }
+fn read_weather_snapshot(event,now){ try { valid_weather(read_json("weather.json"),event,now) } catch { nil } }
 fn candidate_search(args, now){
     if !busy || last_read == nil || last_read.events.len() != 1 { return nil }
-    if args.task_id != active_task || args.read_token != last_read.read_token || last_read.fingerprint != schedule_fingerprint() { return nil }
+    if args.task_id != active_task || args.read_token != last_read.read_token || last_read.fingerprint != schedule_fingerprint() || last_read.weather_fingerprint != read_text("weather.json") { return nil }
     if args.min_start != last_read.bounds.min_start || args.max_end != last_read.bounds.max_end || args.max_candidates != last_read.bounds.max_candidates { return nil }
     if !valid_epoch(args.min_start) || !valid_epoch(args.max_end) || args.min_start < now || args.max_end - args.min_start < last_read.events[0].end-last_read.events[0].start || args.max_end - args.min_start > 604800 { return nil }
     if !(args.max_candidates >= 1 && args.max_candidates <= 3 && whole(args.max_candidates) == args.max_candidates) { return nil }
@@ -212,7 +234,7 @@ fn candidate_search(args, now){
 }
 fn validate_candidate(search_id,candidate_id,now){
     if !busy || last_search == nil || last_read == nil || last_search.task_id != active_task || last_search.search_id != search_id { return nil }
-    if last_read.fingerprint != schedule_fingerprint() || now > last_search.expires_at || !fs.exists("weather.json") || last_weather_fingerprint != fs.read("weather.json") { return nil }
+    if last_read.fingerprint != schedule_fingerprint() || now > last_search.expires_at || last_read.weather_fingerprint != read_text("weather.json") { return nil }
     let w = read_weather_snapshot(last_read.events[0],now)
     if w == nil || w.revision != last_search.weather_revision { return nil }
     weather = w.hours
@@ -240,17 +262,26 @@ fn fetch_weather(){
     let fingerprint = schedule_fingerprint()
     let url = "https://api.open-meteo.com/v1/forecast?latitude=" + current.lat + "&longitude=" + current.lon + "&hourly=weather_code,precipitation,precipitation_probability&forecast_days=7&timeformat=unixtime&timezone=GMT"
     let res = request_weather(url).await()
-    if res == nil || res.status_code != 200 || fingerprint != schedule_fingerprint() { weather_message = "Live weather unavailable or activity changed; no modification." return false }
-    let data = res.body.to_string().parse_json() let hourly = field(data,"hourly")
-    if hourly == nil || field(data,"utc_offset_seconds") != 0 || field(data,"timezone") != "GMT" { return false }
+    if res == nil || fingerprint != schedule_fingerprint() { weather_message = "Live weather unavailable or activity changed; retry analysis. No modification." return false }
+    persist_weather(res.status_code,res.body.to_string(),current)
+}
+fn persist_weather(status_code,body,current){
+    if status_code != 200 { weather_message = "Weather HTTP " + status_code + ". Retry analysis when the forecast service is available; no modification." return false }
+    let data = try { body.parse_json() } catch { nil }
+    if !data.is_object() { weather_message = "Invalid forecast JSON. Retry analysis when weather is available." return false }
+    let hourly = field(data,"hourly")
+    if !hourly.is_object() || field(data,"utc_offset_seconds") != 0 || field(data,"timezone") != "GMT" { weather_message = "Forecast fields/timezone missing or invalid. Nothing changed." return false }
     let times = field(hourly,"time") let codes = field(hourly,"weather_code") let rain = field(hourly,"precipitation") let chance = field(hourly,"precipitation_probability")
-    if !times.is_array() || !codes.is_array() || !rain.is_array() || !chance.is_array() || times.len() < 2 || times.len() > 169 || codes.len() != times.len() || rain.len() != times.len() || chance.len() != times.len() { return false }
+    if !times.is_array() || !codes.is_array() || !rain.is_array() || !chance.is_array() || times.len() < 2 || times.len() > 169 || codes.len() != times.len() || rain.len() != times.len() || chance.len() != times.len() { weather_message = "Forecast arrays are missing or incomplete. Nothing changed." return false }
     let hours = []
     // Open-Meteo precipitation/probability apply to the preceding hour.
     for i in (times.len()-1) { hours.push({start:times[i] end:times[i+1] code:codes[i] rain:rain[i+1] chance:chance[i+1]}) }
     let w = {source:"LIVE" provider:"Open-Meteo" timezone:"GMT" utc_offset_seconds:0 request_lat:current.lat request_lon:current.lon fetched_at:time_now() revision:"live-" + time_now() hours:hours}
-    let result = fs.write("weather.json",w.to_json())
-    if result != nil || read_weather_snapshot(current,time_now()) == nil { weather_message = "Invalid or unpersisted forecast; nothing changed." return false }
+    let checked = try { valid_weather(w,current,time_now()) } catch { nil }
+    if checked == nil { weather_message = "Forecast hours/values invalid. Previous forecast preserved." return false }
+    weather = checked.hours
+    if !coverage(current.start,current.end).complete { weather_message = "Activity is outside available forecast hours. Save a date within the next seven days, then analyze again." return false }
+    if !write_text("weather.json",w.to_json()) || read_weather_snapshot(current,time_now()) == nil { weather_message = "Weather storage unavailable. Check app storage; activity unchanged." return false }
     weather_message = "LIVE Open-Meteo / " + hours.len() + " hours / " + clock_stamp(whole(w.fetched_at),28800)
     true
 }
@@ -275,7 +306,7 @@ fn app_tool(name,call_id){
     let max_end = e.end + 172800
     let result = {task_id:active_task read_token:call_id events:[e] retrieved_at:time_now() data_source:"ripple-local-activity" impact:impact weather_source:w.source weather_revision:w.revision weather_fetched_at:w.fetched_at time_authority:authoritative_time(e.start,e.end) search_bounds:{min_start:min_start max_end:max_end max_candidates:3} calendar_scope:"Only this single Ripple-managed activity; no external calendar access"}
     if fingerprint != schedule_fingerprint() || !mod.app_tools.active(call_id) { mod.app_tools.fail(call_id,"stale_context") return }
-    last_read = {task_id:active_task read_token:call_id events:[e] fingerprint:fingerprint impact:impact bounds:result.search_bounds weather_fingerprint:fs.read("weather.json")}
+    last_read = {read_token:call_id events:[e] fingerprint:fingerprint bounds:result.search_bounds weather_fingerprint:read_text("weather.json")}
     mod.app_tools.complete(call_id,result)
     ui.call.set_text(name + " / " + call_id)
     record_evidence("TOOL call_id=" + call_id + " name=" + name + " result=" + result.to_json())
@@ -285,7 +316,7 @@ fn slots_tool(call_id,args){
     let result = candidate_search(args,time_now())
     if result == nil { mod.app_tools.fail(call_id,"invalid_or_stale_context_constraints_weather: no schedule changed") return }
     if !mod.app_tools.active(call_id) || last_read.fingerprint != schedule_fingerprint() { return }
-    last_search = result last_weather_fingerprint = fs.read("weather.json")
+    last_search = result
     mod.app_tools.complete(call_id,result)
     ui.call.set_text("ripple.slots.search / " + call_id)
     record_evidence("TOOL call_id=" + call_id + " name=ripple.slots.search result=" + result.to_json())
@@ -293,12 +324,12 @@ fn slots_tool(call_id,args){
 fn accept_choice(generation,text){
     if generation != task_generation || !busy { return "DISCARDED obsolete generation" }
     if text == nil || text.len() > 8192 || last_read == nil { return "REJECTED no actual read" }
-    let d = text.parse_json()
+    let d = try { text.parse_json() } catch { nil }
     if !d.is_object() { return "REJECTED expected raw JSON" }
     let count = 0
     for k v in d { if k != "task_id" && k != "read_token" && k != "decision" && k != "search_id" && k != "candidate_id" { return "REJECTED unexpected model field" } count = count + 1 }
     if count != 5 || d.task_id != active_task || d.read_token != last_read.read_token { return "REJECTED uncorrelated choice" }
-    if last_read.fingerprint != schedule_fingerprint() || !fs.exists("weather.json") || last_read.weather_fingerprint != fs.read("weather.json") { return "STALE context changed" }
+    if last_read.fingerprint != schedule_fingerprint() || last_read.weather_fingerprint != read_text("weather.json") { return "STALE context changed" }
     let e = read_event() let w = read_weather_snapshot(e,time_now())
     if w == nil { return "STALE weather expired" }
     weather = w.hours let impact = coverage(e.start,e.end)
@@ -309,7 +340,7 @@ fn accept_choice(generation,text){
     let c = validate_candidate(d.search_id,d.candidate_id,time_now())
     if c == nil { return "STALE invalid candidate" }
     let next = {schema:e.schema event_id:e.event_id title:e.title start:c.start end:c.end lat:e.lat lon:e.lon revision:e.revision+1 data_source:e.data_source}
-    proposal = {task_id:active_task read_token:d.read_token search_id:d.search_id candidate_id:d.candidate_id before:schedule_fingerprint() expected:record(next) start:c.start end:c.end created:time_now() expires_at:last_search.expires_at weather_fingerprint:fs.read("weather.json") reason:impact.reason source:w.source weather_revision:w.revision weather_fetched_at:w.fetched_at}
+    proposal = {task_id:active_task read_token:d.read_token search_id:d.search_id candidate_id:d.candidate_id before:schedule_fingerprint() expected:record(next) start:c.start end:c.end created:time_now() expires_at:last_search.expires_at weather_fingerprint:last_read.weather_fingerprint reason:impact.reason source:w.source weather_revision:w.revision weather_fetched_at:w.fetched_at}
     if proposal.expires_at > workflow_started + 1200 { proposal.expires_at = workflow_started + 1200 }
     "AWAITING_APPROVAL"
 }
@@ -318,21 +349,31 @@ fn finish_model(generation,text){
     if generation != task_generation || !busy { record_evidence(verdict) return }
     busy = false
     record_evidence("MODEL_CHOICE task_id=" + active_task + " text=" + text + " verdict=" + verdict)
-    if verdict == "AWAITING_APPROVAL" { fs.write("agent-choice.json",proposal.to_json()) move(verdict,"Agent chose a validated dry candidate. Explicit approval required.") }
+    if verdict == "AWAITING_APPROVAL" {
+        // Diagnostic receipt only; approvals remain in memory. No second forecast copy.
+        write_text("agent-choice.json",{task_id:proposal.task_id read_token:proposal.read_token search_id:proposal.search_id candidate_id:proposal.candidate_id before:proposal.before expected:proposal.expected start:proposal.start end:proposal.end expires_at:proposal.expires_at weather_revision:proposal.weather_revision}.to_json())
+        move(verdict,"Agent chose a validated dry candidate. Explicit approval required.")
+    }
     else if verdict == "NO_CHANGE" { move("NO_CHANGE","Agent and fresh weather agree: no rain conflict. Activity unchanged.") }
     else if verdict == "NO_CANDIDATE" { move("NO_CANDIDATE","Agent searched; no safe candidate in the permitted window. Activity unchanged.") }
     else if verdict.search("STALE") == 0 { move("STALE",verdict + "; replan once requires fresh approval.") }
     else { move("FAILED",verdict + "; activity unchanged.") }
 }
+fn expire_agent(generation){
+    if !busy || generation != task_generation { return }
+    abandon_task("Agent response deadline exceeded; no schedule changed.")
+    move("FAILED","Agent did not respond within 90 seconds. Activity unchanged; analyze explicitly again.")
+    host.request("octos.turn.interrupt",{},fn(r){})
+}
 fn start_agent(){
     let id = "ripple-task-" + time_now() + "-" + (task_generation+1)
     let generation = begin_task(id)
     move("ANALYZING","Real Agent reading weather conflict and searching if necessary...")
-    start_timeout(90, || { if busy && generation == task_generation { abandon_task("App deadline expired; no schedule changed.") host.request("octos.turn.interrupt",{},fn(r){}) } })
+    start_timeout(90, || expire_agent(generation))
     host.request("octos.session.open",{},fn(s){
         if generation != task_generation || !busy { return }
         if !s.is_ok { busy = false move("FAILED","Agent unavailable: " + s.error) return }
-        fs.write("agent-session.json",s.data.to_json())
+        write_text("agent-session.json",s.data.to_json())
         let text = "Plan the user's outdoor activity. Current task_id=" + id + ". First call ripple.context.read with task_id. Inspect returned impact. If conflict=true, call ripple.slots.search copying read_token and ALL search_bounds exactly. Evaluate actual candidates and choose one. If conflict=false do not search. Return ONLY one raw JSON object, no Markdown, with exactly task_id, read_token, decision (PROPOSE / NO_CHANGE / NO_CANDIDATE), search_id, candidate_id. IDs must come from tools. For NO_CHANGE use null search_id and candidate_id; for NO_CANDIDATE use actual search_id and null candidate_id. Never invent dates, numbers or results. No execution tools exist; a PROPOSE choice requires user approval."
         host.request("octos.turn.start",{text:text trigger:"person" from:"Ripple rain-conflict planning"},fn(r){
             if generation != task_generation || !busy { record_evidence("DISCARDED late MODEL callback") return }
@@ -346,7 +387,7 @@ fn analyze(){
     proposal = nil event = read_event() replan_count = 0 workflow_started = time_now()
     if event == nil { move("EMPTY","Save your activity first.") return }
     loading = true move("LOADING","Fetching live weather for the saved activity...")
-    let fetched = fetch_weather() loading = false repaint()
+    let fetched = try { fetch_weather() } catch { false } loading = false repaint()
     if !fetched { move("FAILED","Weather unavailable; Agent planning did not succeed. Activity unchanged.") return }
     start_agent()
 }
@@ -356,7 +397,7 @@ fn replan(){
     if replan_count >= 1 || time_now() - workflow_started > 1200 { move("FAILED","Replan limit/expiry reached. Start a new analysis explicitly.") return }
     replan_count = replan_count + 1
     loading = true move("LOADING","Old suggestion discarded. Fetching weather for one new Agent plan...")
-    let fetched = fetch_weather() loading = false
+    let fetched = try { fetch_weather() } catch { false } loading = false
     if !fetched { move("FAILED","Replan weather unavailable. Nothing changed.") return }
     start_agent()
 }
@@ -366,17 +407,20 @@ fn finish_verify(){
     let after = read_event() busy = false
     if after == nil || record(after) != expected_record { move("PARTIAL","Independent read-back mismatch. Completion unverified; inspect actual state before any retry.") return }
     event = after verified = true
-    fs.write("outcome.txt","COMPLETED\n" + expected_record)
-    fs.write("execution.json",{status:"COMPLETED" expected:expected_record}.to_json())
+    let saved = read_json("execution.json")
+    if saved.is_object() {
+        if saved.kind == "SAVE" { saved.status = "SAVED" write_text("execution.json",saved.to_json()) verified = false move("READY","Activity save independently verified. Analyze with Agent.") return }
+        saved.status = "COMPLETED" write_text("execution.json",saved.to_json())
+    }
     record_evidence("INDEPENDENT_READ_BACK event=" + record(after))
     move("COMPLETED","Independent disk read-back matches identity, new time, revision, title and location. Ripple activity changed.")
 }
 fn inspect_result(){
     if busy || loading || !fs.exists("execution.json") { return }
-    let saved = fs.read("execution.json").parse_json()
+    let saved = read_json("execution.json")
     if !saved.is_object() || field(saved,"expected") == nil { return }
     expected_record = saved.expected
-    if schedule_fingerprint() == saved.before { proposal = nil move("STALE","Actual read proves no change. New analysis and approval required; no repeat write.") return }
+    if schedule_fingerprint() == saved.before { event = read_event() proposal = nil move("FAILED","Actual read proves no change. Save or analyze explicitly again; no automatic repeat write.") return }
     finish_verify()
 }
 fn execute(){
@@ -384,7 +428,7 @@ fn execute(){
     if proposal == nil || status != "EXECUTING" { busy = false return }
     let p = proposal proposal = nil
     let current = read_event()
-    if current == nil || schedule_fingerprint() != p.before || time_now() > p.expires_at || time_now()-p.created > 600 || p.start <= time_now() || !fs.exists("weather.json") || fs.read("weather.json") != p.weather_fingerprint { busy = false move("STALE","Preflight rejected the old suggestion. No write; replan once and approve again.") return }
+    if current == nil || schedule_fingerprint() != p.before || time_now() > p.expires_at || time_now()-p.created > 600 || p.start <= time_now() || read_text("weather.json") != p.weather_fingerprint { busy = false move("STALE","Preflight rejected the old suggestion. No write; replan once and approve again.") return }
     let w = read_weather_snapshot(current,time_now())
     if w == nil || w.revision != p.weather_revision { busy = false move("STALE","Weather no longer valid. Replan and approve again.") return }
     weather = w.hours let dry = coverage(p.start,p.end)
@@ -392,11 +436,10 @@ fn execute(){
     if !dry.complete || dry.conflict || !valid_event(next) || next.event_id != current.event_id || next.revision != current.revision+1 || next.title != current.title || next.lat != current.lat || next.lon != current.lon || next.end-next.start != current.end-current.start { busy = false move("STALE","Candidate constraints failed. Nothing changed.") return }
     expected_record = p.expected
     // Journal before write. If uncertain, reconcile by reads; never retry blindly.
-    let saved = fs.write("execution.json",{operation_id:p.task_id before:p.before expected:expected_record}.to_json())
-    if saved != nil || !fs.exists("execution.json") || field(fs.read("execution.json").parse_json(),"expected") != expected_record { busy = false move("FAILED","Could not persist execution intent. No activity write.") return }
-    let result = write_event(next)
     move("VERIFYING","Checking the actual persisted activity independently...")
-    start_timeout(0.25,|| finish_verify())
+    start_timeout(0.25,|| { if status == "VERIFYING" { finish_verify() } })
+    let result = write_event(next,"RESCHEDULE")
+    if !result && schedule_fingerprint() == p.before { busy = false move("FAILED","Storage rejected execution; actual read confirms original activity preserved. Check storage before a new analysis/approval.") return }
 }
 fn confirm(){
     if busy || loading || status != "AWAITING_APPROVAL" || proposal == nil { return }
@@ -456,4 +499,3 @@ ui := SolidView{width:Fill height:Fill flow:Down padding:16 spacing:10 draw_bg.c
     }
 }
 start_timeout(0.05,|| boot())
-

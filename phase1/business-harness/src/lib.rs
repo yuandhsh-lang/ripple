@@ -78,12 +78,82 @@ mod tests {
     }
 
     #[test]
+    fn storage_errors_leave_activity_intact_and_feedback_recoverable() {
+        let bundle=root().join("stage1/bundle");
+        let mut source=std::fs::read_to_string(bundle.join("main.splash")).unwrap();
+        source.push_str(r#"
+          fn fault_save(title,start){ let before=schedule_fingerprint() let pending=status=="AWAITING_APPROVAL" ui.title_input.set_text(title) ui.start_input.set_text(start) ui.duration.set_text("60") ui.latitude.set_text("31.23") ui.longitude.set_text("121.47") save_activity() finish_save(before,pending) }
+          fn fault_clock(epoch){ fs.write("clock.json",{utc8:clock_stamp(epoch.to_f64(),28800)}.to_json()) }
+          fn fault_report(){ fs.write("report.json",{status:status message:message busy:busy loading:loading verified:verified}.to_json()) }
+        "#);
+        let (mut cx,_ui,card,reg,jail)=fixture("storage-jail",&source,&bundle);
+        let now=std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_secs();
+        invoke(&mut cx,&card,id!(fault_clock),&[&((now/3600+24)*3600).to_string()]);
+        let stamp=read(jail.join("clock.json"))["utc8"].as_str().unwrap().replace('T'," ");let start=&stamp[..16];
+        invoke(&mut cx,&card,id!(fault_save),&["Before quota",start]);
+        let before=std::fs::read(jail.join("schedule.txt")).unwrap();
+        fn usage(p:&Path)->u64{std::fs::read_dir(p).unwrap().map(|e|{let p=e.unwrap().path();if p.is_dir(){usage(&p)}else{p.metadata().unwrap().len()}}).sum()}
+        let cap=usage(&jail);
+        card.set_storage_quota(&mut cx,Some(cap));
+        let ran=card.call_script_fn_with_strings(&mut cx,id!(fault_save),&["A much longer activity title rejected at full capacity",start]);
+        makepad_platform::makepad_script_std::handle_script_tasks(&mut cx);
+        let unchanged=std::fs::read(jail.join("schedule.txt")).unwrap()==before;
+        card.set_storage_quota(&mut cx,Some(2_000_000));
+        invoke(&mut cx,&card,id!(fault_report),&[]);let report=read(jail.join("report.json"));
+        write("storage-error-result.json",&json!({"classification":"ACTUAL_SDK_VM_NATIVE_QUOTA_ENFORCEMENT","call_completed":ran,"activity_unchanged":unchanged,"quota_bytes":cap,"report":report}));
+        assert!(unchanged);assert!(ran,"uncaught storage exception aborted UI action");assert_eq!(report["status"],"FAILED");
+        let schedule=jail.join("schedule.txt");let mut permissions=schedule.metadata().unwrap().permissions();permissions.set_readonly(true);std::fs::set_permissions(&schedule,permissions).unwrap();
+        invoke(&mut cx,&card,id!(fault_save),&["Rejected by Windows readonly file",start]);invoke(&mut cx,&card,id!(fault_report),&[]);
+        let os_report=read(jail.join("report.json"));assert_eq!(os_report["status"],"FAILED");assert_eq!(std::fs::read(&schedule).unwrap(),before);
+        let receipt=read(jail.join("execution.json"));assert_eq!(receipt["before"].as_str().unwrap().as_bytes(),before);
+        write("windows-write-error.json",&json!({"classification":"REAL_WINDOWS_FILE_READONLY_WITH_ACTUAL_SDK_VM","activity_unchanged":true,"report":os_report,"original_record_preserved_in_receipt":true}));
+        // Restore only this generated test file's permission, preserving all data.
+        let mut permissions=schedule.metadata().unwrap().permissions();permissions.set_readonly(false);std::fs::set_permissions(&schedule,permissions).unwrap();
+        invoke(&mut cx,&card,id!(fault_save),&["Recovered after storage denial",start]);assert_eq!(read(&schedule)["title"],"Recovered after storage denial");
+        drop(reg);
+    }
+
+    #[test]
+    fn forecast_failures_do_not_replace_prior_forecast() {
+        let bundle=root().join("stage1/bundle");
+        let mut source=std::fs::read_to_string(bundle.join("main.splash")).unwrap();
+        source.push_str(r#"
+          fn weather_save(start){ let before=schedule_fingerprint() let pending=status=="AWAITING_APPROVAL" ui.title_input.set_text("Weather reliability") ui.start_input.set_text(start) ui.duration.set_text("60") ui.latitude.set_text("31.23") ui.longitude.set_text("121.47") save_activity() finish_save(before,pending) }
+          fn weather_clock(epoch){ fs.write("clock.json",{utc8:clock_stamp(epoch.to_f64(),28800)}.to_json()) }
+          fn weather_response(code,body){ let accepted=try { persist_weather(code.to_f64(),body,read_event()) } catch { false } fs.write("weather-report.json",{accepted:accepted message:weather_message}.to_json()) }
+        "#);
+        let (mut cx,_ui,card,reg,jail)=fixture("weather-jail",&source,&bundle);
+        let now=std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_secs();let base=(now/3600+1)*3600;
+        invoke(&mut cx,&card,id!(weather_clock),&[&(base+7200).to_string()]);let stamp=read(jail.join("clock.json"))["utc8"].as_str().unwrap().replace('T'," ");
+        invoke(&mut cx,&card,id!(weather_save),&[&stamp[..16]]);let original=read(jail.join("schedule.txt"));
+        let times:Vec<u64>=(0..48).map(|i|base+i*3600).collect();
+        let valid=json!({"timezone":"GMT","utc_offset_seconds":0,"hourly":{"time":times,"weather_code":vec![0;48],"precipitation":vec![0;48],"precipitation_probability":vec![0;48]}});
+        invoke(&mut cx,&card,id!(weather_response),&["200",&valid.to_string()]);assert_eq!(read(jail.join("weather-report.json"))["accepted"],true);
+        let previous=std::fs::read(jail.join("weather.json")).unwrap();
+        let mut cases:Vec<(&str,&str,String)>=vec![("network/no HTTP response","0",valid.to_string()),("HTTP error","503",valid.to_string()),("malformed JSON","200","{bad JSON}".into()),("missing fields","200","{}".into())];
+        let mut bad=valid.clone();bad["hourly"]["precipitation"]=json!([]);cases.push(("missing array","200",bad.to_string()));
+        let mut bad=valid.clone();bad["hourly"]["time"][3]=json!(base+4*3600);cases.push(("noncontiguous hours","200",bad.to_string()));
+        let mut bad=valid.clone();bad["hourly"]["weather_code"][0]=Value::Null;cases.push(("null weather code","200",bad.to_string()));
+        let mut bad=valid.clone();bad["timezone"]=json!("UTC+8");cases.push(("wrong timezone","200",bad.to_string()));
+        let mut bad=valid.clone();bad["hourly"]["time"]=json!((0..48).map(|i|base+604800+i*3600).collect::<Vec<_>>());cases.push(("outside forecast","200",bad.to_string()));
+        let mut results=Vec::new();
+        for (label,code,body) in cases {
+            invoke(&mut cx,&card,id!(weather_response),&[code,&body]);let report=read(jail.join("weather-report.json"));
+            assert_eq!(report["accepted"],false,"{}",label);assert_eq!(std::fs::read(jail.join("weather.json")).unwrap(),previous);assert_eq!(read(jail.join("schedule.txt")),original);
+            results.push(json!({"case":label,"report":report,"prior_forecast_unchanged":true,"activity_unchanged":true}));
+        }
+        write("weather-failures.json",&json!({"classification":"ACTUAL_SDK_VM_WITH_INJECTED_HTTP_STATUS_AND_BODY_NOT_LIVE_NETWORK_FAILURE","cases":results,"automatic_deletions":0}));
+        drop(reg);
+    }
+
+    #[test]
     fn business_abi_approval_readback_and_guards() {
         let bundle=root().join("stage1/bundle");
         let mut source=std::fs::read_to_string(bundle.join("main.splash")).unwrap();
         source.push_str(r#"
-          fn fixture_inputs(title,start,duration,lat,lon){ ui.title_input.set_text(title) ui.start_input.set_text(start) ui.duration.set_text(duration) ui.latitude.set_text(lat) ui.longitude.set_text(lon) save_activity() }
+          fn fixture_inputs(title,start,duration,lat,lon){ let before=schedule_fingerprint() let pending=status=="AWAITING_APPROVAL" ui.title_input.set_text(title) ui.start_input.set_text(start) ui.duration.set_text(duration) ui.latitude.set_text(lat) ui.longitude.set_text(lon) save_activity() finish_save(before,pending) }
           fn fixture_begin(id){ workflow_started=time_now() begin_task(id) }
+          fn fixture_deadline(){ expire_agent(task_generation) }
           fn fixture_finish(text){ finish_model(task_generation,text) }
           fn fixture_report(){ fs.write("report.json",{status:status message:message busy:busy proposal:proposal verified:verified replan_count:replan_count}.to_json()) }
           fn fixture_clock(epoch){ fs.write("clock.json",{utc:clock_stamp(epoch.to_f64(),0) utc8:clock_stamp(epoch.to_f64(),28800)}.to_json()) }
@@ -128,6 +198,20 @@ mod tests {
             (context,search,choice)
         };
         assert!(call("ripple.context.read",json!({"task_id":"x","invented":1}),&mut cx).unwrap_err().contains("invalid_arguments"));
+        assert!(call("ripple.context.read",json!("{invalid JSON}"),&mut cx).unwrap_err().contains("invalid_arguments"));
+        let mut model_errors=Vec::new();
+        for bad in ["{invalid JSON}","[]","{\"task_id\":\"wrong\"}"] {
+            let _=plan("malformed-model",&mut cx);invoke(&mut cx,&card,id!(fixture_finish),&[bad]);invoke(&mut cx,&card,id!(fixture_report),&[]);
+            assert_eq!(read(jail.join("report.json"))["status"],"FAILED");assert_eq!(read(jail.join("schedule.txt")),before);
+            model_errors.push(json!({"reply":bad,"report":read(jail.join("report.json")),"activity_unchanged":true}));
+        }
+        write("malformed-model-replies.json",&json!({"classification":"ACTUAL_SDK_VM_WITH_INJECTED_MODEL_REPLIES","cases":model_errors}));
+        invoke(&mut cx,&card,id!(fixture_begin),&["tool-timeout"]);let replies:Replies=Default::default();let out=replies.clone();
+        script_tools::submit("ripple","ripple.context.read",json!({"task_id":"tool-timeout"}),"device","business-protocol-harness",Duration::from_millis(2),Box::new(move|r|out.lock().unwrap().push(r))).unwrap();
+        std::thread::sleep(Duration::from_millis(8));pump(&mut cx,&card);assert!(replies.lock().unwrap()[0].as_ref().unwrap_err().contains("timeout"));assert_eq!(read(jail.join("schedule.txt")),before);
+        invoke(&mut cx,&card,id!(fixture_deadline),&[]);invoke(&mut cx,&card,id!(fixture_report),&[]);let deadline=read(jail.join("report.json"));assert_eq!(deadline["status"],"FAILED");assert_eq!(deadline["busy"],false);
+        invoke(&mut cx,&card,id!(fixture_finish),&["{invalid late result}"]);assert_eq!(read(jail.join("schedule.txt")),before);
+        write("tool-and-app-deadline.json",&json!({"classification":"ACTUAL_SDK_TOOL_TTL_AND_APP_DEADLINE_HANDLER_FIXTURE","provider_network_timeout":"NOT TESTED","tool_reply":replies.lock().unwrap().clone(),"deadline_report":deadline,"late_result_no_write":true}));
         let (context,search,choice)=plan("business-decline",&mut cx);
         assert_eq!(search["candidates"][0]["end"].as_u64().unwrap()-search["candidates"][0]["start"].as_u64().unwrap(),7200);
         let mut invented=choice.clone();invented["candidate_id"]=json!("invented");invoke(&mut cx,&card,id!(fixture_finish),&[&invented.to_string()]);
@@ -158,6 +242,20 @@ mod tests {
         assert_eq!(after["event_id"],id);assert_eq!(after["revision"],3);assert_eq!(after["start"],executed_search["candidates"][0]["start"]);assert_eq!(after["title"],"Edited walk");
         invoke(&mut cx,&card,id!(confirm),&[]);invoke(&mut cx,&card,id!(execute),&[]);assert_eq!(read(jail.join("schedule.txt")),after);
         invoke(&mut cx,&card,id!(boot),&[]);invoke(&mut cx,&card,id!(fixture_report),&[]);assert_eq!(read(jail.join("report.json"))["status"],"COMPLETED");assert_eq!(read(jail.join("report.json"))["verified"],true);
+        let saved_schedule=std::fs::read(jail.join("schedule.txt")).unwrap();let saved_receipt=std::fs::read(jail.join("execution.json")).unwrap();
+        invoke(&mut cx,&card,id!(fixture_inputs),&["Next user activity",start,"120","31.23","121.47"]);
+        invoke(&mut cx,&card,id!(fixture_report),&[]);let repeat=read(jail.join("report.json"));write("save-after-completed.json",&repeat);
+        assert_eq!(repeat["status"],"READY");assert_eq!(read(jail.join("schedule.txt"))["title"],"Next user activity");
+        // Restore this generated fixture's exact bytes for the separate mismatch case.
+        std::fs::write(jail.join("schedule.txt"),saved_schedule).unwrap();std::fs::write(jail.join("execution.json"),saved_receipt).unwrap();invoke(&mut cx,&card,id!(boot),&[]);
+        // Operator-injected mismatch tests the same independent read-back path.
+        let exact_after=std::fs::read(jail.join("schedule.txt")).unwrap();
+        let mut uncertain=after.clone();uncertain["title"]=json!("Injected read-back mismatch");std::fs::write(jail.join("schedule.txt"),uncertain.to_string()).unwrap();
+        invoke(&mut cx,&card,id!(finish_verify),&[]);invoke(&mut cx,&card,id!(fixture_report),&[]);let mismatch=read(jail.join("report.json"));
+        assert_eq!(mismatch["status"],"PARTIAL");assert_eq!(mismatch["verified"],false);
+        invoke(&mut cx,&card,id!(confirm),&[]);invoke(&mut cx,&card,id!(execute),&[]);invoke(&mut cx,&card,id!(inspect_result),&[]);assert_eq!(read(jail.join("schedule.txt")),uncertain);
+        write("readback-mismatch.json",&json!({"classification":"ACTUAL_SDK_VM_WITH_OPERATOR_DATA_MISMATCH_INJECTION","report":mismatch,"automatic_retry_writes":0,"expected":after,"actual":uncertain,"operator_restores_generated_fixture_after_check":true}));
+        std::fs::write(jail.join("schedule.txt"),&exact_after).unwrap();invoke(&mut cx,&card,id!(finish_verify),&[]);
         // Real read after execution sees a dry activity; no fabricated model success.
         invoke(&mut cx,&card,id!(fixture_begin),&["dry"]);let dry=call("ripple.context.read",json!({"task_id":"dry"}),&mut cx).unwrap();assert_eq!(dry["impact"]["conflict"],false);
         let nochange=json!({"task_id":"dry","read_token":dry["read_token"],"decision":"NO_CHANGE","search_id":null,"candidate_id":null});invoke(&mut cx,&card,id!(fixture_finish),&[&nochange.to_string()]);invoke(&mut cx,&card,id!(fixture_report),&[]);assert_eq!(read(jail.join("report.json"))["status"],"NO_CHANGE");
