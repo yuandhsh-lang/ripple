@@ -1,0 +1,43 @@
+{
+  "agent": {
+    "instructions": "AGENT.md",
+    "max_iterations": 6,
+    "model": {
+      "local_only": false,
+      "needs": [
+        "tool_calling",
+        "multilingual"
+      ]
+    },
+    "profile": "read-only",
+    "token_budget": 12000,
+    "tools": []
+  },
+  "capabilities": [
+    "storage",
+    "runtime",
+    "octos.session.open",
+    "octos.session.history",
+    "octos.turn.start",
+    "octos.turn.interrupt",
+    "net"
+  ],
+  "id": "ripple",
+  "integrity": {
+    "bundle_blake3": "93f6423f8e86f5e3536851b07042bad91320ede8505376e46b3029a9af9ab3b9"
+  },
+  "name": "Ripple",
+  "network": {
+    "hosts": [
+      "api.open-meteo.com"
+    ]
+  },
+  "requires": [
+    "script-tools-v1"
+  ],
+  "schema": 1,
+  "storage": {
+    "max_bytes": 1048576
+  },
+  "version": "0.2.2-stage1"
+}

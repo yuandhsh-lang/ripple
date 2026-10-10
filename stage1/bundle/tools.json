@@ -1,0 +1,261 @@
+{
+  "schema": 1,
+  "tools": [
+    {
+      "name": "ripple.context.read",
+      "description": "Read the saved user outdoor activity, fresh verified hourly rain impact and program-owned search bounds. Private Ripple data; no external calendar claim. Read only.",
+      "implemented_by": "app",
+      "risk": "read",
+      "private_data": true,
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "task_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 96
+          }
+        },
+        "required": [
+          "task_id"
+        ],
+        "additionalProperties": false
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "task_id": {
+            "type": "string"
+          },
+          "read_token": {
+            "type": "string"
+          },
+          "events": {
+            "type": "array",
+            "maxItems": 1,
+            "items": {
+              "type": "object",
+              "properties": {
+                "schema": {
+                  "type": "integer"
+                },
+                "event_id": {
+                  "type": "string"
+                },
+                "title": {
+                  "type": "string"
+                },
+                "start": {
+                  "type": "integer"
+                },
+                "end": {
+                  "type": "integer"
+                },
+                "lat": {
+                  "type": "number"
+                },
+                "lon": {
+                  "type": "number"
+                },
+                "revision": {
+                  "type": "integer"
+                },
+                "data_source": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "schema",
+                "event_id",
+                "title",
+                "start",
+                "end",
+                "lat",
+                "lon",
+                "revision",
+                "data_source"
+              ]
+            }
+          },
+          "retrieved_at": {
+            "type": "number"
+          },
+          "data_source": {
+            "type": "string"
+          },
+          "impact": {
+            "type": "object"
+          },
+          "weather_source": {
+            "type": "string",
+            "enum": [
+              "LIVE",
+              "FIXTURE"
+            ]
+          },
+          "weather_revision": {
+            "type": "string"
+          },
+          "weather_fetched_at": {
+            "type": "number"
+          },
+          "time_authority": {
+            "type": "object"
+          },
+          "search_bounds": {
+            "type": "object"
+          },
+          "calendar_scope": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "task_id",
+          "read_token",
+          "events",
+          "retrieved_at",
+          "data_source",
+          "impact",
+          "weather_source",
+          "weather_revision",
+          "weather_fetched_at",
+          "time_authority",
+          "search_bounds",
+          "calendar_scope"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "ripple.slots.search",
+      "description": "Read-only candidate search for the exact context read_token and returned search_bounds. Up to 3 safe candidates, preserving activity duration. Only one Ripple-managed activity; no external calendar free/busy claim.",
+      "implemented_by": "app",
+      "risk": "read",
+      "private_data": true,
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "task_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 96
+          },
+          "read_token": {
+            "type": "string",
+            "minLength": 1
+          },
+          "min_start": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4102444799
+          },
+          "max_end": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4102444799
+          },
+          "max_candidates": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 3
+          }
+        },
+        "required": [
+          "task_id",
+          "read_token",
+          "min_start",
+          "max_end",
+          "max_candidates"
+        ],
+        "additionalProperties": false
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "task_id": {
+            "type": "string"
+          },
+          "search_id": {
+            "type": "string"
+          },
+          "read_token": {
+            "type": "string"
+          },
+          "context_revision": {
+            "type": "integer"
+          },
+          "weather_revision": {
+            "type": "string"
+          },
+          "weather_source": {
+            "type": "string",
+            "enum": [
+              "LIVE",
+              "FIXTURE"
+            ]
+          },
+          "weather_fetched_at": {
+            "type": "number"
+          },
+          "expires_at": {
+            "type": "number"
+          },
+          "calendar_source": {
+            "type": "string",
+            "const": "RIPPLE_LOCAL"
+          },
+          "constraints": {
+            "type": "object"
+          },
+          "candidates": {
+            "type": "array",
+            "maxItems": 3,
+            "items": {
+              "type": "object",
+              "properties": {
+                "candidate_id": {
+                  "type": "string"
+                },
+                "start": {
+                  "type": "integer"
+                },
+                "end": {
+                  "type": "integer"
+                },
+                "time_authority": {
+                  "type": "object"
+                },
+                "checks": {
+                  "type": "object"
+                }
+              },
+              "required": [
+                "candidate_id",
+                "start",
+                "end",
+                "time_authority",
+                "checks"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "task_id",
+          "search_id",
+          "read_token",
+          "context_revision",
+          "weather_revision",
+          "weather_source",
+          "weather_fetched_at",
+          "expires_at",
+          "calendar_source",
+          "constraints",
+          "candidates"
+        ],
+        "additionalProperties": false
+      }
+    }
+  ]
+}

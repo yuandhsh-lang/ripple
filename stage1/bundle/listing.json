@@ -1,0 +1,28 @@
+{
+  "schema": 1,
+  "subtitle": "Outdoor activity rain-conflict planning with human approval",
+  "description": "Unpublished local Stage 1 build. Save one outdoor activity in Ripple. The host-selected Agent reads the activity and live weather, searches dry candidates, and proposes a change. Explicit approval and independent persisted read-back are required. Activity title, times and location are shared with the selected Provider after host consent. Coordinates are sent to Open-Meteo. No external calendar access or sync.",
+  "category": "productivity",
+  "keywords": [
+    "agent",
+    "rain",
+    "human-approval"
+  ],
+  "screenshots": [
+    "screenshots/01-startup.png",
+    "screenshots/02-approval.png",
+    "screenshots/03-completed.png"
+  ],
+  "icon": "assets/icon.svg",
+  "platforms": [
+    "windows"
+  ],
+  "publisher": {
+    "name": "yuandhsh-lang",
+    "support": "https://github.com/yuandhsh-lang/ripple/issues",
+    "privacy_policy_url": "https://example.invalid/ripple-stage1-local-privacy"
+  },
+  "release_notes": "Unpublished Stage 1 validation. User-owned Ripple activity; real Agent read/search; approval and independent storage verification.",
+  "age_rating": "all",
+  "license": "Apache-2.0"
+}
