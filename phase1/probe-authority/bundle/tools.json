@@ -1,0 +1,122 @@
+{
+  "schema": 1,
+  "tools": [
+    {
+      "name": "ripple.context.read",
+      "description": "Read the current synthetic test schedule from Ripple's actual isolated app storage. Returns no personal calendar data. Call this for the latest event times, identity and revision. Does not write schedules.",
+      "implemented_by": "app",
+      "risk": "read",
+      "private_data": false,
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "task_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 96
+          }
+        },
+        "required": [
+          "task_id"
+        ],
+        "additionalProperties": false
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "events": {
+            "type": "array",
+            "maxItems": 1,
+            "items": {
+              "type": "object",
+              "properties": {
+                "event_id": {
+                  "type": "string"
+                },
+                "start": {
+                  "type": "number"
+                },
+                "end": {
+                  "type": "number"
+                },
+                "revision": {
+                  "type": "number"
+                },
+                "data_source": {
+                  "type": "string",
+                  "const": "ripple-sandbox-synthetic"
+                },
+                "retrieved_at": {
+                  "type": "number"
+                },
+                "time_authority": {
+                  "type": "object",
+                  "properties": {
+                    "epoch_unit": {
+                      "type": "string"
+                    },
+                    "display_zone": {
+                      "type": "string"
+                    },
+                    "start_utc": {
+                      "type": "string"
+                    },
+                    "end_utc": {
+                      "type": "string"
+                    },
+                    "start_utc8": {
+                      "type": "string"
+                    },
+                    "end_utc8": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "epoch_unit",
+                    "display_zone",
+                    "start_utc",
+                    "end_utc",
+                    "start_utc8",
+                    "end_utc8"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "required": [
+                "event_id",
+                "start",
+                "end",
+                "revision",
+                "data_source",
+                "retrieved_at",
+                "time_authority"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "retrieved_at": {
+            "type": "number"
+          },
+          "data_source": {
+            "type": "string",
+            "const": "ripple-sandbox-synthetic"
+          },
+          "task_id": {
+            "type": "string"
+          },
+          "read_token": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "events",
+          "retrieved_at",
+          "data_source",
+          "task_id",
+          "read_token"
+        ],
+        "additionalProperties": false
+      }
+    }
+  ]
+}

@@ -1,0 +1,252 @@
+{
+  "schema": 1,
+  "tools": [
+    {
+      "name": "ripple.context.read",
+      "description": "Read the current synthetic test schedule from Ripple's actual isolated app storage. Returns no personal calendar data. Call this for the latest event times, identity and revision. Does not write schedules.",
+      "implemented_by": "app",
+      "risk": "read",
+      "private_data": false,
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "task_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 96
+          }
+        },
+        "required": [
+          "task_id"
+        ],
+        "additionalProperties": false
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "events": {
+            "type": "array",
+            "maxItems": 1,
+            "items": {
+              "type": "object",
+              "properties": {
+                "event_id": {
+                  "type": "string"
+                },
+                "start": {
+                  "type": "number"
+                },
+                "end": {
+                  "type": "number"
+                },
+                "revision": {
+                  "type": "number"
+                },
+                "data_source": {
+                  "type": "string",
+                  "const": "ripple-sandbox-synthetic"
+                },
+                "retrieved_at": {
+                  "type": "number"
+                },
+                "time_authority": {
+                  "type": "object",
+                  "properties": {
+                    "epoch_unit": {
+                      "type": "string"
+                    },
+                    "display_zone": {
+                      "type": "string"
+                    },
+                    "start_utc": {
+                      "type": "string"
+                    },
+                    "end_utc": {
+                      "type": "string"
+                    },
+                    "start_utc8": {
+                      "type": "string"
+                    },
+                    "end_utc8": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "epoch_unit",
+                    "display_zone",
+                    "start_utc",
+                    "end_utc",
+                    "start_utc8",
+                    "end_utc8"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "required": [
+                "event_id",
+                "start",
+                "end",
+                "revision",
+                "data_source",
+                "retrieved_at",
+                "time_authority"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "retrieved_at": {
+            "type": "number"
+          },
+          "data_source": {
+            "type": "string",
+            "const": "ripple-sandbox-synthetic"
+          },
+          "task_id": {
+            "type": "string"
+          },
+          "read_token": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "events",
+          "retrieved_at",
+          "data_source",
+          "task_id",
+          "read_token"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "ripple.slots.search",
+      "description": "Read-only deterministic candidate search over the current synthetic event and app-owned verified weather. At most three candidates; unknown, stale, mismatched weather is rejected. No personal-calendar free/busy claim, no schedule writes.",
+      "implemented_by": "app",
+      "risk": "read",
+      "private_data": false,
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "task_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 96
+          },
+          "read_token": {
+            "type": "string",
+            "minLength": 1
+          },
+          "min_start": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4102444799
+          },
+          "max_end": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4102444799
+          },
+          "max_candidates": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 3
+          }
+        },
+        "required": [
+          "task_id",
+          "read_token",
+          "min_start",
+          "max_end",
+          "max_candidates"
+        ],
+        "additionalProperties": false
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "task_id": {
+            "type": "string"
+          },
+          "search_id": {
+            "type": "string"
+          },
+          "read_token": {
+            "type": "string"
+          },
+          "context_revision": {
+            "type": "integer"
+          },
+          "weather_revision": {
+            "type": "string"
+          },
+          "weather_source": {
+            "type": "string",
+            "enum": [
+              "LIVE",
+              "FIXTURE"
+            ]
+          },
+          "weather_fetched_at": {
+            "type": "number"
+          },
+          "expires_at": {
+            "type": "number"
+          },
+          "calendar_source": {
+            "type": "string",
+            "const": "SYNTHETIC"
+          },
+          "constraints": {
+            "type": "object"
+          },
+          "candidates": {
+            "type": "array",
+            "maxItems": 3,
+            "items": {
+              "type": "object",
+              "properties": {
+                "candidate_id": {
+                  "type": "string"
+                },
+                "start": {
+                  "type": "integer"
+                },
+                "end": {
+                  "type": "integer"
+                },
+                "time_authority": {
+                  "type": "object"
+                },
+                "checks": {
+                  "type": "object"
+                }
+              },
+              "required": [
+                "candidate_id",
+                "start",
+                "end",
+                "time_authority",
+                "checks"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "task_id",
+          "search_id",
+          "read_token",
+          "context_revision",
+          "weather_revision",
+          "weather_source",
+          "weather_fetched_at",
+          "expires_at",
+          "calendar_source",
+          "constraints",
+          "candidates"
+        ],
+        "additionalProperties": false
+      }
+    }
+  ]
+}

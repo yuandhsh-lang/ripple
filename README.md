@@ -1,5 +1,9 @@
 # Ripple
 
+## Local development experiments
+
+The retained Agent probes, validation scripts and historical reports are indexed in [the experiment archive](docs/experiments/README.md). The current development bundle is `stage1/bundle/`; source templates, historical validation and the preserved v0.1.0 delivery have separate version records. Downloaded SDK snapshots, model sessions and runtime data are excluded from Git.
+
 ## OctoSense App Hub delivery
 
 The native OctoScript app is in **[bundle/](bundle/manifest.json)**, version **0.1.0**. Entry: [main.splash](bundle/main.splash). It uses app-owned synthetic test schedules and real Open-Meteo weather, with pending proposals, explicit approval and independent storage read-back. Only Windows card-host has been tested. [Privacy notice](PRIVACY.md). [Actual 2:51 native demo](submission/video/Ripple-OctoScript-Demo-v0.1.0.mp4).

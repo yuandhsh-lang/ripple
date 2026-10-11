@@ -1,0 +1,37 @@
+{
+  "agent": {
+    "instructions": "AGENT.md",
+    "max_iterations": 6,
+    "model": {
+      "local_only": false,
+      "needs": [
+        "tool_calling",
+        "multilingual"
+      ]
+    },
+    "profile": "read-only",
+    "token_budget": 12000,
+    "tools": []
+  },
+  "capabilities": [
+    "storage",
+    "runtime",
+    "octos.session.open",
+    "octos.session.history",
+    "octos.turn.start",
+    "octos.turn.interrupt"
+  ],
+  "id": "ripple",
+  "integrity": {
+    "bundle_blake3": ""
+  },
+  "name": "Ripple Phase 1 Lab",
+  "requires": [
+    "script-tools-v1"
+  ],
+  "schema": 1,
+  "storage": {
+    "max_bytes": 1048576
+  },
+  "version": "0.1.4-phase1"
+}

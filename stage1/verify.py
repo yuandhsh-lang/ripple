@@ -3,7 +3,7 @@
 The remote HTTP control surface is the official Makepad test API, not a service
 added to Ripple. All snapshots and command failures are preserved under evidence.
 """
-import datetime, hashlib, json, os, shutil, subprocess, sys, tempfile, time
+import datetime, hashlib, json, os, shutil, socket, subprocess, sys, tempfile, time
 import urllib.parse, urllib.request
 from pathlib import Path
 sys.stdout.reconfigure(encoding='utf-8')
@@ -22,8 +22,8 @@ def sha(p): return hashlib.sha256(p.read_bytes()).hexdigest()
 def save(name, data):
     with (E / name).open('x', encoding='utf-8') as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
-def request(path):
-    raw = urllib.request.urlopen(f'http://127.0.0.1:{PORT}{path}', timeout=20).read()
+def request(path, timeout=20):
+    raw = urllib.request.urlopen(f'http://127.0.0.1:{PORT}{path}', timeout=timeout).read()
     with (E / 'actions.jsonl').open('a', encoding='utf-8') as f:
         f.write(json.dumps({'at_utc':now(),'path':path,'response_bytes':len(raw)},ensure_ascii=False)+'\n')
     return raw
@@ -64,6 +64,14 @@ def check_test_isolation():
     if marker != {'runtime_root':str(R.resolve()), 'core_dir':str(CORE.resolve()), 'provider_profile_only':True}:
         raise RuntimeError('Invalid test isolation marker.')
 
+def check_remote_available():
+    # Never attach test actions to another host already using this bridge.
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as guard:
+        if hasattr(socket, 'SO_EXCLUSIVEADDRUSE'):
+            guard.setsockopt(socket.SOL_SOCKET, socket.SO_EXCLUSIVEADDRUSE, 1)
+        try: guard.bind(('127.0.0.1', PORT))
+        except OSError as e: raise RuntimeError('Test control port is occupied; no host launched.') from e
+
 def start(label, reuse=False, no_provider=False,revision=''):
     check_test_isolation()
     prefix=revision+('no-provider' if no_provider and not reuse else 'business')
@@ -71,16 +79,25 @@ def start(label, reuse=False, no_provider=False,revision=''):
     for path in [home, apps, CORE, R/'no-provider-core']:
         if not path.resolve().is_relative_to(R.resolve()) or path.resolve() != path.absolute():
             raise RuntimeError('Runtime roots must stay inside this run without symlinks/junctions.')
+    check_remote_available()
     if not reuse: home.mkdir();apps.mkdir()
     receipt=json.loads((E/(revision+'mirror-receipt.json')).read_text())
     overrides={'OCTOSENSE_HOME':str(home),'OCTOSENSE_APP_DATA':str(apps),'OCTOS_APP_CORE_DIR':str(CORE) if not no_provider else str(R/'no-provider-core'),'OCTOSENSE_HUB_CATALOG':'legacy','OCTOSENSE_HUB':receipt['mirror'],'OCTOSENSE_HUB_ANCHOR':receipt['anchor_public_hex'],'MAKEPAD_REMOTE':str(PORT),'MAKEPAD_HIDE_WINDOWS':'1'}
     env={k:v for k,v in os.environ.items() if not k.startswith(('OCTOS','MAKEPAD','RINX_'))};env.update(overrides)
-    p=subprocess.Popen([str(RC2/'octosense.exe')],cwd=RC2,env=env,stdout=(E/(label+'-shell.log')).open('x',encoding='utf-8'),stderr=subprocess.STDOUT,creationflags=subprocess.CREATE_NO_WINDOW)
+    with (E/(label+'-shell.log')).open('x',encoding='utf-8') as log:
+        p=subprocess.Popen([str(RC2/'octosense.exe')],cwd=RC2,env=env,stdout=log,stderr=subprocess.STDOUT,creationflags=getattr(subprocess,'CREATE_NO_WINDOW',0))
     save(label+'-process.json',{'at_utc':now(),'pid':p.pid,'environment':overrides,'shell_sha256':sha(RC2/'octosense.exe'),'kernel_sha256':sha(RC2/'octos-kernel.exe'),'preopened_card':False})
     for _ in range(40):
         if p.poll() is not None: raise RuntimeError('Shell exited '+str(p.returncode))
-        try: request('/s');break
-        except Exception:time.sleep(.25)
+        try: ready=json.loads(request('/s', timeout=1))
+        except (OSError, ValueError): time.sleep(.25);continue
+        if ready.get('pid') != p.pid:
+            p.terminate()
+            raise RuntimeError('Control API belongs to another PID; spawned test host stopped.')
+        break
+    else:
+        p.terminate()
+        raise RuntimeError('Test control API not ready; spawned test host stopped.')
     print('RC2 started',p.pid,PORT)
 
 def snap(label):

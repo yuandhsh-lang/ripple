@@ -77,9 +77,13 @@ fn valid_event(e){
 }
 fn read_event(){
     if !fs.exists("schedule.txt") { return nil }
-    let e = read_json("schedule.txt")
-    if !valid_event(e) { return nil }
-    e
+    // Include validation in the error boundary: a truncated JSON error value
+    // must never escape boot or leave a previous success visible.
+    try {
+        let e = read_json("schedule.txt")
+        if !valid_event(e) { return nil }
+        e
+    } catch { nil }
 }
 fn schedule_fingerprint(){ if fs.exists("schedule.txt") { return read_text("schedule.txt") } "EMPTY" }
 fn write_event(e,kind){
@@ -304,6 +308,8 @@ fn app_tool(name,call_id){
     if !impact.complete { mod.app_tools.fail(call_id,"unknown_weather_coverage: no schedule changed") return }
     let min_start = whole(time_now()/1800)*1800 + 1800
     let max_end = e.end + 172800
+    if max_end > w.hours[w.hours.len()-1].end { max_end = w.hours[w.hours.len()-1].end }
+    if max_end > min_start + 604800 { max_end = min_start + 604800 }
     let result = {task_id:active_task read_token:call_id events:[e] retrieved_at:time_now() data_source:"ripple-local-activity" impact:impact weather_source:w.source weather_revision:w.revision weather_fetched_at:w.fetched_at time_authority:authoritative_time(e.start,e.end) search_bounds:{min_start:min_start max_end:max_end max_candidates:3} calendar_scope:"Only this single Ripple-managed activity; no external calendar access"}
     if fingerprint != schedule_fingerprint() || !mod.app_tools.active(call_id) { mod.app_tools.fail(call_id,"stale_context") return }
     last_read = {read_token:call_id events:[e] fingerprint:fingerprint bounds:result.search_bounds weather_fingerprint:read_text("weather.json")}
@@ -360,7 +366,7 @@ fn finish_model(generation,text){
     else { move("FAILED",verdict + "; activity unchanged.") }
 }
 fn expire_agent(generation){
-    if !busy || generation != task_generation { return }
+    if !busy || status != "ANALYZING" || generation != task_generation { return }
     abandon_task("Agent response deadline exceeded; no schedule changed.")
     move("FAILED","Agent did not respond within 90 seconds. Activity unchanged; analyze explicitly again.")
     host.request("octos.turn.interrupt",{},fn(r){})
@@ -402,7 +408,7 @@ fn replan(){
     start_agent()
 }
 fn decline(){ if !busy && status == "AWAITING_APPROVAL" { proposal = nil move("DECLINED","Declined. Original activity preserved; no schedule write.") } }
-fn interrupt_task(){ if busy { abandon_task("Cancelled; late results cannot create an approval.") host.request("octos.turn.interrupt",{},fn(r){}) } }
+fn interrupt_task(){ if busy && status == "ANALYZING" { abandon_task("Cancelled; late results cannot create an approval.") host.request("octos.turn.interrupt",{},fn(r){}) } }
 fn finish_verify(){
     let after = read_event() busy = false
     if after == nil || record(after) != expected_record { move("PARTIAL","Independent read-back mismatch. Completion unverified; inspect actual state before any retry.") return }

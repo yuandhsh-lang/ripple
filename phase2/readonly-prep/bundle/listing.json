@@ -1,0 +1,26 @@
+{
+  "schema": 1,
+  "subtitle": "Isolated real-Agent and read-only tool experiment",
+  "description": "Isolated Phase 1 lab. The host-selected model may receive synthetic event fields from the read-only tool. No personal calendar data. This is not a submitted competition release.",
+  "category": "productivity",
+  "keywords": [
+    "agent",
+    "synthetic",
+    "read-only"
+  ],
+  "screenshots": [
+    "screenshots/01-startup.png"
+  ],
+  "icon": "assets/icon.svg",
+  "platforms": [
+    "windows"
+  ],
+  "publisher": {
+    "name": "yuandhsh-lang",
+    "support": "https://github.com/yuandhsh-lang/ripple/issues",
+    "privacy_policy_url": "https://github.com/yuandhsh-lang/ripple/blob/main/PRIVACY.md"
+  },
+  "release_notes": "Unpublished synthetic-state experiment; no personal calendar and no Agent schedule-write tool.",
+  "age_rating": "all",
+  "license": "Apache-2.0"
+}

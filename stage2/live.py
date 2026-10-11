@@ -4,7 +4,7 @@ from run import v, enter, WORK
 
 REV = 'soak-'
 APP = v.R / (REV+'business-apps/ripple')
-STATES = {'READY','EMPTY','LOADING','ANALYZING','SAVING','AWAITING_APPROVAL','COMPLETED','FAILED','STALE','CANCELLED','DECLINED','PARTIAL','NO_CHANGE','NO_CANDIDATE'}
+STATES = {'READY','EMPTY','LOADING','ANALYZING','SAVING','EXECUTING','VERIFYING','AWAITING_APPROVAL','COMPLETED','FAILED','STALE','CANCELLED','DECLINED','PARTIAL','NO_CHANGE','NO_CANDIDATE'}
 def read(name): return json.loads((APP/name).read_text(encoding='utf-8'))
 def labels(): return [x.get('t','') for x in json.loads(v.request('/snap'))['s'] if x.get('ty')=='Label']
 def status(): return next((t for t in reversed(labels()) if t in STATES),None)
@@ -26,22 +26,37 @@ def create(title,start='2026-10-14 21:00',duration='60',lat='47.61',lon='-122.33
     current=read('schedule.txt');assert current['title']==title,current
     scroll(4000);s=wait({'READY','STALE','FAILED','PARTIAL'},15);assert s in {'READY','STALE'},(s,labels()[-6:])
     return current
-def approval(label):
+def decision(label):
     scroll(4000); s=wait({'AWAITING_APPROVAL','FAILED','NO_CHANGE','NO_CANDIDATE','STALE'})
     scroll(4000)
     if not (v.E/(label+'.json')).exists():record(label)
-    assert s=='AWAITING_APPROVAL',(s,labels()[-10:])
-    choice=read('agent-choice.json');session=read('agent-session.json')
+    assert s in {'AWAITING_APPROVAL','NO_CHANGE','NO_CANDIDATE'},(s,labels()[-10:])
+    session=read('agent-session.json')
     if not (v.E/(label+'-kernel.json')).exists():
         with contextlib.redirect_stdout(io.StringIO()):v.capture(label)
     kernel=json.loads((v.E/(label+'-kernel.json')).read_text())
-    assert choice['task_id'] in json.dumps(kernel) and choice['candidate_id'] in json.dumps(kernel)
     names=[a['tool'] for a in kernel['tool_audits'] if a['outcome']=='ok' and a['decision']=='allowed']
-    assert 'ripple.context.read' in names and 'ripple.slots.search' in names,names
-    return choice,dict(session,session_id=kernel['session_id'],turn_id=kernel['turn_id'],tool_denials=[a for a in kernel['tool_audits'] if a['outcome']!='ok'])
+    assert 'ripple.context.read' in names,names
+    if s != 'NO_CHANGE':assert 'ripple.slots.search' in names,names
+    return s,dict(session,session_id=kernel['session_id'],turn_id=kernel['turn_id'],tool_denials=[a for a in kernel['tool_audits'] if a['outcome']!='ok']),kernel
+
+def approval(label):
+    s,session,kernel=decision(label)
+    assert s=='AWAITING_APPROVAL',(s,labels()[-10:])
+    choice=read('agent-choice.json')
+    assert choice['task_id'] in json.dumps(kernel) and choice['candidate_id'] in json.dumps(kernel)
+    return choice,session
 def finish(round_number, before, duplicate=False):
     name='soak-'+str(round_number)
-    choice,session=approval(name+'-approval')
+    s,session,kernel=decision(name+'-approval')
+    if s in {'NO_CHANGE','NO_CANDIDATE'}:
+        after=read('schedule.txt');assert after==before
+        record(name+'-result')
+        v.save(name+'-readback.json',{'classification':'REAL_UI_REAL_DEEPSEEK_REAL_OPEN_METEO_INDEPENDENT_OS_READ','at_utc':v.now(),'app_version':read_manifest()['version'],'source_sha256':v.sha(WORK/'stage1/bundle/main.splash'),'session':session,'before':before,'after':after,'ui_status':s,'activity_unchanged':True,'storage_bytes':sum(p.stat().st_size for p in APP.rglob('*') if p.is_file()),'approval_clicked':False})
+        print(name,s,'activity unchanged',session['turn_id'],flush=True)
+        return
+    choice=read('agent-choice.json')
+    assert choice['task_id'] in json.dumps(kernel) and choice['candidate_id'] in json.dumps(kernel)
     assert json.loads(choice['before'])==before
     if duplicate:
         button=next(x for x in json.loads(v.request('/snap'))['s'] if x.get('ty')=='Button' and x.get('t')=='Approve change')

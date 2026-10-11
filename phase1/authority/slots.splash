@@ -1,0 +1,76 @@
+// Pure candidate generation. All accepted times and IDs originate in this code.
+fn read_weather_snapshot(event, now){
+    if !fs.exists("weather.json") { return nil }
+    let w = fs.read("weather.json").parse_json()
+    if !w.is_object() { return nil }
+    for k in ["source", "provider", "timezone", "utc_offset_seconds", "request_lat", "request_lon", "fetched_at", "revision", "hours"] { if field(w,k) == nil { return nil } }
+    if !w.revision.is_string() || w.revision.len() == 0 || w.revision.len() > 96 { return nil }
+    if w.source != "LIVE" && w.source != "FIXTURE" { return nil }
+    if w.provider != "Open-Meteo" || w.timezone != "GMT" || w.utc_offset_seconds != 0 || w.request_lat != event.lat || w.request_lon != event.lon { return nil }
+    if !(w.fetched_at > 0 && w.fetched_at <= now && now - w.fetched_at <= 600) || w.revision == nil { return nil }
+    if !w.hours.is_array() || w.hours.len() == 0 || w.hours.len() > 168 { return nil }
+    let previous_end = nil
+    for h in w.hours {
+        if !h.is_object() { return nil }
+        for k in ["start", "end", "code", "rain", "chance"] { if field(h,k) == nil { return nil } }
+        if !valid_epoch(h.start) || !valid_epoch(h.end) || h.end - h.start != 3600 { return nil }
+        if previous_end != nil && h.start != previous_end { return nil }
+        if !(h.code >= 0 && h.code <= 99 && whole(h.code) == h.code && h.rain >= 0 && h.chance >= 0 && h.chance <= 100) { return nil }
+        previous_end = h.end
+    }
+    w
+}
+fn candidate_search(args, now){
+    if !busy || last_read == nil || last_read.events.len() != 1 { return nil }
+    if args.task_id != active_task || args.read_token != last_read.read_token || last_read.fingerprint != schedule_fingerprint() { return nil }
+    if !valid_epoch(args.min_start) || !valid_epoch(args.max_end) || args.min_start < now || args.max_end - args.min_start < 3600 || args.max_end - args.min_start > 604800 { return nil }
+    if !(args.max_candidates >= 1 && args.max_candidates <= 3 && whole(args.max_candidates) == args.max_candidates) { return nil }
+    let parts = last_read.fingerprint.split("|")
+    let target = {lat:parts[3].to_f64() lon:parts[4].to_f64()}
+    let w = read_weather_snapshot(target, now)
+    if w == nil { return nil }
+    weather = w.hours
+    search_sequence = search_sequence + 1
+    let search_id = active_task + ":" + task_generation + ":" + search_sequence + ":" + last_read.read_token + ":" + w.revision
+    let found = []
+    let first = whole(args.min_start / 1800) * 1800
+    if first < args.min_start { first = first + 1800 }
+    for step in 336 {
+        let s = first + step * 1800 let e = s + 3600
+        if e > args.max_end { break }
+        if s <= now { continue }
+        if s < w.hours[0].start { continue }
+        let c = coverage(s, e)
+        if c.complete && !c.conflict {
+            found.push({candidate_id:search_id + ":" + found.len() start:s end:e time_authority:authoritative_time(s,e) checks:{future:true duration_seconds:3600 full_weather_coverage:true weather_safe:true time_bounds:true calendar_scope:"single synthetic target event"}})
+            if found.len() >= args.max_candidates { break }
+        }
+    }
+    {task_id:active_task search_id:search_id read_token:last_read.read_token context_revision:last_read.events[0].revision weather_revision:w.revision weather_source:w.source weather_fetched_at:w.fetched_at expires_at:w.fetched_at + 600 calendar_source:"SYNTHETIC" constraints:{min_start:args.min_start max_end:args.max_end max_candidates:args.max_candidates duration_seconds:3600} candidates:found}
+}
+fn slots_tool(call_id,args){
+    if !mod.app_tools.active(call_id) { return }
+    let result = candidate_search(args,time_now())
+    if result == nil { mod.app_tools.fail(call_id,"invalid_or_stale_context_constraints_weather: no schedule changed") return }
+    if !mod.app_tools.active(call_id) { return }
+    if last_read.fingerprint != schedule_fingerprint() { mod.app_tools.fail(call_id,"stale_context: no schedule changed") return }
+    last_search = result
+    last_weather_fingerprint = fs.read("weather.json")
+    mod.app_tools.complete(call_id,result)
+    record_evidence("SEARCH RETURNED call_id=" + call_id + " result=" + result.to_json())
+}
+fn validate_candidate(search_id,candidate_id,now){
+    if !busy || last_search == nil || last_read == nil || last_search.task_id != active_task || last_search.search_id != search_id { return nil }
+    if last_read.fingerprint != schedule_fingerprint() || now > last_search.expires_at || !fs.exists("weather.json") || last_weather_fingerprint != fs.read("weather.json") { return nil }
+    let p = last_read.fingerprint.split("|")
+    let w = read_weather_snapshot({lat:p[3].to_f64() lon:p[4].to_f64()},now)
+    if w == nil || w.revision != last_search.weather_revision { return nil }
+    weather = w.hours
+    for item in last_search.candidates {
+        if item.candidate_id == candidate_id && item.start > now && item.start >= last_search.constraints.min_start && item.end <= last_search.constraints.max_end && item.end - item.start == 3600 {
+            let c = coverage(item.start,item.end)
+            if c.complete && !c.conflict { return item }
+        }
+    }
+    nil
+}
