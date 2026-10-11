@@ -1,0 +1,37 @@
+{
+  "schema": 1,
+  "tools": [{
+    "name": "ripple.context.read",
+    "description": "Read the current synthetic test schedule from Ripple's actual isolated app storage. Returns no personal calendar data. Call this for the latest event times, identity and revision. Does not write schedules.",
+    "implemented_by": "app",
+    "risk": "read",
+    "private_data": false,
+    "input_schema": {"type": "object", "properties": {}, "additionalProperties": false},
+    "output_schema": {
+      "type": "object",
+      "properties": {
+        "events": {
+          "type": "array",
+          "maxItems": 1,
+          "items": {
+            "type": "object",
+            "properties": {
+              "event_id": {"type": "string"},
+              "start": {"type": "number"},
+              "end": {"type": "number"},
+              "revision": {"type": "number"},
+              "data_source": {"type": "string", "const": "ripple-sandbox-synthetic"},
+              "retrieved_at": {"type": "number"}
+            },
+            "required": ["event_id", "start", "end", "revision", "data_source", "retrieved_at"],
+            "additionalProperties": false
+          }
+        },
+        "retrieved_at": {"type": "number"},
+        "data_source": {"type": "string", "const": "ripple-sandbox-synthetic"}
+      },
+      "required": ["events", "retrieved_at", "data_source"],
+      "additionalProperties": false
+    }
+  }]
+}

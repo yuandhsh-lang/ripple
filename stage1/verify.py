@@ -85,7 +85,7 @@ def start(label, reuse=False, no_provider=False,revision=''):
     overrides={'OCTOSENSE_HOME':str(home),'OCTOSENSE_APP_DATA':str(apps),'OCTOS_APP_CORE_DIR':str(CORE) if not no_provider else str(R/'no-provider-core'),'OCTOSENSE_HUB_CATALOG':'legacy','OCTOSENSE_HUB':receipt['mirror'],'OCTOSENSE_HUB_ANCHOR':receipt['anchor_public_hex'],'MAKEPAD_REMOTE':str(PORT),'MAKEPAD_HIDE_WINDOWS':'1'}
     env={k:v for k,v in os.environ.items() if not k.startswith(('OCTOS','MAKEPAD','RINX_'))};env.update(overrides)
     with (E/(label+'-shell.log')).open('x',encoding='utf-8') as log:
-        p=subprocess.Popen([str(RC2/'octosense.exe')],cwd=RC2,env=env,stdout=log,stderr=subprocess.STDOUT,creationflags=subprocess.CREATE_NO_WINDOW)
+        p=subprocess.Popen([str(RC2/'octosense.exe')],cwd=RC2,env=env,stdout=log,stderr=subprocess.STDOUT,creationflags=getattr(subprocess,'CREATE_NO_WINDOW',0))
     save(label+'-process.json',{'at_utc':now(),'pid':p.pid,'environment':overrides,'shell_sha256':sha(RC2/'octosense.exe'),'kernel_sha256':sha(RC2/'octos-kernel.exe'),'preopened_card':False})
     for _ in range(40):
         if p.poll() is not None: raise RuntimeError('Shell exited '+str(p.returncode))

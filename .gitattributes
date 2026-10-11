@@ -9,3 +9,7 @@ docs/hackathon/evidence/*.diff -whitespace
 
 # Preserve the digest-checked development bundle bytes across Git checkouts.
 /stage1/bundle/** -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+
+# Retain historical experiment source bytes; packaging happens in local copies.
+/phase1/probe*/bundle/** -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+/phase2/readonly-prep/bundle/** -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol

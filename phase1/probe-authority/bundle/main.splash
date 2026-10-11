@@ -1,0 +1,247 @@
+// SPDX-License-Identifier: Apache-2.0
+// Isolated Phase 1 experiment. Original Ripple v0.1.0 is untouched.
+let status = "No Agent turn has completed."
+let state_text = ""
+let discovery = "Not queried"
+let last_call = "No tool call"
+let busy = false
+let task_generation = 0
+let active_task = ""
+let last_read = nil
+let response_guard = "IDLE"
+let ink = #x173b36
+let revision = 0
+
+fn field(obj, key){
+    let answer = nil
+    for k v in obj { if k == key { answer = v } }
+    answer
+}
+fn refresh_state(){
+    if fs.exists("schedule.txt") { state_text = fs.read("schedule.txt") }
+    else { state_text = "EMPTY: no schedule.txt" }
+    ui.state_panel.set_text(state_text)
+}
+fn record_evidence(line){
+    if fs.exists("phase1-tool-audit.log") && fs.read("phase1-tool-audit.log").len() > 12000 { return }
+    fs.append("phase1-tool-audit.log", "" + time_now() + " " + line + "\n")
+}
+// Epoch seconds UTC are the sole scheduling authority. Display offsets are explicit.
+// This avoids std.local_time's host-dependent offset (and accidental double offset).
+// The unqualified shader floor() rounds through f32; epoch arithmetic must use f64.
+fn whole(t){ t - t % 1 }
+fn valid_epoch(t){ t >= 0 && t <= 4102444799 && t % 1 == 0 }
+fn pad(n){ if n < 10 { return "0" + n } "" + n }
+fn clock_stamp(t, offset){
+    if !valid_epoch(t) { return nil }
+    let shifted = t + offset
+    let z = whole(shifted / 86400) + 719468
+    let era = whole(z / 146097)
+    let doe = z - era * 146097
+    let yoe = whole((doe - whole(doe / 1460) + whole(doe / 36524) - whole(doe / 146096)) / 365)
+    let year = yoe + era * 400
+    let doy = doe - (365 * yoe + whole(yoe / 4) - whole(yoe / 100))
+    let mp = whole((5 * doy + 2) / 153)
+    let date = doy - whole((153 * mp + 2) / 5) + 1
+    let month = mp + 3
+    if mp >= 10 { month = mp - 9 }
+    if month <= 2 { year = year + 1 }
+    let secs = shifted - whole(shifted / 86400) * 86400
+    let hour = whole(secs / 3600)
+    let minute = whole((secs - hour * 3600) / 60)
+    let second = secs - hour * 3600 - minute * 60
+    let suffix = "Z"
+    if offset == 28800 { suffix = "+08:00" }
+    "" + year + "-" + pad(month) + "-" + pad(date) + "T" + pad(hour) + ":" + pad(minute) + ":" + pad(second) + suffix
+}
+fn authoritative_time(s, e){
+    if !valid_epoch(s) || !valid_epoch(e) || e <= s { return nil }
+    {epoch_unit: "unix_seconds_utc" display_zone: "UTC+08:00" start_utc: clock_stamp(s, 0) end_utc: clock_stamp(e, 0) start_utc8: clock_stamp(s, 28800) end_utc8: clock_stamp(e, 28800)}
+}
+fn schedule_fingerprint(){ if fs.exists("schedule.txt") { return fs.read("schedule.txt") } "EMPTY" }
+fn begin_task(id){
+    task_generation = task_generation + 1
+    active_task = id
+    last_read = nil
+    busy = true
+    response_guard = "ANALYZING: suggestions cannot change schedules"
+    task_generation
+}
+fn abandon_task(reason){
+    task_generation = task_generation + 1
+    busy = false active_task = "" last_read = nil
+    response_guard = reason
+}
+fn validate_model_read(generation, text){
+    // Never display free-form model dates, even on a successful Kernel turn.
+    if generation != task_generation || !busy { return "DISCARDED: obsolete task generation" }
+    if last_read == nil { return "REJECTED: this task has no completed tool read" }
+    if text == nil || text.len() > 8192 { return "REJECTED: missing or oversized structured reply" }
+    let data = text.parse_json()
+    if !data.is_object() { return "REJECTED: expected JSON read acknowledgement" }
+    let count = 0
+    for k v in data {
+        if k != "task_id" && k != "read_token" && k != "event_id" && k != "revision" { return "REJECTED: unexpected model field; model time is never authoritative" }
+        count = count + 1
+    }
+    if count != 4 { return "REJECTED: incomplete acknowledgement" }
+    if field(data, "task_id") != active_task || field(data, "read_token") != last_read.read_token { return "REJECTED: unmatched task or read token" }
+    if last_read.fingerprint != schedule_fingerprint() { return "REJECTED: schedule changed after read" }
+    let id = nil let rev = nil
+    if last_read.events.len() > 0 { id = last_read.events[0].event_id rev = last_read.events[0].revision }
+    if field(data, "event_id") != id || field(data, "revision") != rev { return "REJECTED: invented event identity or revision" }
+    "ACCEPTED: actual tool data only; no schedule was changed"
+}
+
+// Same record format and data validation as original Ripple's read_event.
+// Tool execution always reads storage again; it does not return a canned fixture.
+fn app_tool(name, call_id){
+    if !mod.app_tools.active(call_id) { return }
+    let request = mod.app_tools.request(call_id)
+    if request == nil { return }
+    last_call = "" + call_id + " " + name
+    ui.call.set_text(last_call)
+    record_evidence("RECEIVED call_id=" + call_id + " tool=" + name + " request=" + request.to_json())
+    if name != "ripple.context.read" {
+        record_evidence("FAILED call_id=" + call_id + " unknown_tool")
+        mod.app_tools.fail(call_id, "Unknown Ripple tool")
+        return
+    }
+    let args = field(request, "args")
+    for k v in args {
+        if k == "task_id" { continue }
+        record_evidence("FAILED call_id=" + call_id + " invalid_args")
+        mod.app_tools.fail(call_id, "ripple.context.read accepts only an empty object")
+        return
+    }
+    if !busy || field(args, "task_id") != active_task { mod.app_tools.fail(call_id, "stale_task: no active matching read task") return }
+    let fingerprint = schedule_fingerprint()
+    let task = active_task
+    let retrieved = time_now()
+    let events = []
+    if fs.exists("schedule.txt") {
+        let parts = fs.read("schedule.txt").split("|")
+        if parts.len() != 6 || parts[0] != "ripple-test-v1" {
+            record_evidence("FAILED call_id=" + call_id + " invalid_record")
+            mod.app_tools.fail(call_id, "Invalid synthetic schedule record; nothing changed")
+            return
+        }
+        let s = parts[1].to_f64()
+        let e = parts[2].to_f64()
+        let lat = parts[3].to_f64()
+        let lon = parts[4].to_f64()
+        let rev = parts[5].to_f64()
+        if !(s >= 0 && e > s && e - s == 3600 && lat >= -90 && lat <= 90 && lon >= -180 && lon <= 180 && rev >= 0 && whole(rev) == rev && valid_epoch(s) && valid_epoch(e)) {
+            record_evidence("FAILED call_id=" + call_id + " invalid_values")
+            mod.app_tools.fail(call_id, "Invalid synthetic schedule values; nothing changed")
+            return
+        }
+        events.push({event_id: "ripple-test-" + s + "-r" + rev start: s end: e revision: rev data_source: "ripple-sandbox-synthetic" retrieved_at: retrieved time_authority: authoritative_time(s, e)})
+    }
+    let result = {task_id: task read_token: call_id events: events retrieved_at: retrieved data_source: "ripple-sandbox-synthetic"}
+    if task != active_task || fingerprint != schedule_fingerprint() { mod.app_tools.fail(call_id, "stale_context: task or schedule changed") return }
+    if !mod.app_tools.active(call_id) {
+        record_evidence("DISCARDED call_id=" + call_id + " no_longer_active")
+        return
+    }
+    last_read = {task_id: task read_token: call_id events: events fingerprint: fingerprint}
+    fs.write("authority-state.json", result.to_json())
+    mod.app_tools.complete(call_id, result)
+    record_evidence("RETURNED call_id=" + call_id + " result=" + result.to_json())
+}
+// These buttons are operator controls for synthetic test setup, never Agent tools.
+fn seed(){
+    revision = revision + 1
+    let s = whole(time_now()) + 3600
+    fs.write("schedule.txt", "ripple-test-v1|" + s + "|" + (s + 3600) + "|31.23|121.47|" + revision)
+    refresh_state()
+}
+fn clear(){ if fs.exists("schedule.txt") { fs.remove("schedule.txt") } refresh_state() }
+fn discover(){
+    host.request("runtime.list", {}, fn(r){
+        if r.is_ok { fs.write("phase1-runtime-list.json", r.data.to_json()) }
+        host.request("runtime.describe", {method: "app_tools.dispatch"}, fn(d){
+            if d.is_ok { discovery = d.data.to_json() fs.write("phase1-runtime-describe.json", discovery) }
+            else { discovery = "Discovery error: " + d.error }
+            ui.discovery_panel.set_text(discovery)
+        })
+    })
+}
+fn finish_model(generation, text){
+    let verdict = validate_model_read(generation, text)
+    if generation != task_generation || !busy { record_evidence(verdict) return }
+    response_guard = verdict
+    busy = false
+    if verdict == "ACCEPTED: actual tool data only; no schedule was changed" {
+        let result = {task_id: active_task task_generation: generation data_source: "AGENT" verified_events: last_read.events status: "READ_ONLY_COMPLETE"}
+        fs.write("authority-turn.json", result.to_json())
+        let shown = "No current events. SYNTHETIC / program time / no writes"
+        if last_read.events.len() > 0 {
+            let e = last_read.events[0]
+            shown = "SYNTHETIC / epoch UTC: " + e.start + " - " + e.end + "\nUTC+8: " + e.time_authority.start_utc8 + " - " + e.time_authority.end_utc8 + "\nUTC: " + e.time_authority.start_utc + " - " + e.time_authority.end_utc
+        }
+        ui.authority_panel.set_text(shown)
+    }
+    record_evidence(verdict)
+    ui.answer_panel.set_text(verdict)
+}
+fn interrupt_task(){
+    abandon_task("CANCELLED: obsolete replies will be discarded")
+    ui.answer_panel.set_text(response_guard)
+    host.request("octos.turn.interrupt", {}, fn(r){ record_evidence("INTERRUPT reply=" + r.is_ok) })
+}
+fn ask(){
+    if busy { record_evidence("DUPLICATE ANALYZE IGNORED") return }
+    let id = "ripple-task-" + time_now() + "-" + (task_generation + 1)
+    let generation = begin_task(id)
+    status = response_guard ui.answer_panel.set_text(status)
+    ui.authority_panel.set_text("No current accepted result / SYNTHETIC / program time only")
+    let deadline = 45
+    // Operator-only fault setup. Never an Agent argument or Provider setting.
+    if fs.exists("model-deadline-fixture.txt") {
+        let requested = fs.read("model-deadline-fixture.txt").to_f64()
+        if requested >= 0.2 && requested <= 45 { deadline = requested }
+    }
+    start_timeout(deadline, || {
+        if busy && generation == task_generation {
+            abandon_task("TIMEOUT: app request deadline; no schedule was changed")
+            ui.answer_panel.set_text(response_guard)
+            record_evidence(response_guard)
+            host.request("octos.turn.interrupt", {}, fn(r){ record_evidence("TIMEOUT INTERRUPT=" + r.is_ok) })
+        }
+    })
+    host.request("octos.session.open", {}, fn(s){
+        if generation != task_generation || !busy { return }
+        if !s.is_ok { busy = false status = "SESSION ERROR: " + s.error ui.answer_panel.set_text(status) return }
+        fs.write("phase1-session.json", s.data.to_json())
+        let text = ui.prompt.text() + "\nRead task_id=" + id + ". Call ripple.context.read with this task_id. Return ONLY JSON with exactly task_id, read_token, event_id, revision copied from the actual tool result. For no events use null event_id and revision. Do not output or calculate dates or any other fields."
+        host.request("octos.turn.start", {text: text trigger: "person" from: "Ripple isolated read task"}, fn(r){
+            if generation != task_generation || !busy { record_evidence("DISCARDED obsolete MODEL callback") return }
+            if r.is_ok { finish_model(generation, field(r.data, "text")) }
+            else { busy = false status = "TURN ERROR: " + r.error record_evidence(status) ui.answer_panel.set_text(status) }
+        })
+    })
+}
+
+ui := SolidView{width: Fill height: Fill flow: Down padding: 20 spacing: 12
+    draw_bg.color: #xf2f6f3
+    Label{text: "Ripple Phase 1 Lab" draw_text.color: ink draw_text.text_style.font_size: 24}
+    Label{width: Fill text: "Unpublished experiment / synthetic app storage / one read-only Agent tool" draw_text.color: ink}
+    state_panel := Label{width: Fill text: state_text draw_text.color: ink draw_text.text_style.font_size: 13}
+    View{width: Fill height: Fit flow: Right spacing: 8
+        ButtonFlat{text: "Seed synthetic state" on_click: || seed() draw_text +: {color: ink color_hover: ink color_down: ink color_focus: ink}}
+        ButtonFlat{text: "Empty synthetic state" on_click: || clear() draw_text +: {color: ink color_hover: ink color_down: ink color_focus: ink}}
+        ButtonFlat{text: "Refresh disk state" on_click: || refresh_state() draw_text +: {color: ink color_hover: ink color_down: ink color_focus: ink}}
+        ButtonFlat{text: "Discover official ABI" on_click: || discover() draw_text +: {color: ink color_hover: ink color_down: ink color_focus: ink}}
+    }
+    discovery_panel := Label{width: Fill text: discovery draw_text.color: ink draw_text.text_style.font_size: 11}
+    prompt := TextInput{width: Fill height: 70 text: "请读取当前合成日程，报告实际 event_id、start、end、revision、data_source、retrieved_at。必须先调用 ripple.context.read，不能猜测。" draw_text +: {color: ink color_hover: ink color_focus: ink}}
+    View{width: Fill height: Fit flow: Right spacing: 8
+        ButtonFlat{text: "Ask real Ripple Agent" on_click: || ask() draw_text +: {color: ink color_hover: ink color_down: ink color_focus: ink}}
+        ButtonFlat{text: "Interrupt Agent" on_click: || interrupt_task() draw_text +: {color: ink color_hover: ink color_down: ink color_focus: ink}}
+    }
+    authority_panel := Label{width: Fill text: "Program time only / UTC and UTC+8 / no model date rendering" draw_text.color: ink draw_text.text_style.font_size: 13}
+    call := Label{width: Fill text: last_call draw_text.color: ink}
+    answer_panel := Label{width: Fill text: status draw_text.color: ink draw_text.text_style.font_size: 13}
+}
+start_timeout(0.05, || refresh_state())

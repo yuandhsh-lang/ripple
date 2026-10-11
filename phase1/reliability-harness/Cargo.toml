@@ -1,0 +1,32 @@
+[package]
+name = "ripple-reliability-harness"
+version = "0.1.0"
+edition = "2021"
+[workspace]
+[dependencies]
+octosense-appstore = { path = "../toolchain/OctoSense-App-Hub/crates/appstore", default-features = false }
+octosense-app-policy = { path = "../toolchain/OctoSense-App-Hub/crates/app-policy", features = ["splash"] }
+makepad-widgets = { path = "../toolchain/makepad/widgets" }
+serde_json = "1"
+[patch.crates-io]
+octosense-app-contract = { path = "../toolchain/OctoSense-App-Hub/crates/app-contract" }
+
+# Builds resolve the pinned sources from the prepared sibling checkouts, as
+# the OctoSense launcher workspace does.
+[patch."https://github.com/OctoSense-org/makepad.git"]
+makepad-widgets = { path = "../toolchain/makepad/widgets" }
+makepad-app-module = { path = "../toolchain/makepad/libs/app_module" }
+makepad-script = { path = "../toolchain/makepad/platform/script" }
+makepad-ai-services = { path = "../toolchain/makepad/libs/ai/services" }
+makepad-strict-json = { path = "../toolchain/makepad/libs/strict_json" }
+makepad-studio-protocol = { path = "../toolchain/makepad/platform/studio" }
+makepad-network = { path = "../toolchain/makepad/platform/network" }
+makepad-wm-theme = { path = "../toolchain/makepad/libs/wm_theme" }
+
+[patch."https://github.com/OctoSense-org/Octoscript-Makepad.git"]
+octoscript-makepad = { path = "../toolchain/octoscript-makepad/crates/octoscript-makepad" }
+octoscript-widgets = { path = "../toolchain/octoscript-makepad/crates/octoscript-widgets" }
+octoscript-node = { path = "../toolchain/octoscript-makepad/crates/octoscript-node" }
+
+[patch."https://github.com/OctoSense-org/Octoscript.git"]
+octoscript-ui-l0 = { path = "../toolchain/octoscript/crates/octoscript-ui-l0" }

@@ -65,3 +65,32 @@ browser-profile/
 /.local-state/
 __pycache__/
 *.py[cod]
+
+# Phase 1 isolated binaries, test state and local evidence
+/phase1/runtime/
+/phase1/downloads/
+/phase1/toolchain/
+/phase1/evidence/
+/phase1/baseline-bundle/
+/phase1/preview-bundle/
+/phase1/mirror/
+/phase1/__pycache__/
+
+# Downloaded upstream snapshots and historical raw execution records.
+/phase1/sources/
+/PHASE1_EVIDENCE.json
+/docs/convergence/*.json
+/docs/phase1/current/*.json
+/docs/phase2/*.json
+/docs/phase2/history/
+/phase1/reliability-harness/target/
+
+# Captured previews are local evidence, not experiment source assets.
+/phase1/probe*/bundle/screenshots/
+/phase2/readonly-prep/bundle/screenshots/
+
+# One-off assemblers of the retained historical reports need the original logs.
+/phase1/finalize_reports.py
+/phase1/finalize_continuation.py
+/phase1/finalize_convergence.py
+/phase1/write_evidence.py
