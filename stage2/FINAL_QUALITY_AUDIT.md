@@ -28,7 +28,7 @@
 | A04 | P1 应用 | E1 `sdk-deadline-before`：旧 90 秒规划计时器在批准写入后触发，显示 FAILED / 未修改，而实际已写入。 | 规划 deadline 仅作用于 ANALYZING。 | 最终 SDK 模拟旧 timer 在 VERIFYING 触发，继续核验并完成。未用真实等待 90 秒冒充本轮原生计时测试。**已修复**。 |
 | A05 | P1 测试 | 原 `live.py` 强制要求审批；真实晴天 NO_CHANGE 会被错误判为失败。 | 区分真实决策与必须审批的雨天专项，接受 NO_CHANGE / NO_CANDIDATE 并核对活动未变。 | E2 `soak-1-readback.json`：真实 Seattle、DeepSeek、Open-Meteo 返回 NO_CHANGE，未批准、未修改，脚本通过。**已修复**。 |
 | A06 | P1 测试隔离 | 原生坏记录验收中额外启动的隔离宿主 receipt PID 与实际 `/s` PID 不同；旧启动器只判断 API 有响应且可能超时仍报 started。 | 启动前拒绝端口占用；检查控制 API 的 PID；超时终止本次新进程并报失败。 | 8/8 隔离回归，包括实际占用 socket、乱 PID、无 API；实际修复后进程 46884 归属核对、原字节恢复与正常重开通过。**已修复**。 |
-| A07 | P1 交付 | E1 `git-export-before.json`：Git 规范化改变 4 个包内文本字节，官方 Hub 因实际摘要不符拒绝。 | `.gitattributes` 为开发包保留盖章字节；提交这些原有文件的准确字节。 | E1 `git-export-after.json`：所有导出字节一致，官方 Hub 检查通过；最终提交导出再次核验。**已修复**。 |
+| A07 | P1 交付 | E1 `git-export-before.json`：Git 规范化改变 4 个包内文本字节，官方 Hub 因实际摘要不符拒绝；首次提交导出又发现三个未改内容文件仍沿用旧索引字节，见 `commit-export-before-restaging-check.json`。 | `.gitattributes` 为开发包保留盖章字节，并仅对 `stage1/bundle` 重新登记原始字节。 | E1 `git-export-after.json`：所有导出字节一致，官方 Hub 检查通过；最终提交导出再次核验。**已修复**。 |
 
 没有确认新的应用级 P0。上述结论只覆盖已审查和执行的路径。
 
@@ -40,7 +40,7 @@
 
 - `stage1/bundle/main.splash`：只修改坏记录异常边界、候选上界及两个规划阶段控制条件。写入入口、整数 UTC 方案、审批和独立回读架构保持原有实现。
 - `manifest.json`：仅更新官方工具生成的包摘要；权限、工具和版本没有扩展。
-- `.gitattributes`：保留开发包实际测试字节。`main.splash` 提交保留实测 CRLF，因此普通 Git diff 显示较多换行差异；忽略行尾差异后仅有上述局部业务修改。`AGENT.md`、`listing.json`、`tools.json` 的运行内容与字节未改，也未产生本轮提交变化。
+- `.gitattributes`：保留开发包实际测试字节。`main.splash` 提交保留实测 CRLF，因此普通 Git diff 显示较多换行差异；忽略行尾差异后仅有上述局部业务修改。`AGENT.md`、`listing.json`、`tools.json` 的运行内容与字节未改，提交变化仅修正 Git 中的换行字节，使其与已经运行的包一致。
 - `stage1/verify.py`：控制端口和进程归属检查、启动超时，以及日志句柄关闭。
 - `stage2/live.py`：接受真实无需改期 / 无候选结果，识别 EXECUTING、VERIFYING。
 - `phase1/business-harness/src/lib.rs`、`stage2/test_isolation.py`：增加针对性故障和隔离回归。
@@ -123,9 +123,9 @@
 
 冻结参赛包未覆盖，原 Git 历史及 tag 未破坏，原始证据未删除，用户数据未清理，未执行 reset --hard、clean、强制覆盖或全目录删除。未远程推送、部署、发布、修改生产资源、DNS、密钥或数据库。测试结束后本轮 RC2 进程已退出。曾经误连旧的本轮进程及修复前失败日志均保留，没有隐藏为成功。
 
-最终提交只包含本轮修复、字节保留、测试辅助和报告；已有 `.gitignore` 与历史未跟踪资产保持原状。实际提交导出经官方 Hub 再核对，为本地可复现开发版提供证据，不代替赛事接收证明。
+本轮两个本地提交只包含修复、字节保留、测试辅助和报告；已有 `.gitignore` 与历史未跟踪资产保持原状。实际最终提交导出经官方 Hub 再核对，为本地可复现开发版提供证据，不代替赛事接收证明。首次提交导出失败及后续补正记录完整保留。
 
-如需回滚，在该开发分支审阅后对本轮本地提交执行 `git revert <code-version-final.json 中的 head>`，不重写历史、不清空运行目录。若回到旧版，应使用另一个独立沙箱，避免旧 schema 覆盖新版活动。证据和用户数据不随代码回滚删除。
+如需回滚，在该开发分支审阅后，按反向顺序 revert `code-version-final.json` 的 `audit_commits` 中两个本地提交，不重写历史、不清空运行目录。若回到旧版，应使用另一个独立沙箱，避免旧 schema 覆盖新版活动。证据和用户数据不随代码回滚删除。
 
 ## 8. 最终建议
 
