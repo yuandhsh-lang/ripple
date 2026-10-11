@@ -1,5 +1,5 @@
 """Launch guards reject shared historical state before starting any process."""
-import importlib.util, json, unittest, uuid
+import importlib.util, json, socket, unittest, uuid
 from pathlib import Path
 from unittest.mock import patch
 
@@ -40,5 +40,28 @@ class Isolation(unittest.TestCase):
         with patch.object(v.subprocess,'Popen') as launch:
             with self.assertRaises(RuntimeError): v.start('must-not-start',revision='../../../../outside-')
             launch.assert_not_called()
+
+    def test_occupied_control_port_cannot_launch(self):
+        with socket.socket(socket.AF_INET,socket.SOCK_STREAM) as occupied:
+            occupied.bind(('127.0.0.1',0));occupied.listen()
+            with patch.object(v,'PORT',occupied.getsockname()[1]),patch.object(v.subprocess,'Popen') as launch:
+                with self.assertRaisesRegex(RuntimeError,'occupied'): v.start('must-not-start')
+                launch.assert_not_called()
+
+    def control_failure(self, response=None):
+        evidence=self.root/'evidence';evidence.mkdir()
+        (evidence/'mirror-receipt.json').write_text(json.dumps({'mirror':str(self.root/'mirror'),'anchor_public_hex':'test-fixture'}),encoding='utf-8')
+        with patch.object(v,'E',evidence),patch.object(v,'check_remote_available'),patch.object(v,'sha',return_value='FIXTURE'),patch.object(v,'save'),patch.object(v.time,'sleep'),patch.object(v.subprocess,'Popen') as launch,patch.object(v,'request') as request:
+            process=launch.return_value;process.pid=12345;process.poll.return_value=None
+            if response is None:request.side_effect=OSError('fixture unavailable API')
+            else:request.return_value=response
+            with self.assertRaisesRegex(RuntimeError,'another PID' if response else 'not ready'):v.start('fixture-control-failure')
+            process.terminate.assert_called_once()
+
+    def test_mismatched_pid_stops_only_spawned_host(self):
+        self.control_failure(b'{"pid":99999}')
+
+    def test_missing_control_api_never_claims_ready(self):
+        self.control_failure()
 
 if __name__ == '__main__': unittest.main()
