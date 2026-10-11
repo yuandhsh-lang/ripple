@@ -101,7 +101,7 @@ receipt = {'final_status': status, 'at_utc': datetime.datetime.now(datetime.time
     'native_readback_mismatch': mismatch, 'sdk_fixture_tests': '3/3 current SDK; not real model evidence',
     'time_vectors': 90, 'weather_injected_cases': 9, 'original_project_checks': original_checks,
     'historical_files_checked': len(history), 'historical_files_not_preserved': changes,
-    'blockers': ['Three historical Stage 1 test Agent ledger/session files have no byte-exact recovery copy.'] if changes else [],
+    'blockers': [f'{len(changes)} historical Stage 1 test Agent ledger/session files have no byte-exact recovery copy.'] if changes else [],
     'not_tested': ['Real Provider transport timeout', 'Fixed-source host build/cold start (missing pinned SDK)',
                    'Long-term host Agent-history retention', 'Real model no-candidate branch (current SDK/FIXTURE only)'],
     'system_interruption': 'Windows BlueScreen 154/boot 2026-10-11 02:49; later native recovery/failure checks completed',

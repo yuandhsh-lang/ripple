@@ -54,9 +54,23 @@ def prepare(revision=''):
         command(revision+'mirror-verify',[HUB,'verify',mirror/'catalog.json','--anchor',anchor])
     save(revision+'mirror-receipt.json',{'classification':'ISOLATED_LOCAL_REHEARSAL_NOT_RELEASE','mirror':str(mirror),'anchor_public_hex':anchor,'temporary_signing_identity_only':True,'existing_keys_modified':False,'source_hashes':{str(p.relative_to(main)):sha(p) for p in main.rglob('*') if p.is_file()}})
 
+def check_test_isolation():
+    allowed = WORK / 'stage2/runtime/runs'
+    if not R.resolve().is_relative_to(allowed.resolve()) or R.resolve() == allowed.resolve():
+        raise RuntimeError('Use stage2/run.py with a fresh RIPPLE_TEST_RUN; historical runtimes are read-only.')
+    if R.resolve() != R.absolute() or CORE.resolve() != (R/'kernel-core').absolute():
+        raise RuntimeError('Kernel core must belong to this run; no external paths or junctions.')
+    marker = json.loads((R/'isolation.json').read_text(encoding='utf-8'))
+    if marker != {'runtime_root':str(R.resolve()), 'core_dir':str(CORE.resolve()), 'provider_profile_only':True}:
+        raise RuntimeError('Invalid test isolation marker.')
+
 def start(label, reuse=False, no_provider=False,revision=''):
+    check_test_isolation()
     prefix=revision+('no-provider' if no_provider and not reuse else 'business')
     home=R/(prefix+'-home');apps=R/(prefix+'-apps')
+    for path in [home, apps, CORE, R/'no-provider-core']:
+        if not path.resolve().is_relative_to(R.resolve()) or path.resolve() != path.absolute():
+            raise RuntimeError('Runtime roots must stay inside this run without symlinks/junctions.')
     if not reuse: home.mkdir();apps.mkdir()
     receipt=json.loads((E/(revision+'mirror-receipt.json')).read_text())
     overrides={'OCTOSENSE_HOME':str(home),'OCTOSENSE_APP_DATA':str(apps),'OCTOS_APP_CORE_DIR':str(CORE) if not no_provider else str(R/'no-provider-core'),'OCTOSENSE_HUB_CATALOG':'legacy','OCTOSENSE_HUB':receipt['mirror'],'OCTOSENSE_HUB_ANCHOR':receipt['anchor_public_hex'],'MAKEPAD_REMOTE':str(PORT),'MAKEPAD_HIDE_WINDOWS':'1'}

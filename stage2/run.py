@@ -1,16 +1,34 @@
 """Stage 2 isolated RC2 operations, reusing Stage 1's verified control API."""
-import json, sys, urllib.parse
+import json, os, re, shutil, sys, urllib.parse
 from pathlib import Path
 
 WORK = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(WORK / 'stage1'))
 import verify as v
-v.E = WORK / 'stage2/evidence'
-v.R = WORK / 'stage2/runtime'
-v.E.mkdir(exist_ok=True)
-# Never fall back to Stage 1's shared peer registry. An unconfigured isolated
-# core must report Provider unavailable instead of touching old workspaces.
+run_name = os.environ.get('RIPPLE_TEST_RUN', '')
+if not re.fullmatch(r'[a-z0-9][a-z0-9-]{0,63}', run_name):
+    raise RuntimeError('Set RIPPLE_TEST_RUN to a new lowercase run name; historical test roots are never reused.')
+v.R = WORK / 'stage2/runtime/runs' / run_name
+v.E = WORK / 'stage2/evidence/runs' / run_name
 v.CORE = v.R / 'kernel-core'
+for path in (v.R, v.E):
+    if path.resolve() != path.absolute(): raise RuntimeError('Test roots must not use symlinks/junctions.')
+
+def initialize():
+    # Copy only the already configured test Provider profile, never a peer
+    # registry, workspace, conversation, home or app-state directory.
+    profile = WORK / 'stage2/runtime/kernel-core/profiles/_main.json'
+    data = json.loads(profile.read_text(encoding='utf-8'))
+    if set(data['config']) - {'env_vars', 'llm', 'tool_policy'}:
+        raise RuntimeError('Unexpected test Provider profile fields; refuse to clone runtime state.')
+    if v.R.exists() or v.E.exists(): raise RuntimeError('Run already exists; choose a new run name.')
+    v.R.mkdir(parents=True); v.E.mkdir(parents=True)
+    target = v.CORE / 'profiles/_main.json'; target.parent.mkdir(parents=True)
+    shutil.copyfile(profile, target)
+    with (v.R / 'isolation.json').open('x', encoding='utf-8') as f:
+        json.dump({'runtime_root':str(v.R.resolve()), 'core_dir':str(v.CORE.resolve()),
+                   'provider_profile_only':True}, f)
+    print('Fresh test run initialized; no peer/workspace/history copied.')
 
 def enter(widget,text):
     snapshot=json.loads(v.request('/snap'))['s']
@@ -27,7 +45,10 @@ def enter(widget,text):
 if __name__ == '__main__':
     mode = sys.argv[1]
     revision = sys.argv[sys.argv.index('--revision')+1] if '--revision' in sys.argv else 'soak-'
-    if mode == 'prepare': v.prepare(revision)
+    if mode == 'init': initialize()
+    elif mode == 'prepare':
+        v.check_test_isolation()
+        v.prepare(revision)
     elif mode == 'start': v.start(sys.argv[2], '--reuse' in sys.argv, '--no-provider' in sys.argv,revision=revision)
     elif mode == 'snap': v.snap(sys.argv[2])
     elif mode == 'click': v.click(sys.argv[2])
