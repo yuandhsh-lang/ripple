@@ -1,5 +1,9 @@
 # Ripple
 
+## 当前正式开发目录（2026-10-13）
+
+正式开发入口固定为 `F:\桌面\01 项目开发\黑客松\Ripple`，分支 `main`；当前 Agent 应用为 `stage1/bundle/`，版本 `0.2.3-stage2`。固定依赖、检查命令和数据保护说明见 [DEVELOPMENT.md](DEVELOPMENT.md)。Workspace 副本保留为历史证据，不再作为正式开发入口。下文 v0.1.0 与旧阶段记录保持历史含义；本地开发版尚无可信的本届比赛正式接收证明。
+
 ## Local development experiments
 
 The retained Agent probes, validation scripts and historical reports are indexed in [the experiment archive](docs/experiments/README.md). The current development bundle is `stage1/bundle/`; source templates, historical validation and the preserved v0.1.0 delivery have separate version records. Downloaded SDK snapshots, model sessions and runtime data are excluded from Git.
