@@ -82,7 +82,7 @@ mod tests {
         let bundle=root().join("stage1/bundle");
         let mut source=std::fs::read_to_string(bundle.join("main.splash")).unwrap();
         source.push_str(r#"
-          fn editor_init(epoch){ let before=schedule_fingerprint() ui.title_input.set_text("Editor regression") ui.start_input.set_text(clock_stamp(epoch.to_f64(),28800).replace("T"," ").split("+")[0].strip_suffix(":00")) ui.duration.set_text("60") ui.latitude.set_text("31.23") ui.longitude.set_text("121.47") save_activity() finish_save(before,false) }
+          fn editor_init(epoch){ manual_location=true selected_city=nil ui.available_start.set_text("00:00") ui.available_end.set_text("23:59") let before=schedule_fingerprint() ui.title_input.set_text("Editor regression") ui.start_input.set_text(clock_stamp(epoch.to_f64(),28800).replace("T"," ").split("+")[0].strip_suffix(":00")) ui.duration.set_text("60") ui.latitude.set_text("31.23") ui.longitude.set_text("121.47") save_activity() finish_save(before,false) }
           fn editor_begin(id){ workflow_started=time_now() begin_task(id) move("ANALYZING","SDK fixture, not real model") }
           fn editor_finish(text){ finish_model(task_generation,text) }
           fn editor_title(text){ ui.title_input.set_text(text) }
@@ -154,7 +154,7 @@ mod tests {
         let bundle=root().join("stage1/bundle");
         let mut source=std::fs::read_to_string(bundle.join("main.splash")).unwrap();
         source.push_str(r#"
-          fn fault_save(title,start){ let before=schedule_fingerprint() let pending=status=="AWAITING_APPROVAL" ui.title_input.set_text(title) ui.start_input.set_text(start) ui.duration.set_text("60") ui.latitude.set_text("31.23") ui.longitude.set_text("121.47") save_activity() finish_save(before,pending) }
+          fn fault_save(title,start){ manual_location=true selected_city=nil ui.available_start.set_text("00:00") ui.available_end.set_text("23:59") let before=schedule_fingerprint() let pending=status=="AWAITING_APPROVAL" ui.title_input.set_text(title) ui.start_input.set_text(start) ui.duration.set_text("60") ui.latitude.set_text("31.23") ui.longitude.set_text("121.47") save_activity() finish_save(before,pending) }
           fn fault_clock(epoch){ fs.write("clock.json",{utc8:clock_stamp(epoch.to_f64(),28800)}.to_json()) }
           fn fault_report(){ fs.write("report.json",{status:status message:message busy:busy loading:loading verified:verified}.to_json()) }
         "#);
@@ -190,7 +190,7 @@ mod tests {
         let bundle=root().join("stage1/bundle");
         let mut source=std::fs::read_to_string(bundle.join("main.splash")).unwrap();
         source.push_str(r#"
-          fn weather_save(start){ let before=schedule_fingerprint() let pending=status=="AWAITING_APPROVAL" ui.title_input.set_text("Weather reliability") ui.start_input.set_text(start) ui.duration.set_text("60") ui.latitude.set_text("31.23") ui.longitude.set_text("121.47") save_activity() finish_save(before,pending) }
+          fn weather_save(start){ manual_location=true selected_city=nil ui.available_start.set_text("00:00") ui.available_end.set_text("23:59") let before=schedule_fingerprint() let pending=status=="AWAITING_APPROVAL" ui.title_input.set_text("Weather reliability") ui.start_input.set_text(start) ui.duration.set_text("60") ui.latitude.set_text("31.23") ui.longitude.set_text("121.47") save_activity() finish_save(before,pending) }
           fn weather_clock(epoch){ fs.write("clock.json",{utc8:clock_stamp(epoch.to_f64(),28800)}.to_json()) }
           fn weather_response(code,body){ let accepted=try { persist_weather(code.to_f64(),body,read_event()) } catch { false } fs.write("weather-report.json",{accepted:accepted message:weather_message}.to_json()) }
         "#);
@@ -223,8 +223,8 @@ mod tests {
         let bundle=root().join("stage1/bundle");
         let mut source=std::fs::read_to_string(bundle.join("main.splash")).unwrap();
         source.push_str(r#"
-          fn audit_save(title,start){ let before=schedule_fingerprint() let pending=status=="AWAITING_APPROVAL" ui.title_input.set_text(title) ui.start_input.set_text(start) ui.duration.set_text("120") ui.latitude.set_text("31.23") ui.longitude.set_text("121.47") save_activity() finish_save(before,pending) }
-          fn audit_inputs(title,start,duration,lat,lon){ ui.title_input.set_text(title) ui.start_input.set_text(start) ui.duration.set_text(duration) ui.latitude.set_text(lat) ui.longitude.set_text(lon) save_activity() }
+          fn audit_save(title,start){ manual_location=true selected_city=nil ui.available_start.set_text("00:00") ui.available_end.set_text("23:59") let before=schedule_fingerprint() let pending=status=="AWAITING_APPROVAL" ui.title_input.set_text(title) ui.start_input.set_text(start) ui.duration.set_text("120") ui.latitude.set_text("31.23") ui.longitude.set_text("121.47") save_activity() finish_save(before,pending) }
+          fn audit_inputs(title,start,duration,lat,lon){ manual_location=true selected_city=nil ui.available_start.set_text("00:00") ui.available_end.set_text("23:59") ui.title_input.set_text(title) ui.start_input.set_text(start) ui.duration.set_text(duration) ui.latitude.set_text(lat) ui.longitude.set_text(lon) save_activity() }
           fn audit_begin(id){ workflow_started=time_now() begin_task(id) move("ANALYZING","Audit planning fixture") }
           fn audit_deadline(){ expire_agent(task_generation) }
           fn audit_finish(text){ finish_model(task_generation,text) }
@@ -343,7 +343,7 @@ mod tests {
         let bundle=root().join("stage1/bundle");
         let mut source=std::fs::read_to_string(bundle.join("main.splash")).unwrap();
         source.push_str(r#"
-          fn fixture_inputs(title,start,duration,lat,lon){ let before=schedule_fingerprint() let pending=status=="AWAITING_APPROVAL" ui.title_input.set_text(title) ui.start_input.set_text(start) ui.duration.set_text(duration) ui.latitude.set_text(lat) ui.longitude.set_text(lon) save_activity() finish_save(before,pending) }
+          fn fixture_inputs(title,start,duration,lat,lon){ manual_location=true selected_city=nil ui.available_start.set_text("00:00") ui.available_end.set_text("23:59") let before=schedule_fingerprint() let pending=status=="AWAITING_APPROVAL" ui.title_input.set_text(title) ui.start_input.set_text(start) ui.duration.set_text(duration) ui.latitude.set_text(lat) ui.longitude.set_text(lon) save_activity() finish_save(before,pending) }
           fn fixture_begin(id){ workflow_started=time_now() begin_task(id) move("ANALYZING","Planning fixture") }
           fn fixture_deadline(){ expire_agent(task_generation) }
           fn fixture_finish(text){ finish_model(task_generation,text) }
@@ -465,4 +465,5 @@ mod tests {
         write("business-abi-results.json",&json!({"classification":"ACTUAL_SDK_ABI_AND_SPLASH_VM_WITH_FIXTURE_WEATHER_AND_MODEL_REPLY","real_model_used":false,"created_activity":before,"context":context,"search":search,"executed_choice":approved,"independent_readback":after,"dry_context":dry,"no_candidate":none,"guards_verified":["invalid input date","invalid tool schema","invented candidate","decline no write","identity stable across edit","changed revision stale","weather content stale","expired weather","expired proposal unchanged weather","cancelled late choice","double approval","duplicate execution","boot readback","no change","no weather","no candidate","one replan limit","workflow expiry"]}));
         drop(reg);
     }
+    include!("stage1_tests.rs");
 }

@@ -17,6 +17,17 @@ let expected_record = ""
 let verified = false
 let replan_count = 0
 let workflow_started = 0
+let selected_city = nil
+let city_results = []
+let city_message = "搜索城市后，请核对国家、省市并选择。城市坐标不是您的精确位置。"
+let city_loading = false
+let city_generation = 0
+let city_query = ""
+let manual_location = false
+let dirty = false
+let input_generation = 0
+let saving_input_generation = 0
+let planning_mode = "agent"
 let ink = #x173b36
 let muted = #x58746e
 let accent = #x087f6d
@@ -66,13 +77,118 @@ fn authoritative_time(s, e){
     {epoch_unit: "unix_seconds_utc" display_zone: "UTC+08:00" start_utc: clock_stamp(s, 0) end_utc: clock_stamp(e, 0) start_utc8: clock_stamp(s, 28800) end_utc8: clock_stamp(e, 28800)}
 }
 
+// The pinned runtime has a host-local offset, not an IANA timezone database.
+// City mode deliberately supports China / Asia/Shanghai only; all epochs stay UTC.
+fn local_date(t){ clock_stamp(t,28800).split("T")[0] }
+fn local_day(t){ whole((t+28800)/86400) }
+fn local_clock(t){ clock_stamp(t,28800).split("T")[1].split("+")[0].strip_suffix(":00") }
+fn supported_city(c){ c.country_code == "CN" && c.timezone == "Asia/Shanghai" }
+fn valid_city(c){
+    if !c.is_object() { return false }
+    for v in [c.name,c.country,c.country_code,c.admin1,c.admin2,c.timezone,c.source] {
+        if !v.is_string() || v.len() > 160 { return false }
+    }
+    c.name.len() > 0 && c.country.len() > 0 && c.country_code.len() == 2 && c.admin1.len() > 0 && c.timezone.len() > 0 && c.source == "Open-Meteo / GeoNames" && c.id > 0 && c.id % 1 == 0 && c.lat >= -90 && c.lat <= 90 && c.lon >= -180 && c.lon <= 180
+}
+fn valid_window(a,s,e){
+    if a == nil { return true }
+    if !a.is_object() { return false }
+    valid_epoch(a.min_start) && valid_epoch(a.max_end) && a.max_end > a.min_start && a.max_end-a.min_start >= e-s && local_day(a.min_start) == local_day(s) && local_day(a.max_end) == local_day(s)
+}
+fn window_inputs(s,duration){
+    let left = ui.available_start.text().trim() let right = ui.available_end.text().trim()
+    if left == "" && right == "" { return {valid:true window:nil} }
+    let a = parse_start(local_date(s)+" "+left) let b = parse_start(local_date(s)+" "+right)
+    if a == nil || b == nil { return {valid:false window:nil} }
+    let w = {min_start:a max_end:b}
+    {valid:valid_window(w,s,s+duration) window:w}
+}
+fn within_window(e,s,end){
+    if e.schema != 3 { return false }
+    let a = field(e,"availability")
+    a != nil && valid_window(a,e.start,e.end) && s >= a.min_start && end <= a.max_end && end-s == e.end-e.start && local_day(s) == local_day(e.start) && local_day(end) == local_day(e.start)
+}
+fn draft_changed(){
+    dirty = true input_generation = input_generation + 1
+    if status == "ANALYZING" { interrupt_task() }
+    if status == "AWAITING_APPROVAL" || status == "CANDIDATES" {
+        proposal = nil last_read = nil last_search = nil
+        move("STALE","输入已修改，旧方案已失效。请保存后重新查询。")
+    }
+    ui.draft_label.set_text("未保存：查询和审批只使用已保存的活动。请先保存修改。")
+}
+fn location_mode(){
+    if busy || loading || city_loading || status == "PARTIAL" { return }
+    manual_location = !manual_location selected_city = nil city_results = []
+    city_generation = city_generation + 1 draft_changed() ui.city_panel.render()
+}
+fn city_input_changed(){
+    city_generation = city_generation + 1 city_loading = false selected_city = nil city_results = []
+    city_message = "城市名称已编辑，请重新查询并确认。" draft_changed() ui.city_panel.render()
+}
+fn geocode_results(code,body){
+    if code != 200 || body.len() > 65536 { city_message = "城市服务暂不可用，请重试；活动未修改。" return [] }
+    let data = try { body.parse_json() } catch { nil }
+    if !data.is_object() { city_message = "城市响应格式错误，未采用任何位置。" return [] }
+    let rows = field(data,"results")
+    if rows == nil { city_message = "未找到城市，请补充省份或使用其他名称。" return [] }
+    if !rows.is_array() || rows.len() > 5 { city_message = "城市响应不完整，未采用任何位置。" return [] }
+    let found = []
+    for r in rows {
+        let c = try {
+            let area = field(r,"admin2") if area == nil { area = "" }
+            {id:r.id name:r.name country:r.country country_code:r.country_code admin1:r.admin1 admin2:area lat:r.latitude lon:r.longitude timezone:r.timezone source:"Open-Meteo / GeoNames"}
+        } catch { nil }
+        let accepted = try { valid_city(c) } catch { false }
+        if accepted { found.push(c) }
+    }
+    city_message = "请逐项核对并选择；最多显示 5 项，可补充省份缩小查询。仅支持中国 Asia/Shanghai。"
+    if found.len() == 0 { city_message = "未找到字段完整的城市；未选择位置，请重试其他名称。" }
+    found
+}
+fn search_city(){
+    if busy || loading || status == "PARTIAL" { return }
+    let q = ui.city_input.text().trim()
+    if q.len() < 2 || q.len() > 80 || q.search("\n") >= 0 || q.search("\r") >= 0 || q.search("\t") >= 0 {
+        city_message = "请输入 2–80 字符的城市名称，不接受换行或控制字符。" ui.city_panel.render() return
+    }
+    city_generation = city_generation + 1 let generation = city_generation
+    city_query = q city_loading = true city_results = []
+    city_message = "正在向 Open-Meteo 查询城市名称…" ui.city_panel.render()
+    let res = try { request_weather("https://geocoding-api.open-meteo.com/v1/search?name="+q.url_encode()+"&count=5&language=zh&format=json").await() } catch { nil }
+    if generation != city_generation { return }
+    city_loading = false
+    if q != ui.city_input.text().trim() { city_message = "查询名称已改变，请重新搜索。" city_results = [] }
+    else if res == nil { city_message = "城市查询失败或超过 15 秒；请检查网络后重试。" }
+    else { city_results = try { geocode_results(res.status_code,res.body.to_string()) } catch { let empty = [] city_message = "城市响应缺少必要字段，未采用位置。" empty } }
+    ui.city_panel.render()
+}
+fn choose_city(id){
+    if busy || loading || city_loading || status == "PARTIAL" { return }
+    if city_query != ui.city_input.text().trim() { city_results = [] city_message = "名称已改变，请重新查询。" ui.city_panel.render() return }
+    for c in city_results {
+        if c.id == id {
+            draft_changed() weather = [] weather_message = "位置草稿已改变，请保存后重新获取天气。"
+            if !supported_city(c) { selected_city = nil city_message = "暂不支持此城市时区："+c.timezone+"。不会按北京时间替代计算。" }
+            else { selected_city = c manual_location = false ui.city_input.set_text(c.name) city_query = c.name city_message = "已选择："+c.name+" / "+c.country+" / "+c.admin1+" / "+c.admin2+" / "+c.timezone+"；保存后生效。" }
+            city_results = [] ui.city_panel.render() repaint() return
+        }
+    }
+}
+
 
 // Same app-owned schedule file, now with a stable identity and user title.
 fn record(e){ e.to_json() }
 fn valid_event(e){
     if !e.is_object() { return false }
     if e.schema == nil || e.event_id == nil || e.title == nil || e.start == nil || e.end == nil || e.lat == nil || e.lon == nil || e.revision == nil || e.data_source == nil { return false }
-    if e.schema != 2 || e.data_source != "ripple-local-activity" || !e.event_id.is_string() || !e.title.is_string() { return false }
+    if (e.schema != 2 && e.schema != 3) || e.data_source != "ripple-local-activity" || !e.event_id.is_string() || !e.title.is_string() { return false }
+    if e.schema == 3 {
+        if !valid_window(e.availability,e.start,e.end) || local_day(e.start) != local_day(e.end) { return false }
+        let c = e.location
+        if c == nil { if e.timezone != "UTC+08:00" { return false } }
+        else if !valid_city(c) || !supported_city(c) || e.timezone != c.timezone || e.lat != c.lat || e.lon != c.lon { return false }
+    }
     e.event_id.len() > 0 && e.event_id.len() <= 96 && e.title.trim().len() > 0 && e.title.len() <= 120 && valid_epoch(e.start) && valid_epoch(e.end) && e.end - e.start >= 900 && e.end - e.start <= 14400 && (e.end-e.start) % 60 == 0 && e.lat >= -90 && e.lat <= 90 && e.lon >= -180 && e.lon <= 180 && e.revision >= 1 && e.revision <= 1000000000 && whole(e.revision) == e.revision
 }
 fn read_event(){
@@ -112,19 +228,28 @@ fn parse_start(text){
     epoch
 }
 fn save_activity(){
-    if busy || loading || status == "PARTIAL" { return }
+    if busy || loading || city_loading || status == "PARTIAL" { return }
     let s = parse_start(ui.start_input.text()) let duration = ui.duration.text().trim().to_f64()
     let lat = ui.latitude.text().trim().to_f64() let lon = ui.longitude.text().trim().to_f64()
     let title = ui.title_input.text().trim()
+    if !manual_location {
+        if selected_city == nil || !supported_city(selected_city) { move("FAILED","请先查询并确认一个受支持的城市。") return }
+        lat = selected_city.lat lon = selected_city.lon
+    }
     if s == nil || !(s > time_now() && duration >= 15 && duration <= 240 && duration % 1 == 0 && lat >= -90 && lat <= 90 && lon >= -180 && lon <= 180) || title.len() == 0 || title.len() > 120 { move("FAILED","Enter title, future UTC+8 date/time, 15-240 minutes, and valid coordinates.") return }
     let old = read_event()
     if old == nil && fs.exists("schedule.txt") { move("FAILED","Stored activity invalid; preserved for inspection. No overwrite.") return }
     let id = "ripple-" + time_now() let revision = 1
     if old != nil { id = old.event_id revision = old.revision + 1 }
-    let next = {schema:2 event_id:id title:title start:s end:s + duration*60 lat:lat lon:lon revision:revision data_source:"ripple-local-activity"}
+    let available = window_inputs(s,duration*60)
+    if !available.valid || local_date(s) != local_date(s+duration*60) { move("FAILED","仅支持同一天：可用开始须早于结束且容纳完整活动；不可跨日。窗口可同时留空，表示未声明个人空闲。") return }
+    let zone = "UTC+08:00" let place = nil
+    if !manual_location { zone = selected_city.timezone place = selected_city }
+    let next = {schema:3 event_id:id title:title start:s end:s + duration*60 lat:lat lon:lon revision:revision data_source:"ripple-local-activity" timezone:zone location:place availability:available.window}
     if !valid_event(next) { move("FAILED","Invalid activity; nothing changed.") return }
     let was_pending = status == "AWAITING_APPROVAL"
     let before = schedule_fingerprint()
+    saving_input_generation = input_generation
     expected_record = record(next) busy = true
     move("SAVING","Saving the activity; success requires an independent read.")
     // Arm read-back before blocking OS I/O, so an interrupted callback cannot
@@ -140,10 +265,13 @@ fn finish_save(before,was_pending){
         else { move("PARTIAL","Save outcome uncertain. Inspect actual result before any new write; original record is in the execution receipt.") }
         return
     }
-    event = after verified = false
+    event = after verified = false dirty = input_generation != saving_input_generation
+    if dirty { ui.draft_label.set_text("保存期间有新的编辑尚未保存；请再次保存后查询。") }
+    else { ui.draft_label.set_text("已保存并独立读回；后续查询只使用下面的已保存活动。") }
+    weather = [] weather_message = "活动已保存，请重新获取天气；旧天气未删除但不作为新的查询结果。"
     if was_pending { move("STALE","Activity changed. Old approval is invalid; replan once for new approval.") }
     else { proposal = nil move("READY","Activity saved and independently read back. Analyze with Agent.") }
-    record_evidence("USER_SAVE event=" + record(after))
+    record_evidence("USER_SAVE event_id=" + after.event_id + " revision=" + after.revision)
 }
 fn boot(){
     event = read_event()
@@ -152,6 +280,13 @@ fn boot(){
     ui.start_input.set_text(clock_stamp(event.start,28800).replace("T"," ").split("+")[0].strip_suffix(":00"))
     ui.duration.set_text("" + (event.end-event.start)/60)
     ui.latitude.set_text("" + event.lat) ui.longitude.set_text("" + event.lon)
+    selected_city = field(event,"location") manual_location = selected_city == nil dirty = false
+    let available = field(event,"availability")
+    ui.available_start.set_text("") ui.available_end.set_text("")
+    if available != nil { ui.available_start.set_text(local_clock(available.min_start)) ui.available_end.set_text(local_clock(available.max_end)) }
+    if selected_city != nil { ui.city_input.set_text(selected_city.name) city_message = "已保存："+selected_city.name+" / "+selected_city.country+" / "+selected_city.admin1+" / "+selected_city.admin2+" / "+selected_city.timezone }
+    else { city_message = "旧记录仅有坐标，城市未确认。按原 UTC+8 显示；选择城市后再保存。" }
+    ui.city_panel.render() ui.draft_label.set_text("已读取保存记录；未声明窗口不代表您全天有空。")
     move("READY","Stored activity loaded. Old approvals are never resumed.")
     if fs.exists("execution.json") {
         let saved = read_json("execution.json")
@@ -211,7 +346,7 @@ fn candidate_search(args, now){
     if !busy || last_read == nil || last_read.events.len() != 1 { return nil }
     if args.task_id != active_task || args.read_token != last_read.read_token || last_read.fingerprint != schedule_fingerprint() || last_read.weather_fingerprint != read_text("weather.json") { return nil }
     if args.min_start != last_read.bounds.min_start || args.max_end != last_read.bounds.max_end || args.max_candidates != last_read.bounds.max_candidates { return nil }
-    if !valid_epoch(args.min_start) || !valid_epoch(args.max_end) || args.min_start < now || args.max_end - args.min_start < last_read.events[0].end-last_read.events[0].start || args.max_end - args.min_start > 604800 { return nil }
+    if !valid_epoch(args.min_start) || !valid_epoch(args.max_end) || args.max_end - args.min_start > 604800 { return nil }
     if !(args.max_candidates >= 1 && args.max_candidates <= 3 && whole(args.max_candidates) == args.max_candidates) { return nil }
     let target = last_read.events[0]
     let w = read_weather_snapshot(target, now)
@@ -221,16 +356,16 @@ fn candidate_search(args, now){
     let search_id = active_task + ":" + task_generation + ":" + search_sequence + ":" + last_read.read_token + ":" + w.revision
     let duration = target.end-target.start
     let found = []
-    let first = whole(args.min_start / 1800) * 1800
-    if first < args.min_start { first = first + 1800 }
+    // Half-hour spacing anchored at the declared bound includes its exact start.
+    let first = args.min_start
     for step in 336 {
         let s = first + step * 1800 let e = s + duration
         if e > args.max_end { break }
         if s <= now { continue }
         if s < w.hours[0].start { continue }
         let c = coverage(s, e)
-        if c.complete && !c.conflict {
-            found.push({candidate_id:search_id + ":" + found.len() start:s end:e time_authority:authoritative_time(s,e) checks:{future:true duration_seconds:duration full_weather_coverage:true weather_safe:true time_bounds:true calendar_scope:"single Ripple-managed activity"}})
+        if c.complete && !c.conflict && within_window(target,s,e) {
+            found.push({candidate_id:search_id + ":" + found.len() start:s end:e time_authority:authoritative_time(s,e) checks:{future:true duration_seconds:duration full_weather_coverage:true weather_safe:true time_bounds:true availability_declared:true calendar_scope:"single Ripple-managed activity; other personal commitments unknown"}})
             if found.len() >= args.max_candidates { break }
         }
     }
@@ -245,7 +380,7 @@ fn validate_candidate(search_id,candidate_id,now){
     for item in last_search.candidates {
         if item.candidate_id == candidate_id && item.start > now && item.start >= last_search.constraints.min_start && item.end <= last_search.constraints.max_end && item.end - item.start == last_read.events[0].end-last_read.events[0].start {
             let c = coverage(item.start,item.end)
-            if c.complete && !c.conflict { return item }
+            if c.complete && !c.conflict && within_window(last_read.events[0],item.start,item.end) { return item }
         }
     }
     nil
@@ -294,28 +429,34 @@ fn begin_task(id){
     task_generation
 }
 fn abandon_task(reason){ task_generation = task_generation + 1 active_task = "" busy = false last_read = nil last_search = nil proposal = nil move("CANCELLED",reason) }
+fn read_context(token){
+    let fingerprint = schedule_fingerprint() let e = read_event()
+    if e == nil { return nil }
+    let w = read_weather_snapshot(e,time_now()) if w == nil { return nil }
+    weather = w.hours let impact = coverage(e.start,e.end)
+    if !impact.complete { return nil }
+    // No declaration means no actionable candidates. Never infer free/busy.
+    let min_start = 0 let max_end = 0 let a = field(e,"availability")
+    if a != nil {
+        min_start = a.min_start max_end = a.max_end
+        if min_start <= time_now() { min_start = whole(time_now()/60)*60+60 }
+    }
+    let result = {task_id:active_task read_token:token events:[e] retrieved_at:time_now() data_source:"ripple-local-activity" impact:impact weather_source:w.source weather_revision:w.revision weather_fetched_at:w.fetched_at time_authority:authoritative_time(e.start,e.end) search_bounds:{min_start:min_start max_end:max_end max_candidates:3} calendar_scope:"Only the declared availability for one Ripple activity; other personal commitments unknown"}
+    if fingerprint != schedule_fingerprint() { return nil }
+    last_read = {read_token:token events:[e] fingerprint:fingerprint bounds:result.search_bounds weather_fingerprint:read_text("weather.json")}
+    result
+}
 fn app_tool(name,call_id){
     if !mod.app_tools.active(call_id) { return }
     let request = mod.app_tools.request(call_id) if request == nil { return }
     let args = field(request,"args")
     if name == "ripple.slots.search" { slots_tool(call_id,args) return }
     if name != "ripple.context.read" || !busy || field(args,"task_id") != active_task { mod.app_tools.fail(call_id,"unknown_tool_or_stale_task") return }
-    let fingerprint = schedule_fingerprint() let e = read_event()
-    if e == nil { mod.app_tools.fail(call_id,"no_valid_activity: no schedule changed") return }
-    let w = read_weather_snapshot(e,time_now())
-    if w == nil { mod.app_tools.fail(call_id,"no_fresh_weather: no schedule changed") return }
-    weather = w.hours let impact = coverage(e.start,e.end)
-    if !impact.complete { mod.app_tools.fail(call_id,"unknown_weather_coverage: no schedule changed") return }
-    let min_start = whole(time_now()/1800)*1800 + 1800
-    let max_end = e.end + 172800
-    if max_end > w.hours[w.hours.len()-1].end { max_end = w.hours[w.hours.len()-1].end }
-    if max_end > min_start + 604800 { max_end = min_start + 604800 }
-    let result = {task_id:active_task read_token:call_id events:[e] retrieved_at:time_now() data_source:"ripple-local-activity" impact:impact weather_source:w.source weather_revision:w.revision weather_fetched_at:w.fetched_at time_authority:authoritative_time(e.start,e.end) search_bounds:{min_start:min_start max_end:max_end max_candidates:3} calendar_scope:"Only this single Ripple-managed activity; no external calendar access"}
-    if fingerprint != schedule_fingerprint() || !mod.app_tools.active(call_id) { mod.app_tools.fail(call_id,"stale_context") return }
-    last_read = {read_token:call_id events:[e] fingerprint:fingerprint bounds:result.search_bounds weather_fingerprint:read_text("weather.json")}
+    let result = read_context(call_id)
+    if result == nil || !mod.app_tools.active(call_id) { mod.app_tools.fail(call_id,"invalid_activity_or_weather: no schedule changed") return }
     mod.app_tools.complete(call_id,result)
     ui.call.set_text(name + " / " + call_id)
-    record_evidence("TOOL call_id=" + call_id + " name=" + name + " result=" + result.to_json())
+    record_evidence("TOOL call_id=" + call_id + " name=" + name + " context_read")
 }
 fn slots_tool(call_id,args){
     if !mod.app_tools.active(call_id) { return }
@@ -325,7 +466,7 @@ fn slots_tool(call_id,args){
     last_search = result
     mod.app_tools.complete(call_id,result)
     ui.call.set_text("ripple.slots.search / " + call_id)
-    record_evidence("TOOL call_id=" + call_id + " name=ripple.slots.search result=" + result.to_json())
+    record_evidence("TOOL call_id=" + call_id + " name=ripple.slots.search candidates=" + result.candidates.len())
 }
 fn accept_choice(generation,text){
     if generation != task_generation || !busy { return "DISCARDED obsolete generation" }
@@ -345,8 +486,8 @@ fn accept_choice(generation,text){
     if d.decision != "PROPOSE" || !impact.conflict { return "REJECTED unsupported decision" }
     let c = validate_candidate(d.search_id,d.candidate_id,time_now())
     if c == nil { return "STALE invalid candidate" }
-    let next = {schema:e.schema event_id:e.event_id title:e.title start:c.start end:c.end lat:e.lat lon:e.lon revision:e.revision+1 data_source:e.data_source}
-    proposal = {task_id:active_task read_token:d.read_token search_id:d.search_id candidate_id:d.candidate_id before:schedule_fingerprint() expected:record(next) start:c.start end:c.end created:time_now() expires_at:last_search.expires_at weather_fingerprint:last_read.weather_fingerprint reason:impact.reason source:w.source weather_revision:w.revision weather_fetched_at:w.fetched_at}
+    let next = rescheduled(e,c.start,c.end)
+    proposal = {task_id:active_task read_token:d.read_token search_id:d.search_id candidate_id:d.candidate_id before:schedule_fingerprint() expected:record(next) start:c.start end:c.end created:time_now() expires_at:last_search.expires_at weather_fingerprint:last_read.weather_fingerprint reason:impact.reason source:w.source weather_revision:w.revision weather_fetched_at:w.fetched_at input_generation:input_generation}
     if proposal.expires_at > workflow_started + 1200 { proposal.expires_at = workflow_started + 1200 }
     "AWAITING_APPROVAL"
 }
@@ -354,7 +495,7 @@ fn finish_model(generation,text){
     let verdict = accept_choice(generation,text)
     if generation != task_generation || !busy { record_evidence(verdict) return }
     busy = false
-    record_evidence("MODEL_CHOICE task_id=" + active_task + " text=" + text + " verdict=" + verdict)
+    record_evidence("MODEL_CHOICE task_id=" + active_task + " verdict=" + verdict)
     if verdict == "AWAITING_APPROVAL" {
         // Diagnostic receipt only; approvals remain in memory. No second forecast copy.
         write_text("agent-choice.json",{task_id:proposal.task_id read_token:proposal.read_token search_id:proposal.search_id candidate_id:proposal.candidate_id before:proposal.before expected:proposal.expected start:proposal.start end:proposal.end expires_at:proposal.expires_at weather_revision:proposal.weather_revision}.to_json())
@@ -388,24 +529,71 @@ fn start_agent(){
         })
     })
 }
+fn rescheduled(e,s,end){ let next = record(e).parse_json() next.start = s next.end = end next.revision = e.revision+1 next }
+// UI and Agent share one read, one search, one choice validator and one approval.
+// This is a user-selected deterministic candidate, never described as an AI result.
+fn preview_candidates(){
+    let generation = begin_task("ripple-preview-"+time_now())
+    move("CHECKING","正在核对已保存的活动与天气…")
+    start_timeout(10,|| preview_timeout(generation))
+    let context = read_context("preview-"+task_generation)
+    if context == nil { busy = false move("FAILED","天气或活动已失效，请重新查询。") return }
+    if !context.impact.conflict { busy = false move("NO_CHANGE","真实天气未发现原活动有降雨冲突，无需改期。活动未修改。") return }
+    let inputs = input_generation
+    move("CHECKING","正在核对窗口内候选…")
+    start_timeout(0.05,|| preview_search(generation,inputs))
+}
+fn preview_search(generation,inputs){
+    if !busy || generation != task_generation || status != "CHECKING" { return }
+    if inputs != input_generation { abandon_task("输入已修改，请保存后重新查询。") return }
+    let bounds = last_read.bounds
+    last_search = candidate_search({task_id:active_task read_token:last_read.read_token min_start:bounds.min_start max_end:bounds.max_end max_candidates:bounds.max_candidates},time_now())
+    busy = false
+    if last_search == nil { move("FAILED","数据已变化，请重新查询。") return }
+    if field(event,"availability") == nil { move("NO_CANDIDATE","原活动有降雨风险。您尚未声明个人可用窗口；请填写并保存，不能推断您有空。") return }
+    if last_search.candidates.len() == 0 { move("NO_CANDIDATE","原活动有降雨风险，但窗口内没有完整时长、未来时间且天气覆盖完整的干燥候选。活动未修改。") return }
+    move("CANDIDATES","原活动有降雨风险。以下为规则筛选的候选，仅符合您声明的窗口；其他个人安排未知。选择后仍须批准。")
+}
+fn preview_timeout(generation){
+    if generation == task_generation && busy && (status == "CHECKING" || status == "CANDIDATES") {
+        abandon_task("候选检查未能完成；活动未修改。") move("FAILED","候选检查超时，请重新查询。没有执行改期。")
+    }
+}
+fn choose_candidate(id){
+    if busy || loading || dirty || status != "CANDIDATES" || last_search == nil { return }
+    busy = true
+    let generation = task_generation start_timeout(10,|| preview_timeout(generation))
+    let verdict = accept_choice(task_generation,{task_id:active_task read_token:last_read.read_token decision:"PROPOSE" search_id:last_search.search_id candidate_id:id}.to_json())
+    busy = false
+    if verdict == "AWAITING_APPROVAL" { move(verdict,"您选择了经过窗口和天气校验的时段。请核对前后时间，再明确批准。") }
+    else { proposal = nil move("STALE","候选已失效，请保存并重新查询。") }
+}
+fn check_availability(){ planning_mode = "user" analyze() }
+fn analyze_with_agent(){ planning_mode = "agent" analyze() }
 fn analyze(){
-    if busy || loading || status == "PARTIAL" { return }
+    if busy || loading || city_loading || status == "PARTIAL" { return }
+    if dirty { move("FAILED","有未保存的修改，请先保存活动。") return }
+    let generation = input_generation
     proposal = nil event = read_event() replan_count = 0 workflow_started = time_now()
     if event == nil { move("EMPTY","Save your activity first.") return }
     loading = true move("LOADING","Fetching live weather for the saved activity...")
     let fetched = try { fetch_weather() } catch { false } loading = false repaint()
+    if generation != input_generation { move("STALE","输入已改变；未使用迟到天气生成方案。请保存后重试。") return }
     if !fetched { move("FAILED","Weather unavailable; Agent planning did not succeed. Activity unchanged.") return }
-    start_agent()
+    if planning_mode == "user" { preview_candidates() } else { start_agent() }
 }
 fn replan(){
     if busy || loading || status != "STALE" { return }
+    if dirty { move("STALE","请先保存修改，再重新查询。") return }
     proposal = nil
     if replan_count >= 1 || time_now() - workflow_started > 1200 { move("FAILED","Replan limit/expiry reached. Start a new analysis explicitly.") return }
     replan_count = replan_count + 1
+    let generation = input_generation
     loading = true move("LOADING","Old suggestion discarded. Fetching weather for one new Agent plan...")
     let fetched = try { fetch_weather() } catch { false } loading = false
+    if generation != input_generation { move("STALE","输入已改变；未使用迟到天气生成方案。请保存后重试。") return }
     if !fetched { move("FAILED","Replan weather unavailable. Nothing changed.") return }
-    start_agent()
+    if planning_mode == "user" { preview_candidates() } else { start_agent() }
 }
 fn decline(){ if !busy && status == "AWAITING_APPROVAL" { proposal = nil move("DECLINED","Declined. Original activity preserved; no schedule write.") } }
 fn interrupt_task(){ if busy && status == "ANALYZING" { abandon_task("Cancelled; late results cannot create an approval.") host.request("octos.turn.interrupt",{},fn(r){}) } }
@@ -424,7 +612,7 @@ fn finish_verify(){
         }
         saved.status = "COMPLETED" write_text("execution.json",saved.to_json())
     }
-    record_evidence("INDEPENDENT_READ_BACK event=" + record(after))
+    record_evidence("INDEPENDENT_READ_BACK event_id=" + after.event_id + " revision=" + after.revision)
     move("COMPLETED","Independent disk read-back matches identity, new time, revision, title and location. Ripple activity changed.")
 }
 fn inspect_result(){
@@ -440,12 +628,12 @@ fn execute(){
     if proposal == nil || status != "EXECUTING" { busy = false return }
     let p = proposal proposal = nil
     let current = read_event()
-    if current == nil || schedule_fingerprint() != p.before || time_now() > p.expires_at || time_now()-p.created > 600 || p.start <= time_now() || read_text("weather.json") != p.weather_fingerprint { busy = false move("STALE","Preflight rejected the old suggestion. No write; replan once and approve again.") return }
+    if current == nil || schedule_fingerprint() != p.before || time_now() > p.expires_at || time_now()-p.created > 600 || p.start <= time_now() || read_text("weather.json") != p.weather_fingerprint || p.input_generation != input_generation { busy = false move("STALE","Preflight rejected the old suggestion. No write; replan once and approve again.") return }
     let w = read_weather_snapshot(current,time_now())
     if w == nil || w.revision != p.weather_revision { busy = false move("STALE","Weather no longer valid. Replan and approve again.") return }
     weather = w.hours let dry = coverage(p.start,p.end)
     let next = p.expected.parse_json()
-    if !dry.complete || dry.conflict || !valid_event(next) || next.event_id != current.event_id || next.revision != current.revision+1 || next.title != current.title || next.lat != current.lat || next.lon != current.lon || next.end-next.start != current.end-current.start { busy = false move("STALE","Candidate constraints failed. Nothing changed.") return }
+    if !dry.complete || dry.conflict || !valid_event(next) || !within_window(current,p.start,p.end) || record(next) != record(rescheduled(current,p.start,p.end)) { busy = false move("STALE","Candidate constraints failed. Nothing changed.") return }
     expected_record = p.expected
     // Journal before write. If uncertain, reconcile by reads; never retry blindly.
     move("VERIFYING","Checking the actual persisted activity independently...")
@@ -454,48 +642,78 @@ fn execute(){
     if !result && schedule_fingerprint() == p.before { busy = false move("FAILED","Storage rejected execution; actual read confirms original activity preserved. Check storage before a new analysis/approval.") return }
 }
 fn confirm(){
-    if busy || loading || status != "AWAITING_APPROVAL" || proposal == nil { return }
+    if busy || loading || dirty || status != "AWAITING_APPROVAL" || proposal == nil { return }
     busy = true move("EXECUTING","Explicit approval received; rechecking identity, revision, weather and candidate before write...")
     start_timeout(0.25,|| execute())
 }
 let Action = ButtonFlat{height:38 draw_text +: {color:ink color_hover:ink color_down:ink color_focus:ink}}
-let Input = TextInput{width:Fill height:38 draw_text +: {color:ink color_hover:ink color_focus:ink color_empty:muted}}
+let Input = TextInput{width:Fill height:38 on_change:|| draft_changed() draw_text +: {color:ink color_hover:ink color_focus:ink color_empty:muted}}
 ui := SolidView{width:Fill height:Fill flow:Down padding:16 spacing:10 draw_bg.color:#xf3f8f5
     Label{text:"Ripple" draw_text.color:ink draw_text.text_style.font_size:26}
-    Label{width:Fill text:"Outdoor rain conflicts · Agent suggests · You approve · Ripple verifies" draw_text.color:muted}
+    Label{width:Fill text:"户外活动避雨 · 声明可用时间 · 您批准 · 独立读回" draw_text.color:muted}
     content := ScrollYView{width:Fill height:Fill flow:Down spacing:10
-        Label{width:Fill text:"YOUR ACTIVITY / date-time UTC+08:00 / latitude, longitude" draw_text.color:accent}
-        title_input := Input{text:"" empty_text:"Activity title"}
+        Label{width:Fill text:"活动与地点 / 城市模式仅支持中国 Asia/Shanghai（北京时间 UTC+8）" draw_text.color:accent}
+        title_input := Input{text:"" empty_text:"活动名称，例如：公园散步"}
         View{width:Fill height:Fit flow:Right spacing:8
-            start_input := Input{text:"" empty_text:"YYYY-MM-DD HH:mm (UTC+8)"}
+            city_input := Input{text:"" empty_text:"城市，例如深圳、广州、上海" on_change:|| city_input_changed()}
+            Action{text:"搜索城市" on_click:|| search_city()}
+        }
+        city_panel := View{width:Fill height:Fit flow:Down spacing:5 on_render:||{
+            Label{width:Fill text:city_message draw_text.color:ink}
+            for c in city_results {
+                Action{width:Fill height:Fit text:c.name+" / "+c.country+" / "+c.admin1+" / "+c.admin2+" / "+c.timezone+" / "+c.lat+","+c.lon on_click:|| choose_city(c.id)}
+            }
+            if manual_location { Label{width:Fill text:"高级坐标模式已启用：城市未知，时间明确按 UTC+8，不推断当地时区。" draw_text.color:accent} }
+            else { Label{width:Fill text:"城市模式：无需填写下面的高级坐标。来源 Open-Meteo / GeoNames，城市代表点，非设备定位。" draw_text.color:muted} }
+        }}
+        Label{width:Fill text:"活动开始日期与时间（北京时间），时长 15–240 分钟；本阶段不支持跨日活动。" draw_text.color:muted}
+        View{width:Fill height:Fit flow:Right spacing:8
+            start_input := Input{text:"" empty_text:"YYYY-MM-DD HH:mm"}
             duration := Input{width:110 text:"60" empty_text:"Minutes"}
         }
         View{width:Fill height:Fit flow:Right spacing:8
-            latitude := Input{text:"31.23" empty_text:"Latitude"}
-            longitude := Input{text:"121.47" empty_text:"Longitude"}
-            Action{text:"Save activity" on_click:|| save_activity()}
+            available_start := Input{text:"" empty_text:"同日最早可开始 HH:mm"}
+            available_end := Input{text:"" empty_text:"同日最晚必须结束 HH:mm"}
         }
+        Label{width:Fill text:"窗口以活动日期为准，须容纳完整时长。两项留空表示未声明，不能改期。未知的其他个人安排不会被当作空闲。" draw_text.color:muted}
+        View{width:Fill height:Fit flow:Right spacing:8
+            latitude := Input{text:"" empty_text:"高级：纬度"}
+            longitude := Input{text:"" empty_text:"高级：经度"}
+            Action{text:"切换城市 / 高级坐标" on_click:|| location_mode()}
+        }
+        Action{text:"Save activity" on_click:|| save_activity()}
+        draft_label := Label{width:Fill text:"请填写并保存；保存后才参与天气查询。" draw_text.color:accent}
         schedule_panel := View{width:Fill height:Fit flow:Down spacing:5 on_render:||{
             if event == nil { Label{width:Fill text:"No saved activity." draw_text.color:ink} }
             else {
                 Label{width:Fill text:event.title + " / " + event.event_id + " / revision " + event.revision draw_text.color:ink}
                 Label{width:Fill text:clock_stamp(event.start,28800) + " → " + clock_stamp(event.end,28800) draw_text.color:ink}
+                let a = field(event,"availability")
+                if a == nil { Label{width:Fill text:"个人可用时间：未声明。可看天气，不能据此自动改期。" draw_text.color:ink} }
+                else { Label{width:Fill text:"已声明窗口："+clock_stamp(a.min_start,28800)+" → "+clock_stamp(a.max_end,28800) draw_text.color:ink} }
             }
         }}
-        Label{width:Fill text:"Only one activity managed by Ripple. No external calendar sync. Search: future time through 48h after original end; at most 3 dry candidates." draw_text.color:muted draw_text.text_style.font_size:12}
+        Label{width:Fill text:"仅管理这一个 Ripple 本地活动，无外部日历同步。只在声明窗口内按半小时步长查找，最多显示 3 项；降雨预报不等于完整户外安全评估。" draw_text.color:muted draw_text.text_style.font_size:12}
         weather_label := Label{width:Fill text:weather_message draw_text.color:muted}
         View{width:Fill height:Fit flow:Right spacing:8
-            Action{text:"Analyze with Agent" on_click:|| analyze()}
+            Action{text:"查询天气与可用时段" on_click:|| check_availability()}
+            Action{text:"Analyze with Agent" on_click:|| analyze_with_agent()}
             Action{text:"Cancel Agent" on_click:|| interrupt_task()}
         }
         call := Label{width:Fill text:"No real tool call yet." draw_text.color:muted draw_text.text_style.font_size:11}
         workflow_panel := View{width:Fill height:Fit flow:Down spacing:8 on_render:||{
             Label{width:Fill text:status draw_text.color:accent draw_text.text_style.font_size:18}
             Label{width:Fill text:message draw_text.color:ink}
+            if status == "CANDIDATES" && last_search != nil {
+                for c in last_search.candidates {
+                    Action{width:Fill text:"选择 "+clock_stamp(c.start,28800)+" → "+local_clock(c.end) on_click:|| choose_candidate(c.candidate_id)}
+                }
+            }
             if proposal != nil && status == "AWAITING_APPROVAL" {
                 let old = proposal.before.parse_json()
                 Label{width:Fill text:"Original: " + clock_stamp(old.start,28800) + " → " + clock_stamp(old.end,28800) draw_text.color:ink}
-                Label{width:Fill text:"Agent choice: " + clock_stamp(proposal.start,28800) + " → " + clock_stamp(proposal.end,28800) draw_text.color:ink}
+                Label{width:Fill text:"建议时间: " + clock_stamp(proposal.start,28800) + " → " + clock_stamp(proposal.end,28800) draw_text.color:ink}
+                Label{width:Fill text:"约束：保持时长，完全位于您声明的同日窗口内；其他个人安排未知。" draw_text.color:ink}
                 Label{width:Fill text:"Reason: rain conflict (" + proposal.reason + "). Selected candidate has complete dry coverage under the same thresholds." draw_text.color:ink}
                 Label{width:Fill text:"Weather: " + proposal.source + " Open-Meteo / " + proposal.weather_revision + " / expires " + clock_stamp(whole(proposal.expires_at),28800) draw_text.color:muted}
                 Label{width:Fill text:"Your approval is required. Only this Ripple activity will change." draw_text.color:ink}

@@ -1,10 +1,14 @@
-# Ripple 0.2.3-stage2 local privacy notice
+# Ripple 0.3.0-stage1 local privacy notice
 
 This unpublished local build manages one activity entered by the user. It has no external calendar integration or publisher backend.
 
 Ripple stores the activity title, UTC start/end, coordinates, stable identity and revision in its host sandbox. It also stores one forecast, one compact choice receipt, one execution receipt including the original record, and diagnostic records capped at 24 KB. The manifest storage grant is 1 MiB; storage denial stops saves or forecast updates without claiming success. The host additionally persists Agent conversations and tool records; Ripple preserves those records. Host history retention remains a host responsibility. Existing historical files are not deleted.
 
 Selecting Analyze fetches live Open-Meteo weather using the entered coordinates. Open-Meteo receives coordinates and connection metadata. After host permission, the selected Provider receives the activity title, times and location, verified weather impact, and search candidates through private App Tools. Ripple does not read or change Provider credentials.
+
+City search sends only the typed city name (and normal connection metadata) to geocoding-api.open-meteo.com. It does not send the activity title, availability, schedule or Agent context. Location results are based on GeoNames via Open-Meteo; the selected country, administrative areas, representative coordinates, source and timezone are stored with the activity. No GPS is collected. City coordinates are approximate representative points, not a person's exact location. City mode supports China / Asia/Shanghai; unsupported timezones are rejected. Advanced coordinates retain an explicit UTC+8 interpretation without inventing a city.
+
+The optional same-day availability is stored as UTC bounds in the activity and execution receipts. Missing bounds mean undeclared availability, not all-day free time. Legacy records are read without bulk migration; only an explicit save writes schema 3. The weather/candidate button uses deterministic rules locally and does not contact a model Provider. The separate Agent button uses the same checked facts and declared constraints. Neither path accesses any other calendar. New ordinary diagnostics record identifiers and outcomes rather than complete activity/tool/model content; existing diagnostic files are preserved.
 
 Only Save activity and an explicitly approved change can write the Ripple activity. Independent storage read-back is required to display COMPLETED. Decline and cancelled or expired planning cannot write the activity. Pending approvals are not resumed after restart.
 

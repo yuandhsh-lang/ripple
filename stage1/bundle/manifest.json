@@ -23,12 +23,13 @@
   ],
   "id": "ripple",
   "integrity": {
-    "bundle_blake3": "1dc41555dee5c43f11690dcea7d0e937e05e95fdf08f0bb7e426c2c2a551f998"
+    "bundle_blake3": "b931879a530d436755167f16ab999c1e79329873e2a46862c020301f08e5e63f"
   },
   "name": "Ripple",
   "network": {
     "hosts": [
-      "api.open-meteo.com"
+      "api.open-meteo.com",
+      "geocoding-api.open-meteo.com"
     ]
   },
   "requires": [
@@ -38,5 +39,5 @@
   "storage": {
     "max_bytes": 1048576
   },
-  "version": "0.2.3-stage2"
+  "version": "0.3.0-stage1"
 }
