@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "subtitle": "Outdoor activity rain-conflict planning with human approval",
-  "description": "Unpublished local build. Choose a city, enter one outdoor activity and a same-day availability window. City mode supports China / Asia/Shanghai only. Open-Meteo supplies city lookup and live weather. View deterministic candidates or ask the host-selected Agent; both share the same constraints, human approval and independent persisted read-back. No external calendar sync. City name goes to geocoding; coordinates go to weather; private activity context reaches the Provider only through the Agent path after host consent.",
+  "description": "Unpublished local build. Choose a city, enter a primary outdoor activity and a same-day availability window, or ask AI to prepare a review-only draft with up to four related same-city plans. Related rescheduling remains advice only. City mode supports China / Asia/Shanghai only. Open-Meteo supplies city lookup and live weather. View deterministic candidates or ask the host-selected Agent; both share the same constraints, human approval and independent persisted read-back. No external calendar sync. City name goes to geocoding; coordinates go to weather; private activity context reaches the Provider only through the Agent path after host consent.",
   "category": "productivity",
   "keywords": [
     "agent",
@@ -22,7 +22,7 @@
     "support": "https://github.com/yuandhsh-lang/ripple/issues",
     "privacy_policy_url": "https://example.invalid/ripple-stage1-local-privacy"
   },
-  "release_notes": "Local Stage 1: confirmed cities, declared availability, explicit timezone limits, compatible activity records. Reuses the existing approval, journal and read-back core. Not a public release.",
+  "release_notes": "Local Stage 2: review-only AI input, saved related plans, bounded minimum-disruption coordination. Related-plan changes are advice only. Reuses cities, weather, approvals, journal and read-back. Not a public release; screenshots show the earlier core flow.",
   "age_rating": "all",
   "license": "Apache-2.0"
 }

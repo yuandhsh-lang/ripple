@@ -69,8 +69,10 @@ mod tests {
         (cx,ui,card,reg,jail)
     }
     fn invoke(cx:&mut Cx,card:&SplashRef,name:LiveId,args:&[&str]) {
+        let started=std::time::Instant::now();
         assert!(card.call_script_fn_with_strings(cx,name,args),"fixture function failed");
         makepad_platform::makepad_script_std::handle_script_tasks(cx);
+        if std::env::var_os("RIPPLE_TRACE_CALLS").is_some() { eprintln!("RIPPLE_HOOK name={name:?} elapsed_us={}",started.elapsed().as_micros()); }
     }
     fn pump(cx:&mut Cx,card:&SplashRef) {
         script_tools::pump(cx,"ripple",card);
@@ -466,4 +468,5 @@ mod tests {
         drop(reg);
     }
     include!("stage1_tests.rs");
+    include!("stage2_tests.rs");
 }

@@ -1,6 +1,6 @@
-# Ripple 0.3.0-stage1 local privacy notice
+# Ripple 0.4.0-stage2 local privacy notice
 
-This unpublished local build manages one activity entered by the user. It has no external calendar integration or publisher backend.
+This unpublished local build manages one primary activity and up to four related same-city, same-day planning facts confirmed by the user. It has no external calendar integration or publisher backend.
 
 Ripple stores the activity title, UTC start/end, coordinates, stable identity and revision in its host sandbox. It also stores one forecast, one compact choice receipt, one execution receipt including the original record, and diagnostic records capped at 24 KB. The manifest storage grant is 1 MiB; storage denial stops saves or forecast updates without claiming success. The host additionally persists Agent conversations and tool records; Ripple preserves those records. Host history retention remains a host responsibility. Existing historical files are not deleted.
 
@@ -15,3 +15,5 @@ Only Save activity and an explicitly approved change can write the Ripple activi
 The listing's example.invalid URL is an intentional local-fixture placeholder required by the official listing schema, not a published privacy-policy endpoint. This file covers the current build; the repository's frozen v0.1.0 PRIVACY.md covers only the frozen submission. A public release requires a real current notice and human approval. No public release is performed by this development task.
 
 Local acceptance evidence uses operator-entered demonstration activities and may contain their titles, locations, times and model/tool replies. Do not share these records with personal data. No credentials are included in the bundle or acceptance records.
+
+Stage 2 also stores the person-confirmed natural-language request, a soft time-of-day preference and up to four related same-day plans in the existing activity record. AI interpretation sends that request and current/saved facts through the official host Provider; planning tools supply only saved facts and checked weather/candidates. The interpretation is a draft until the person confirms and saves. Related multi-plan changes are advice only in this stage; no model can write the activity. Cancelled related plans remain represented as inactive, not silently deleted. Test credentials are supplied only to isolated host processes; the app never receives a Provider key.
