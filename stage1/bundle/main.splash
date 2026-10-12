@@ -416,6 +416,12 @@ fn finish_verify(){
     let saved = read_json("execution.json")
     if saved.is_object() {
         if saved.kind == "SAVE" { saved.status = "SAVED" write_text("execution.json",saved.to_json()) verified = false move("READY","Activity save independently verified. Analyze with Agent.") return }
+        // Refresh only the unchanged time field after verified rescheduling.
+        // Other fields and a user-edited time remain unsaved drafts.
+        let previous = try { saved.before.parse_json() } catch { nil }
+        if previous.is_object() && parse_start(ui.start_input.text()) == field(previous,"start") {
+            ui.start_input.set_text(clock_stamp(after.start,28800).replace("T"," ").split("+")[0].strip_suffix(":00"))
+        }
         saved.status = "COMPLETED" write_text("execution.json",saved.to_json())
     }
     record_evidence("INDEPENDENT_READ_BACK event=" + record(after))
