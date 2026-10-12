@@ -78,6 +78,78 @@ mod tests {
     }
 
     #[test]
+    fn editor_time_after_verified_reschedule() {
+        let bundle=root().join("stage1/bundle");
+        let mut source=std::fs::read_to_string(bundle.join("main.splash")).unwrap();
+        source.push_str(r#"
+          fn editor_init(epoch){ let before=schedule_fingerprint() ui.title_input.set_text("Editor regression") ui.start_input.set_text(clock_stamp(epoch.to_f64(),28800).replace("T"," ").split("+")[0].strip_suffix(":00")) ui.duration.set_text("60") ui.latitude.set_text("31.23") ui.longitude.set_text("121.47") save_activity() finish_save(before,false) }
+          fn editor_begin(id){ workflow_started=time_now() begin_task(id) move("ANALYZING","SDK fixture, not real model") }
+          fn editor_finish(text){ finish_model(task_generation,text) }
+          fn editor_title(text){ ui.title_input.set_text(text) }
+          fn editor_time(epoch){ ui.start_input.set_text(clock_stamp(epoch.to_f64(),28800).replace("T"," ").split("+")[0].strip_suffix(":00")) }
+          fn editor_save(){ let before=schedule_fingerprint() let pending=status=="AWAITING_APPROVAL" save_activity() finish_save(before,pending) }
+          fn editor_report(){ fs.write("editor-report.json",{status:status verified:verified title:ui.title_input.text() start:parse_start(ui.start_input.text())}.to_json()) }
+        "#);
+        let (mut cx,_ui,card,reg,jail)=fixture("editor-jail",&source,&bundle);
+        let now=std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_secs();
+        let base=(now/3600+1)*3600;
+        let call=|name:&str,args:Value,cx:&mut Cx|->Value{
+            let replies:Replies=Default::default();let out=replies.clone();
+            script_tools::submit("ripple",name,args,"device","editor-protocol-harness",Duration::from_secs(60),Box::new(move|r|out.lock().unwrap().push(r))).unwrap();
+            pump(cx,&card);let answer=replies.lock().unwrap()[0].clone().unwrap();answer
+        };
+        let setup=|label:&str,cx:&mut Cx|->Value{
+            invoke(cx,&card,id!(editor_init),&[&(base+14400).to_string()]);
+            let hours:Vec<Value>=(0..72).map(|i|json!({"start":base-3600+i*3600,"end":base+i*3600,"code":if i==5 {61}else{0},"rain":if i==5 {2}else{0},"chance":if i==5 {80}else{0}})).collect();
+            std::fs::write(jail.join("weather.json"),json!({"source":"FIXTURE","provider":"Open-Meteo","timezone":"GMT","utc_offset_seconds":0,"request_lat":31.23,"request_lon":121.47,"fetched_at":now-1,"revision":label,"hours":hours}).to_string()).unwrap();
+            invoke(cx,&card,id!(editor_begin),&[label]);
+            let context=call("ripple.context.read",json!({"task_id":label}),cx);
+            let mut args=context["search_bounds"].clone();args["task_id"]=json!(label);args["read_token"]=context["read_token"].clone();
+            let search=call("ripple.slots.search",args,cx);
+            let choice=json!({"task_id":label,"read_token":context["read_token"],"decision":"PROPOSE","search_id":search["search_id"],"candidate_id":search["candidates"][0]["candidate_id"]});
+            invoke(cx,&card,id!(editor_finish),&[&choice.to_string()]);
+            search
+        };
+        let approve=|cx:&mut Cx|{
+            invoke(cx,&card,id!(confirm),&[]);invoke(cx,&card,id!(execute),&[]);invoke(cx,&card,id!(finish_verify),&[]);
+        };
+        let search=setup("editor-title-only",&mut cx);
+        approve(&mut cx);
+        let approved=read(jail.join("schedule.txt"));
+        invoke(&mut cx,&card,id!(editor_report),&[]);let displayed=read(jail.join("editor-report.json"));
+        invoke(&mut cx,&card,id!(editor_title),&["Title only after approval"]);invoke(&mut cx,&card,id!(editor_save),&[]);
+        let title_saved=read(jail.join("schedule.txt"));
+        write("editor-time-regression.json",&json!({"classification":"ACTUAL_SPLASH_SDK_WITH_FIXTURE_WEATHER_MODEL_CHOICE","approved":approved,"editor_after_approval":displayed,"after_title_only_save":title_saved,"search":search,"time_preserved":approved["start"]==title_saved["start"]}));
+        assert_eq!(title_saved["start"],approved["start"],"title-only save reverted approved time");
+        assert_eq!(title_saved["title"],"Title only after approval");
+        setup("editor-immediate-save",&mut cx);approve(&mut cx);let before=read(jail.join("schedule.txt"));
+        invoke(&mut cx,&card,id!(editor_save),&[]);let after=read(jail.join("schedule.txt"));
+        assert_eq!(after["start"],before["start"]);assert_eq!(after["end"],before["end"]);
+        setup("editor-draft-preserved",&mut cx);
+        invoke(&mut cx,&card,id!(editor_title),&["Unsaved title draft"]);
+        invoke(&mut cx,&card,id!(editor_time),&[&(base+7200).to_string()]);
+        approve(&mut cx);invoke(&mut cx,&card,id!(editor_report),&[]);let draft=read(jail.join("editor-report.json"));
+        assert_eq!(draft["title"],"Unsaved title draft");assert_eq!(draft["start"],base+7200);
+        invoke(&mut cx,&card,id!(editor_save),&[]);assert_eq!(read(jail.join("schedule.txt"))["start"],base+7200);
+        setup("editor-title-draft-time-sync",&mut cx);invoke(&mut cx,&card,id!(editor_title),&["Title draft only"]);approve(&mut cx);
+        invoke(&mut cx,&card,id!(editor_report),&[]);let title_draft=read(jail.join("editor-report.json"));
+        assert_eq!(title_draft["title"],"Title draft only");assert_eq!(title_draft["start"],read(jail.join("schedule.txt"))["start"]);
+        setup("editor-verify-failure",&mut cx);invoke(&mut cx,&card,id!(confirm),&[]);invoke(&mut cx,&card,id!(execute),&[]);
+        let exact=std::fs::read(jail.join("schedule.txt")).unwrap();std::fs::write(jail.join("schedule.txt"),"{truncated").unwrap();
+        invoke(&mut cx,&card,id!(finish_verify),&[]);invoke(&mut cx,&card,id!(editor_report),&[]);let partial=read(jail.join("editor-report.json"));
+        assert_eq!(partial["status"],"PARTIAL");assert_eq!(partial["verified"],false);assert_eq!(partial["start"],base+14400);
+        std::fs::write(jail.join("schedule.txt"),exact).unwrap();invoke(&mut cx,&card,id!(inspect_result),&[]);
+        invoke(&mut cx,&card,id!(boot),&[]);invoke(&mut cx,&card,id!(editor_report),&[]);
+        assert_eq!(read(jail.join("editor-report.json"))["start"],read(jail.join("schedule.txt"))["start"]);
+        setup("editor-decline",&mut cx);let before=read(jail.join("schedule.txt"));invoke(&mut cx,&card,id!(decline),&[]);invoke(&mut cx,&card,id!(confirm),&[]);
+        assert_eq!(read(jail.join("schedule.txt")),before);invoke(&mut cx,&card,id!(editor_report),&[]);assert_eq!(read(jail.join("editor-report.json"))["start"],before["start"]);
+        setup("editor-stale",&mut cx);invoke(&mut cx,&card,id!(editor_title),&["Explicit edit invalidates approval"]);invoke(&mut cx,&card,id!(editor_save),&[]);let before=read(jail.join("schedule.txt"));
+        invoke(&mut cx,&card,id!(confirm),&[]);invoke(&mut cx,&card,id!(execute),&[]);assert_eq!(read(jail.join("schedule.txt")),before);
+        write("editor-regressions.json",&json!({"title_only_save":true,"immediate_save_same_time":true,"explicit_time_draft_preserved":draft,"title_draft_preserved_and_time_synced":title_draft,"partial_no_sync":partial,"inspect_and_boot_verified_record":true,"decline_no_write":true,"stale_no_write":true}));
+        drop(reg);
+    }
+
+    #[test]
     fn storage_errors_leave_activity_intact_and_feedback_recoverable() {
         let bundle=root().join("stage1/bundle");
         let mut source=std::fs::read_to_string(bundle.join("main.splash")).unwrap();
