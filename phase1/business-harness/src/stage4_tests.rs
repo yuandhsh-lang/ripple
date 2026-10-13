@@ -6,7 +6,7 @@ fn stage4_change_response_and_existing_execution() {
     source.push_str(r#"
       fn s4_check(){ finish_change_check("sdk_replay",input_generation,schedule_fingerprint()) }
       fn s4_facts(){ let e=read_event() let w=read_weather_snapshot(e,time_now()) weather=w.hours fs.write("facts.json",change_facts(e).to_json()) }
-      fn s4_card(){ fs.write("glance-payload.json",{payload:glance_payload()}.to_json()) }
+      fn s4_card(){ fs.write("glance-payload.json",{payload:glance_payload() weather_message:weather_message detail:weather_detail(plan_entries(read_event())[0])}.to_json()) }
       fn s4_report(){ fs.write("state.json",{status:status busy:busy verified:verified change:change_context message:message mode:planning_mode change_message:change_message}.to_json()) }
       fn s4_outage(){ change_agent_failed(task_generation,"EXPLICIT_SDK_PROVIDER_OUTAGE") }
       fn s4_rule_begin(){ preview_candidates() }
@@ -28,12 +28,22 @@ fn stage4_change_response_and_existing_execution() {
     let baseline=read(jail.join("change-response.json"));
     weather["fetched_at"]=json!(now-1);weather["revision"]=json!("timestamp-only");weather["hours"][9]["rain"]=json!(0.2);save("weather.json",&weather);
     invoke(&mut cx,&card,id!(s4_check),&[]);assert_eq!(read(jail.join("change-response.json")),baseline,"semantic weather jitter must remain quiet");
+    let mut related_only=primary.clone();related_only["revision"]=json!(2);related_only["planning"]["plans"]=json!([{"id":"walk","title":"关联散步","start":day+15*3600,"end":day+16*3600,"active":true,"movable":false,"outdoor":true,"priority":3,"availability":null}]);
+    weather["hours"][15]["rain"]=json!(2);save("weather.json",&weather);save("schedule.txt",&related_only);invoke(&mut cx,&card,id!(s4_check),&[]);invoke(&mut cx,&card,id!(s4_card),&[]);let related_card=read(jail.join("glance-payload.json"));assert!(related_card["payload"]["title"].as_str().unwrap().contains("关联散步"));assert!(related_card["payload"]["summary"].as_str().unwrap().contains("15:00"));assert!(related_card["payload"]["summary"].as_str().unwrap().contains("降雨"));assert_eq!(read(jail.join("schedule.txt")),related_only);
+    weather["hours"][15]["rain"]=json!(0);save("weather.json",&weather);save("schedule.txt",&primary);invoke(&mut cx,&card,id!(s4_check),&[]);
     let mut added=primary.clone();added["revision"]=json!(2);added["planning"]["plans"]=json!([
         {"id":"new-meeting","title":"十点固定会议","start":day+10*3600,"end":day+11*3600,"active":true,"movable":false,"outdoor":false,"priority":5,"availability":null},
         {"id":"unrelated","title":"下午会议","start":day+15*3600,"end":day+16*3600,"active":true,"movable":false,"outdoor":false,"priority":3,"availability":null}]);
     save("schedule.txt",&added);invoke(&mut cx,&card,id!(s4_check),&[]);let detected=report(&mut cx);assert_eq!(detected["status"],"RISK");assert_eq!(detected["change"]["affected"].as_array().unwrap().len(),2);assert_eq!(read(jail.join("schedule.txt")),added);
     invoke(&mut cx,&card,id!(s4_card),&[]);let risk_card=read(jail.join("glance-payload.json"));
     assert!(risk_card["payload"].is_object());assert!(risk_card["payload"]["title"].as_str().unwrap().contains("测试天气重放"));assert!(!risk_card["payload"]["summary"].as_str().unwrap().contains("骑行"),"public summary must not expose activity titles");
+    assert!(risk_card["payload"]["expires"].as_f64().unwrap()<=600.0);
+    let mut near_expiry=weather.clone();near_expiry["fetched_at"]=json!(now-550);save("weather.json",&near_expiry);
+    invoke(&mut cx,&card,id!(s4_card),&[]);assert!(read(jail.join("glance-payload.json"))["payload"].is_null(),"minimum Glance TTL must not extend stale forecast claims");
+    near_expiry["fetched_at"]=json!(now-601);save("weather.json",&near_expiry);
+    invoke(&mut cx,&card,id!(expire_visible_risk),&[]);assert_eq!(report(&mut cx)["status"],"STALE");assert_eq!(read(jail.join("schedule.txt")),added,"expiry never authorizes a write");
+    invoke(&mut cx,&card,id!(s4_card),&[]);let expired_card=read(jail.join("glance-payload.json"));assert!(expired_card["weather_message"].as_str().unwrap().contains("过期"));assert!(expired_card["detail"].as_str().unwrap().contains("未知"),"expired UI must not retain the cached rain label");
+    save("weather.json",&weather);invoke(&mut cx,&card,id!(s4_check),&[]);
     let call=|name:&str,args:Value,cx:&mut Cx|->Value{
         let replies:Replies=Default::default();let out=replies.clone();
         script_tools::submit("ripple",name,args,"device","stage4-fixture",Duration::from_secs(60),Box::new(move|r|out.lock().unwrap().push(r))).unwrap();pump(cx,&card);

@@ -22,7 +22,7 @@
     "support": "https://github.com/yuandhsh-lang/ripple/issues",
     "privacy_policy_url": "https://example.invalid/ripple-stage1-local-privacy"
   },
-  "release_notes": "0.6.3-rc.1：前台天气与冲突检查接入官方 Glance 风险卡片；无解时可补充条件；非法候选最多一次定向纠正；计划列表显示天气依据，城市查询不丢失草稿。继续复用原审批、唯一写入与独立读回。历史 SDK 计时风险及公开发布材料仍需核验。",
+  "release_notes": "0.6.4-rc.4 本地冲刺候选：减少重复存储查询、通知绑定天气有效期、显示具体活动风险与醒目的时间变更。保留原 Agent、确定性约束、审批和独立读回；完整验收以本轮实际记录为准。 修复真实模型 Markdown JSON 导致草稿卡住的问题；异常输出安全拒绝。SDK 间歇计时风险仍未关闭，未公开发布。 无解说明使用程序格式化的北京时间事实，数值说明最多纠正一次；通知指向真实受影响活动。",
   "age_rating": "all",
   "license": "Apache-2.0"
 }

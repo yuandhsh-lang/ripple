@@ -1,4 +1,4 @@
-# Ripple 0.6.3-rc.1 local privacy notice
+# Ripple 0.6.4-rc.2 local privacy notice
 
 This unpublished local build manages one primary activity and up to four related same-city, same-day planning facts confirmed by the user. It has no external calendar integration or publisher backend.
 
@@ -23,4 +23,4 @@ Stage 3 extends the existing execution receipt with the approved original/final 
 Stage 4 checks saved plans and weather on application startup, explicit weather refresh, and saving a plan. Meaningful risks may invoke the same configured AI provider and its two read-only tools. A small change-response.json in the existing app storage remembers the latest semantic facts and dismissal to avoid repeat suggestions. Closing the application stops checks. Plans still change only after explicit approval; partial or unknown writes stop further analysis.
 
 ## 系统风险提醒
-Ripple 在已支持的前台检查时机通过官方 Glance 发布一张本应用风险卡片，并请求宿主桌面提醒。公开卡片仅显示日期和必要风险摘要，不包含活动名称、地点或模型协议。相同事实只尝试一次弹窗；拒绝、风险解除、方案失效或结果待核对时撤回卡片。宿主通知设置决定是否显示，卡片本身不能批准或执行日程。通知尝试指纹保存在已有 change-response.json 中，不建立其他计划数据库。
+Ripple 在已支持的前台检查时机通过官方 Glance 发布一张本应用风险卡片，并请求宿主桌面提醒。桌面卡片显示活动简称、日期、时段和必要风险摘要；旁人可能看到，请避免在活动名称中填写敏感内容。卡片不显示具体地点、模型协议或完整日程。相同事实只尝试一次弹窗；拒绝、风险解除、天气过期、方案失效或结果待核对时撤回卡片。宿主通知设置决定是否显示，卡片本身不能批准或执行日程。通知尝试指纹保存在已有 change-response.json 中，不建立其他计划数据库。

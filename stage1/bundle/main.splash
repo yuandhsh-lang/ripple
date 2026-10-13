@@ -49,6 +49,7 @@ let glance_signature = ""
 let glance_message = ""
 let model_corrections = 0
 let negotiation_text = ""
+let evidence_bytes = -1
 let manual_open = false
 let review_index = -2
 let review_edit = nil
@@ -60,16 +61,19 @@ let accent = #x087f6d
 // JSON keys are strings; locally constructed Script objects use identifiers.
 fn field(obj,key){ let answer = nil for k v in obj { if k == key || (k.is_id() && k.to_string() == key) { answer = v } } answer }
 // SDK storage failures throw; they do not return an error value.
-fn read_text(path){ try { if fs.exists(path) { fs.read(path) } else { nil } } catch { nil } }
+// fs.read enforces the same sandbox and signals missing/denied paths. Avoid a
+// second filesystem round-trip; every safety boundary still reads actual bytes.
+fn read_text(path){ try { fs.read(path) } catch { nil } }
 fn read_json(path){ let text = read_text(path) if text == nil { return nil } try { text.parse_json() } catch { nil } }
 fn write_text(path,text){ try { fs.write(path,text) true } catch { false } }
 fn record_evidence(line){
     // Stop diagnostics at a fixed budget; never erase old evidence to make space.
     let text = "" + time_now() + " " + line + "\n"
-    let previous = read_text("agent-audit.log") let size = 0
-    if previous != nil { size = previous.len() }
-    if size + text.len() > 24000 { return }
-    try { fs.append("agent-audit.log",text) } catch { nil }
+    // This best-effort audit has no approval authority. Read its existing length
+    // once per isolate; repeated storage reads were a measured callback cost.
+    if evidence_bytes < 0 { let previous = read_text("agent-audit.log") evidence_bytes = if previous == nil { 0 } else { previous.len() } }
+    if evidence_bytes + text.len() > 24000 { return }
+    try { fs.append("agent-audit.log",text) evidence_bytes = evidence_bytes + text.len() } catch { evidence_bytes = -1 }
 }
 fn repaint(){
     // Rebuild the saved list only when its displayed facts or actions change.
@@ -96,19 +100,38 @@ fn glance_payload(){
     let w = read_weather_snapshot(e,time_now()) if w == nil { return nil }
     weather = w.hours let facts = change_facts(e)
     if facts == nil || !facts.conflict || field(marker,"key") != facts.key { return nil }
-    let text = "发现安排风险，请打开 Ripple 查看。尚未修改任何计划。"
-    if status == "AWAITING_APPROVAL" || status == "PLAN_REVIEW" || status == "CANDIDATES" { text = "已找到通过约束检查的调整方案，请打开 Ripple 核对并批准。尚未执行。" }
-    if status == "NO_CANDIDATE" { text = "当前支持范围内没有符合条件的可用时间。请打开 Ripple 补充条件，或保留原计划。" }
-    let title = "Ripple · 安排需要您处理"
-    if w.source == "FIXTURE" { title = "Ripple · 测试天气重放" }
-    {key:facts.key title:title summary:text as_of:local_date(e.start) phase:text}
+    let target = plan_entries(e)[0]
+    if facts.affected.len() > 0 { for a in plan_entries(e) { if a.id == facts.affected[0].id { target = a } } }
+    let c = coverage(target.start,target.end)
+    let risk = if target.outdoor && c.conflict { "活动时段有降雨风险" } else { "与已保存安排重叠" }
+    let text = local_date(target.start)+" "+local_clock(target.start)+"–"+local_clock(target.end)+" · "+risk+"。请打开 Ripple 查看，尚未改期。"
+    if status == "AWAITING_APPROVAL" || status == "PLAN_REVIEW" || status == "CANDIDATES" { text = text+"已有合规建议，需您批准。" }
+    if status == "NO_CANDIDATE" { text = text+"允许窗口内无可用时段，请补充条件或保留。" }
+    let display_title = if target.title.len() <= 64 { target.title } else { "您的户外活动" }
+    let title = "Ripple · "+display_title
+    if w.source == "FIXTURE" { title = "测试天气重放 · "+display_title }
+    let remaining = whole(w.fetched_at+600-time_now())
+    // Official Glance minimum TTL is 60 seconds. Do not publish a card that
+    // would outlive its forecast when fewer than 60 valid seconds remain.
+    if remaining < 60 { return nil }
+    {key:facts.key title:title summary:text as_of:local_date(e.start) phase:text expires:remaining expires_at:w.fetched_at+600}
+}
+fn expire_visible_risk(){
+    if busy || loading { return }
+    if status != "RISK" && status != "NO_CANDIDATE" && status != "AWAITING_APPROVAL" && status != "PLAN_REVIEW" && status != "CANDIDATES" { return }
+    let e = read_event()
+    if e != nil && read_weather_snapshot(e,time_now()) == nil {
+        proposal = nil planning_advice = nil weather = []
+        weather_message = "天气依据已过期，风险未知；请刷新后重新检查。"
+        move("STALE","天气依据已过期，这份建议不能继续执行。请刷新天气重新核对，安排尚未修改。")
+    }
 }
 fn sync_glance(){
     if glance_busy { return }
     // Intermediate loading/editing does not publish a claim about the result.
     if busy || loading || status == "DRAFT_REVIEW" || status == "NEEDS_DETAILS" { return }
     let payload = glance_payload()
-    let signature = if payload == nil { "withdraw" } else { payload.key+payload.phase }
+    let signature = if payload == nil { "withdraw" } else { payload.key+payload.phase+payload.expires_at }
     if signature == glance_signature { return }
     glance_signature = signature glance_busy = true
     if payload == nil {
@@ -128,13 +151,14 @@ fn sync_glance(){
     // A failed notification is never evidence of a failed schedule save.
     if notify { marker.glance_notified = payload.key if !write_text("change-response.json",marker.to_json()) { glance_busy = false glance_message = "提醒状态无法保存，已停止系统弹窗；请在应用内处理风险。" repaint() return } }
     let source = "# ledger ripple.risk@0.1.0\n# level: L0\n# profile: ui/l0\nsource note sys.dataset(fields: [title, summary, as_of])\n\ncopy app { class: vocabulary, en: \"Ripple\" }\n\nview root Surface(pad: .tight) {\n  Col(gap: 8) {\n    Row(gap: 8, align: .center) {\n      Icon(name: .calendar, size: .row)\n      TextCaption(text: copy.app, width: .fill)\n      TextCaption(value: note.as_of)\n    }\n    TextTitle(text: note.title, width: .fill)\n    TextBody(text: note.summary, width: .fill)\n  }\n}\n"
-    host.request("glance.publish",{card_id:"current-risk" source:source data:{note:{title:payload.title summary:payload.summary as_of:payload.as_of}} title:payload.title summary:payload.summary priority:70 expires:600 open:{app:"ripple" route:"risk"} notify:notify},fn(r){
+    start_timeout(payload.expires+1,|| expire_visible_risk())
+    host.request("glance.publish",{card_id:"current-risk" source:source data:{note:{title:payload.title summary:payload.summary as_of:payload.as_of}} title:payload.title summary:payload.summary priority:70 expires:payload.expires open:{app:"ripple" route:"risk"} notify:notify},fn(r){
         glance_busy = false
         record_evidence("GLANCE_PUBLISH ok="+r.is_ok+" notify="+notify+" reply="+if r.is_ok { r.data.to_json() } else { ""+r.error })
         glance_message = if r.is_ok { "已提交系统风险卡片；桌面提醒是否显示取决于宿主通知设置。" } else { "系统提醒发送失败；计划保存和审批不受影响，请在这里处理风险。" }
         repaint()
         let current = glance_payload()
-        let now_signature = if current == nil { "withdraw" } else { current.key+current.phase }
+        let now_signature = if current == nil { "withdraw" } else { current.key+current.phase+current.expires_at }
         if now_signature != signature { start_timeout(0.1,|| sync_glance()) }
     })
 }
@@ -350,6 +374,20 @@ fn plan_entries(e){
     if p != nil { for a in p.plans { if a.active { plans.push(a) } } }
     plans
 }
+fn local_plan_facts(e){
+    let rows = []
+    for a in plan_entries(e) {
+        rows.push({id:a.id title:a.title start:nice_time(a.start) end:nice_time(a.end) timezone:"UTC+08:00" movable:a.movable outdoor:a.outdoor window:if a.availability == nil { "未声明" } else { nice_time(a.availability.min_start)+"–"+local_clock(a.availability.max_end) }})
+    }
+    rows
+}
+// Explanations are qualitative; the UI and tools own all numerical facts.
+// This avoids uncheckable model epoch arithmetic in the no-solution question.
+fn safe_negotiation_text(text){
+    if !text.is_string() || text.len() > 600 { return false }
+    for digit in ["0","1","2","3","4","5","6","7","8","9","０","１","２","３","４","５","６","７","８","９"] { if text.search(digit) >= 0 { return false } }
+    true
+}
 fn overlap(a,b,c,d){ a < d && c < b }
 // Semantic de-duplication only. Execution still binds exact original bytes.
 fn change_facts(e){
@@ -562,7 +600,7 @@ fn search_step(job){
         if c != nil { let duplicate = false for old in found { if old.starts.to_json() == c.starts.to_json() { duplicate = true } } if !duplicate { found.push(c) } }
     }
     let baseline = nil if job.preferred != nil { baseline = job.preferred.candidate_id }
-    let result = {task_id:active_task search_id:job.search_id read_token:last_read.read_token context_revision:job.event.revision weather_revision:job.w.revision weather_source:job.w.source weather_fetched_at:job.w.fetched_at expires_at:job.w.fetched_at+600 calendar_source:"RIPPLE_LOCAL" constraints:{min_start:job.args.min_start max_end:job.args.max_end max_candidates:3 duration_seconds:job.event.end-job.event.start} candidates:found baseline_candidate_id:baseline search_scope:"same day; primary plus at most one movable related plan; 30-minute grid; minimum moved count among enumerated placements"}
+    let result = {task_id:active_task search_id:job.search_id read_token:last_read.read_token context_revision:job.event.revision weather_revision:job.w.revision weather_source:job.w.source weather_fetched_at:job.w.fetched_at expires_at:job.w.fetched_at+600 calendar_source:"RIPPLE_LOCAL" constraints:{min_start:job.args.min_start max_end:job.args.max_end max_candidates:3 duration_seconds:job.event.end-job.event.start time_authority:authoritative_time(job.args.min_start,job.args.max_end)} candidates:found baseline_candidate_id:baseline local_planning_facts:local_plan_facts(job.event) search_scope:"same day; primary plus at most one movable related plan; 30-minute grid; minimum moved count among enumerated placements"}
     coordinated_job = nil job.done(result)
 }
 fn interpret_context(token){
@@ -578,6 +616,8 @@ fn input_window(date,left,right,duration){
     {min_start:a max_end:b}
 }
 fn validate_draft(d){
+    if !d.is_object() { return nil }
+    for key in ["title","city_query","start_text","duration_minutes","window_start","window_end","primary_movable","priority","preference","plans"] { if field(d,key) == nil { return nil } }
     if !d.is_object() || !d.title.is_string() || d.title.trim().len() == 0 || d.title.len() > 120 || !d.city_query.is_string() || d.city_query.trim().len() < 2 || d.city_query.len() > 80 { return nil }
     let s = parse_start(d.start_text) let duration = d.duration_minutes
     if s == nil || s <= time_now() || !(duration >= 15 && duration <= 240 && duration%1 == 0) || local_day(s) != local_day(s+duration*60) { return nil }
@@ -585,6 +625,8 @@ fn validate_draft(d){
     if available == "INVALID" || !d.plans.is_array() || d.plans.len() > 4 { return nil }
     let plans = []
     for p in d.plans {
+        if !p.is_object() { return nil }
+        for key in ["id","title","city_query","start_text","end_text","window_start","window_end","active","movable","outdoor","priority"] { if field(p,key) == nil { return nil } }
         if p.city_query != d.city_query { return nil }
         let start = parse_start(p.start_text) let end = parse_start(p.end_text)
         if start == nil || end == nil { return nil }
@@ -603,17 +645,26 @@ fn validate_draft(d){
     if !valid_planning(meta,e) { return nil }
     {fields:d planning:meta}
 }
+fn model_json(text){
+    if !text.is_string() || text.len() > 16000 { return nil }
+    let raw = text.trim() let lines = raw.split("\n")
+    if lines.len() >= 3 && (lines[0] == "```json" || lines[0] == "```") && lines[lines.len()-1].trim() == "```" {
+        raw = "" for i in (lines.len()-2) { raw = raw+lines[i+1]+"\n" }
+    }
+    try { raw.parse_json() } catch { nil }
+}
 fn finish_interpret(generation,text){
     if generation != task_generation || !busy { return }
-    let d = try { if text.len() <= 16000 { text.parse_json() } else { nil } } catch { nil }
+    let d = model_json(text)
     busy = false
-    if !d.is_object() || last_read == nil || d.task_id != active_task || d.read_token != last_read.read_token || last_read.fingerprint != schedule_fingerprint() || last_read.input_generation != input_generation { move("FAILED","AI 草稿未通过任务或事实版本校验；没有保存任何计划。") return }
+    if !d.is_object() || last_read == nil || field(d,"task_id") != active_task || field(d,"read_token") != last_read.read_token || last_read.fingerprint != schedule_fingerprint() || last_read.input_generation != input_generation { move("FAILED","AI 草稿未通过任务或事实版本校验；没有保存任何计划。") return }
     let count = 0
     for k v in d { if k != "task_id" && k != "read_token" && k != "decision" && k != "draft" && k != "question" { move("FAILED","AI 返回了未允许的字段，未保存。") return } count = count+1 }
     if count != 4 { move("FAILED","AI 草稿结构不完整，未保存。") return }
-    if d.decision == "CLARIFY" && d.question.is_string() && d.question.len() <= 600 { move("NEEDS_DETAILS","AI 需要您补充："+d.question) return }
-    let draft = try { validate_draft(d.draft) } catch { nil }
-    if d.decision != "DRAFT" || draft == nil { move("FAILED","AI 草稿有重复安排，或日期、窗口、格式无效；没有保存，请重新整理或使用手动编辑。") return }
+    let decision = field(d,"decision") let question = field(d,"question")
+    if decision == "CLARIFY" && question.is_string() && question.len() <= 600 { move("NEEDS_DETAILS","AI 需要您补充："+question) return }
+    let draft = try { validate_draft(field(d,"draft")) } catch { nil }
+    if decision != "DRAFT" || draft == nil { move("FAILED","AI 草稿有重复安排，或日期、窗口、格式无效；没有保存，请重新整理或使用手动编辑。") return }
     interpretation_draft = {data:draft fingerprint:schedule_fingerprint() inputs:input_generation}
     review_index = -2 review_edit = nil review_message = ""
     if selected_city == nil || selected_city.name != draft.fields.city_query {
@@ -956,7 +1007,7 @@ fn read_context(token){
         min_start = a.min_start max_end = a.max_end
         if min_start <= time_now() { min_start = whole(time_now()/60)*60+60 }
     }
-    let result = {task_id:active_task read_token:token events:[e] retrieved_at:time_now() data_source:"ripple-local-activity" impact:impact weather_source:w.source weather_revision:w.revision weather_fetched_at:w.fetched_at time_authority:authoritative_time(e.start,e.end) search_bounds:{min_start:min_start max_end:max_end max_candidates:3} calendar_scope:"Saved primary and related plans share one city/date; all other personal commitments unknown"}
+    let result = {task_id:active_task read_token:token events:[e] retrieved_at:time_now() data_source:"ripple-local-activity" impact:impact weather_source:w.source weather_revision:w.revision weather_fetched_at:w.fetched_at time_authority:authoritative_time(e.start,e.end) local_planning_facts:local_plan_facts(e) search_bounds:{min_start:min_start max_end:max_end max_candidates:3} calendar_scope:"Saved primary and related plans share one city/date; all other personal commitments unknown"}
     if change_context != nil { result.change = change_context }
     if fingerprint != schedule_fingerprint() { return nil }
     last_read = {read_token:token events:[e] fingerprint:fingerprint bounds:result.search_bounds weather_fingerprint:read_text("weather.json")}
@@ -988,11 +1039,11 @@ fn slots_tool(call_id,args){
 fn accept_choice(generation,text){
     if generation != task_generation || !busy { return "DISCARDED obsolete generation" }
     if text == nil || text.len() > 8192 || last_read == nil { return "REJECTED no actual read" }
-    let d = try { text.parse_json() } catch { nil }
+    let d = model_json(text)
     if !d.is_object() { return "REJECTED expected raw JSON" }
     let count = 0
     for k v in d { if k == "explanation" { continue } if k != "task_id" && k != "read_token" && k != "decision" && k != "search_id" && k != "candidate_id" { return "REJECTED unexpected model field" } count = count + 1 }
-    if count != 5 || d.task_id != active_task || d.read_token != last_read.read_token { return "REJECTED uncorrelated choice" }
+    if count != 5 || field(d,"task_id") != active_task || field(d,"read_token") != last_read.read_token { return "REJECTED uncorrelated choice" }
     if last_read.fingerprint != schedule_fingerprint() || last_read.weather_fingerprint != read_text("weather.json") { return "STALE context changed" }
     let e = read_event() let w = read_weather_snapshot(e,time_now())
     if w == nil { return "STALE weather expired" }
@@ -1001,7 +1052,7 @@ fn accept_choice(generation,text){
     if d.decision == "NO_CHANGE" && !impact.conflict && d.search_id == nil && d.candidate_id == nil { return "NO_CHANGE" }
     if d.decision == "NO_CANDIDATE" && impact.conflict && last_search != nil && d.search_id == last_search.search_id && d.candidate_id == nil && last_search.candidates.len() == 0 {
         negotiation_text = "" let explanation = field(d,"explanation")
-        if explanation.is_string() && explanation.len() <= 600 { negotiation_text = explanation }
+        if explanation != nil { if !safe_negotiation_text(explanation) { return "REJECTED explanation must contain only qualitative reasons and a question, no numerical facts. Use exact local_planning_facts from the tools; the UI displays all times and durations." } negotiation_text = explanation }
         return "NO_CANDIDATE"
     }
     if d.decision != "PROPOSE" || !impact.conflict { return "REJECTED unsupported decision" }
@@ -1024,7 +1075,7 @@ fn finish_model(generation,text){
     if agent_task_kind == "interpret" { finish_interpret(generation,text) return }
     let verdict = accept_choice(generation,text)
     if generation != task_generation || !busy { record_evidence(verdict) return }
-    if verdict.search("REJECTED candidate_id") == 0 && model_corrections == 0 && last_read != nil && last_read.fingerprint == schedule_fingerprint() && last_read.weather_fingerprint == read_text("weather.json") {
+    if (verdict.search("REJECTED candidate_id") == 0 || verdict.search("REJECTED explanation") == 0) && model_corrections == 0 && last_read != nil && last_read.fingerprint == schedule_fingerprint() && last_read.weather_fingerprint == read_text("weather.json") {
         record_evidence("MODEL_CORRECTION_INPUT output="+text+" verdict="+verdict)
         model_corrections = 1
         move("ANALYZING","建议未通过校验，正在根据具体原因修正一次；尚未执行。")
@@ -1292,20 +1343,25 @@ fn valid_group_receipt(j){
     }
     fingerprint == j.expected && j.cursor >= 0 && j.cursor <= j.steps.len() && j.cursor%1 == 0
 }
-fn group_checkpoint(j){
+fn group_readback(j){
+    // Keep the independent parse bracketed by actual-byte reads. Return one
+    // coherent snapshot for display rather than reading a different record later.
     let actual = schedule_fingerprint() let e = read_event()
-    if e == nil || actual != schedule_fingerprint() { return -1 }
-    if actual == j.before { return 0 }
-    for i in j.steps.len() { if actual == j.steps[i].expected { return i+1 } }
-    -1
+    let checkpoint = -1
+    if e != nil && actual == schedule_fingerprint() {
+        if actual == j.before { checkpoint = 0 }
+        for i in j.steps.len() { if actual == j.steps[i].expected { checkpoint = i+1 } }
+    }
+    {checkpoint:checkpoint event:e fingerprint:actual}
 }
+fn group_checkpoint(j){ group_readback(j).checkpoint }
 fn show_group_result(j){
     let valid = try { valid_group_receipt(j) } catch { false }
     if !valid { execution_result = nil busy = false move("PARTIAL","执行收据缺失或损坏，无法核实授权与结果。保留原始文件；不重试、不覆盖，请人工检查。") return }
     render_group_result(j)
 }
 fn render_group_result(j){
-    let checkpoint = group_checkpoint(j) let results = []
+    let snapshot = group_readback(j) let checkpoint = snapshot.checkpoint let results = []
     for i in j.steps.len() {
         let s = j.steps[i] let state = "NOT_STARTED"
         if checkpoint < 0 { state = "UNKNOWN" }
@@ -1313,8 +1369,8 @@ fn render_group_result(j){
         else if s.state == "FAILED" || s.state == "UNKNOWN" { state = "FAILED" }
         results.push({id:s.id title:s.title state:state start:s.start end:s.end})
     }
-    execution_result = {journal:j checkpoint:checkpoint results:results fingerprint:schedule_fingerprint()}
-    event = read_event() busy = false proposal = nil
+    execution_result = {journal:j checkpoint:checkpoint results:results fingerprint:snapshot.fingerprint}
+    event = snapshot.event busy = false proposal = nil
     if event != nil && !dirty { planning_draft = planning_of(event) }
     if checkpoint == j.steps.len() { verified = true move("COMPLETED","全部批准变更已从实际存储逐项核对，完整日程也一致。仅表示 Ripple 本地改期成功。") }
     else if checkpoint >= 0 && field(j,"closed") == true { move("FAILED","本次执行已结束，已核验的修改保留；剩余项目不会重试。请基于当前日程重新规划并批准。") }
@@ -1553,7 +1609,7 @@ ui := SolidView{width:Fill height:Fill flow:Down padding:18 spacing:12 draw_bg.c
             }
             if status == "RISK" { Action{text:"查看调整方案" on_click:|| review_risk()} Action{text:"保留原计划" on_click:|| keep_risk()} }
             if status == "NO_CANDIDATE" {
-                if negotiation_text != "" { Body{text:"AI 说明："+negotiation_text} }
+                if negotiation_text != "" { Body{text:"AI 协商建议："+negotiation_text} }
                 if event != nil {
                     let a = field(event,"availability")
                     Hint{text:if a == nil { "尚未声明可改期窗口；不能推断您全天有空。" } else { "当前允许窗口 "+local_clock(a.min_start)+"–"+local_clock(a.max_end)+"，活动时长 "+((event.end-event.start)/60)+" 分钟。" }}
@@ -1627,8 +1683,8 @@ ui := SolidView{width:Fill height:Fill flow:Down padding:18 spacing:12 draw_bg.c
                 let old = proposal.before.parse_json()
                 if field(proposal,"steps") == nil {
                     Heading{text:old.title}
-                    Body{text:"原来："+nice_time(old.start)+"–"+local_clock(old.end)}
-                    Body{text:"建议："+nice_time(proposal.start)+"–"+local_clock(proposal.end)}
+                    Label{width:Fill text:"原来："+nice_time(old.start)+"–"+local_clock(old.end) draw_text.text_style.font_size:17}
+                    Label{width:Fill text:"建议："+nice_time(proposal.start)+"–"+local_clock(proposal.end) draw_text.color:accent draw_text.text_style.font_size:19}
                     Body{text:"原因："+proposal.reason}
                     if planning_of(old) != nil { for a in planning_of(old).plans { if a.active { Hint{text:"保持不变："+a.title+" · "+local_clock(a.start)+"–"+local_clock(a.end)} } } }
                 } else {

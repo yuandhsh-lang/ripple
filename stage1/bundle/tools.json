@@ -339,6 +339,50 @@
           },
           "change": {
             "type": "object"
+          },
+          "local_planning_facts": {
+            "type": "array",
+            "maxItems": 5,
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "title": {
+                  "type": "string"
+                },
+                "start": {
+                  "type": "string"
+                },
+                "end": {
+                  "type": "string"
+                },
+                "timezone": {
+                  "type": "string"
+                },
+                "window": {
+                  "type": "string"
+                },
+                "movable": {
+                  "type": "boolean"
+                },
+                "outdoor": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "id",
+                "title",
+                "start",
+                "end",
+                "timezone",
+                "window",
+                "movable",
+                "outdoor"
+              ],
+              "additionalProperties": false
+            }
           }
         },
         "required": [
@@ -540,6 +584,50 @@
           },
           "search_scope": {
             "type": "string"
+          },
+          "local_planning_facts": {
+            "type": "array",
+            "maxItems": 5,
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "title": {
+                  "type": "string"
+                },
+                "start": {
+                  "type": "string"
+                },
+                "end": {
+                  "type": "string"
+                },
+                "timezone": {
+                  "type": "string"
+                },
+                "window": {
+                  "type": "string"
+                },
+                "movable": {
+                  "type": "boolean"
+                },
+                "outdoor": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "id",
+                "title",
+                "start",
+                "end",
+                "timezone",
+                "window",
+                "movable",
+                "outdoor"
+              ],
+              "additionalProperties": false
+            }
           }
         },
         "required": [

@@ -8,6 +8,11 @@ mod tests {
     use std::{path::{Path, PathBuf}, sync::{Arc, Mutex}, time::Duration};
 
     type Replies = Arc<Mutex<Vec<Result<Value, String>>>>;
+    thread_local! {
+        // The official registry is thread-local and append-only. A test creates
+        // many Cx instances on one thread; register its host vocabulary once.
+        static HOST_TOOLS_READY: std::cell::Cell<bool> = const { std::cell::Cell::new(false) };
+    }
     fn root() -> PathBuf { PathBuf::from(std::env::var("RIPPLE_TEST_ROOT").unwrap()) }
     fn evidence() -> PathBuf { PathBuf::from(std::env::var("RIPPLE_TEST_EVIDENCE").unwrap()) }
     fn write(name: &str, v: &Value) {
@@ -18,7 +23,9 @@ mod tests {
     fn read(p: impl AsRef<Path>) -> Value { serde_json::from_slice(&std::fs::read(p.as_ref()).unwrap_or_else(|e|panic!("read {}: {e}",p.as_ref().display()))).unwrap() }
     fn fixture(label: &str, source: &str, reference: &Path) -> (Cx, WidgetRef, SplashRef, script_tools::Registration, PathBuf) {
         // Public isolate registration, identical app_tools implementation; no gate edits.
-        makepad_widgets::widget_async::register_splash_isolate_mod(script_tools::script_mod);
+        HOST_TOOLS_READY.with(|ready| {
+            if !ready.replace(true) { makepad_widgets::widget_async::register_splash_isolate_mod(script_tools::script_mod); }
+        });
         let mut cx=Cx::new(Box::new(|_,_|{}));
         let ui=cx.with_vm(|vm| {
             makepad_widgets::script_mod(vm);
@@ -31,7 +38,9 @@ mod tests {
         card.set_host_tag(&mut cx,Some("ripple".into()));
         card.set_sandbox_dir(&mut cx,Some(jail.clone()));
         card.set_policy(&mut cx,Some(vec![]),Some(2_000_000));
+        let initialization_started=std::time::Instant::now();
         card.set_text(&mut cx,source);
+        if std::env::var_os("RIPPLE_TRACE_CALLS").is_some() { eprintln!("RIPPLE_INIT label={label} source_bytes={} elapsed_us={}",source.len(),initialization_started.elapsed().as_micros()); }
         widget_tree::set_ui_root(&mut cx,&ui);
         // Mount/draw the real widget tree, as official card_layout_tests do.
         // app_tool legitimately calls ui.call.set_text; keep that UI code intact.
@@ -487,7 +496,8 @@ mod tests {
         std::fs::write(jail.join("weather.json"),w.to_string()).unwrap();invoke(&mut cx,&card,id!(fixture_begin),&["no-candidate"]);
         let nc=call("ripple.context.read",json!({"task_id":"no-candidate"}),&mut cx).unwrap();let mut args=nc["search_bounds"].clone();args["task_id"]=json!("no-candidate");args["read_token"]=nc["read_token"].clone();
         let none=call("ripple.slots.search",args,&mut cx).unwrap();assert_eq!(none["candidates"],json!([]));
-        let ncchoice=json!({"task_id":"no-candidate","read_token":nc["read_token"],"decision":"NO_CANDIDATE","search_id":none["search_id"],"candidate_id":null});invoke(&mut cx,&card,id!(fixture_finish),&[&ncchoice.to_string()]);invoke(&mut cx,&card,id!(fixture_report),&[]);assert_eq!(read(jail.join("report.json"))["status"],"NO_CANDIDATE");assert_eq!(read(jail.join("schedule.txt")),after);
+        let ncchoice=json!({"task_id":"no-candidate","read_token":nc["read_token"],"decision":"NO_CANDIDATE","search_id":none["search_id"],"candidate_id":null});let mut wrong_explanation=ncchoice.clone();wrong_explanation["explanation"]=json!("窗口 15:00–17:00 被会议占用");invoke(&mut cx,&card,id!(fixture_finish),&[&wrong_explanation.to_string()]);invoke(&mut cx,&card,id!(fixture_report),&[]);assert_eq!(read(jail.join("report.json"))["status"],"ANALYZING");assert_eq!(read(jail.join("schedule.txt")),after);
+        let mut corrected=ncchoice.clone();corrected["explanation"]=json!("允许窗口内没有同时满足天气与固定安排的时段。愿意声明另一段同日空闲，还是保留？");invoke(&mut cx,&card,id!(fixture_finish),&[&corrected.to_string()]);invoke(&mut cx,&card,id!(fixture_report),&[]);assert_eq!(read(jail.join("report.json"))["status"],"NO_CANDIDATE");assert_eq!(read(jail.join("schedule.txt")),after);
         for mode in ["count","expiry"] {
             invoke(&mut cx,&card,id!(fixture_replan_limit),&[mode]);invoke(&mut cx,&card,id!(fixture_report),&[]);
             assert_eq!(read(jail.join("report.json"))["status"],"FAILED");assert_eq!(read(jail.join("schedule.txt")),after);
