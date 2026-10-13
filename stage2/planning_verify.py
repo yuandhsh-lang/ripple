@@ -12,7 +12,7 @@ sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'stage1'))
 import verify as v
 
 P=Path(__file__).resolve().parents[1]
-phase='3' if 'RIPPLE_STAGE3_AUDIT' in os.environ else '2'
+phase='4' if 'RIPPLE_STAGE4_AUDIT' in os.environ else '3' if 'RIPPLE_STAGE3_AUDIT' in os.environ else '2'
 A=Path(os.environ['RIPPLE_STAGE'+phase+'_AUDIT']).resolve()
 assert A.parent==(P.parent/'_audits/Ripple').resolve() and A.name.startswith('Stage'+phase+'-')
 run=os.environ['RIPPLE_TEST_RUN']

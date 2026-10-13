@@ -470,4 +470,5 @@ mod tests {
     include!("stage1_tests.rs");
     include!("stage2_tests.rs");
     include!("stage3_tests.rs");
+    include!("stage4_tests.rs");
 }

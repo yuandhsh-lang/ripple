@@ -336,6 +336,9 @@
               "city_query"
             ],
             "additionalProperties": false
+          },
+          "change": {
+            "type": "object"
           }
         },
         "required": [

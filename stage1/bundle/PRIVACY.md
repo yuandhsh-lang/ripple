@@ -1,4 +1,4 @@
-# Ripple 0.5.0-stage3 local privacy notice
+# Ripple 0.6.0-stage4 local privacy notice
 
 This unpublished local build manages one primary activity and up to four related same-city, same-day planning facts confirmed by the user. It has no external calendar integration or publisher backend.
 
@@ -19,3 +19,5 @@ Local acceptance evidence uses operator-entered demonstration activities and may
 Stage 2 also stores the person-confirmed natural-language request, a soft time-of-day preference and up to four related same-day plans in the existing activity record. AI interpretation sends that request and current/saved facts through the official host Provider; planning tools supply only saved facts and checked weather/candidates. The interpretation is a draft until the person confirms and saves. Related changes require a separate complete preview and explicit user approval; no model can write the activity. Cancelled related plans remain represented as inactive, not silently deleted. Test credentials are supplied only to isolated host processes; the app never receives a Provider key.
 
 Stage 3 extends the existing execution receipt with the approved original/final record and per-plan before/expected checkpoints, identity, revision and read-back result. Steps are sequential, not an atomic database transaction. Restart reconciles by reading persisted records; it never replays an old approval. Partial or unknown results stop further writes; no automatic rollback occurs. The current planner still considers the primary plus at most one related move. All writes remain within Ripple local storage.
+
+Stage 4 checks saved plans and weather on application startup, explicit weather refresh, and saving a plan. Meaningful risks may invoke the same configured AI provider and its two read-only tools. A small change-response.json in the existing app storage remembers the latest semantic facts and dismissal to avoid repeat suggestions. Closing the application stops checks. Plans still change only after explicit approval; partial or unknown writes stop further analysis.

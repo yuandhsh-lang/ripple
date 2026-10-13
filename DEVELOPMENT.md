@@ -2,7 +2,7 @@
 
 唯一正式仓库：`F:\桌面\01 项目开发\黑客松\Ripple`，开发分支 `main`。2026-10-13 已从受保护的冻结分支切换到此前合并的开发提交；没有复制另一个仓库覆盖原 `.git`。
 
-开发应用是 `stage1/bundle/`，入口 `main.splash`，版本 `0.5.0-stage3`。根 `bundle/` 仍为 v0.1.0 历史交付。React/TypeScript 的 `src/` 是保留的早期原型。不要将 React 构建成功当成原生 Agent 完整验证。
+开发应用是 `stage1/bundle/`，入口 `main.splash`，版本 `0.6.0-stage4`。根 `bundle/` 仍为 v0.1.0 历史交付。React/TypeScript 的 `src/` 是保留的早期原型。不要将 React 构建成功当成原生 Agent 完整验证。
 
 本次源码统一没有新增业务逻辑；阶段三的时间编辑同步修复已经存在于合并提交。参赛版本接收仍为 `COMPETITION_VERSION_UNVERIFIED`，本地开发提交不等于比赛已接收。
 
@@ -75,3 +75,11 @@ Stage 2 的理解、工具和搜索继续复用。关联建议先显示完整变
 原版 RC6 测试继续用 stage2/planning_verify.py；Stage 3 设置 RIPPLE_STAGE3_AUDIT（并列 Stage3-* 审计目录）、RIPPLE_TEST_RUN（由 stage4/new_run.ps1 新建 p4-stage3-*），可选 RIPPLE_STAGE3_REVISION。该驱动只用于隔离本地验收，不是新开发目录。不要运行 octosense.exe --help：该 GUI 程序会忽略它并启动默认环境；只使用经过隔离检查的 start 入口。
 
 SDK 严格检查同时拒绝任意 script time budget exceeded 文本（包括日志等级不是 error 的初始化错误）。RIPPLE_STAGE3_CASE 可在独立进程定向运行一个故障场景，默认仍运行全部；所有断言和官方预算相同。Stage 3 审计：../_audits/Ripple/Stage3-20261013-121408。
+
+## 当前 Stage 4 变化响应
+
+启动、保存计划后，以及“刷新天气并检查变化”会检查保存事实。计划重叠或相关时段降雨风险变化时，前台调用同一 Agent 和两个只读工具；无风险或相同语义键不重复调用。change-response.json 只保存最近语义键和处理/拒绝状态，不是计划库或审批。天气时间戳和未跨风险阈值的波动不触发新建议；审批仍严格绑定原始天气与计划字节。AI 不可用会转为明确标记的规则候选。没有后台服务或关闭后的监测。
+
+使用原草稿/保存操作新增、修改及取消关联计划。PARTIAL/未知执行状态阻止变化分析和写入；独立核验与人工处理后才可继续。搜索、时区及活动限制不变。当前 SDK 全套包含 9 项测试（新增 stage4_change_response_and_existing_execution），仍须同时检查退出码和日志。
+
+本轮审计与隔离驱动在 ../_audits/Ripple/Stage4-20261013-144921；RIPPLE_STAGE4_AUDIT / RIPPLE_STAGE4_REVISION / RIPPLE_TEST_RUN 可复用 stage2/planning_verify.py 的受保护启动入口。Provider 仅在隔离进程使用环境变量引用；不要复制历史 profile 或凭据。Stage 4 的运行证据、真实视频、实际退出状态及未关闭计时问题见该审计目录。原评审包未替换，本地测试签名不等于公开发行。

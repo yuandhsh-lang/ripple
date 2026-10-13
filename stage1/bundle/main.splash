@@ -40,6 +40,8 @@ let execution_group = nil
 let execution_result = nil
 let group_cancelled = false
 let group_receipt_text = nil
+let change_context = nil
+let change_message = "启动、保存计划或刷新天气时检查重要变化；关闭应用后不监测。"
 let ink = #x173b36
 let muted = #x58746e
 let accent = #x087f6d
@@ -216,6 +218,94 @@ fn plan_entries(e){
     plans
 }
 fn overlap(a,b,c,d){ a < d && c < b }
+// Semantic de-duplication only. Execution still binds exact original bytes.
+fn change_facts(e){
+    let plans = plan_entries(e) let affected = [] let reasons = [] let mask = []
+    let conflicts = plan_conflicts(e)
+    for a in plans {
+        let hit = false
+        for c in conflicts { if c.a == a.id || c.b == a.id { hit = true } }
+        if a.outdoor { let c = coverage(a.start,a.end) if !c.complete { return nil } if c.conflict { hit = true } }
+        if hit { affected.push({id:a.id title:a.title}) }
+    }
+    if conflicts.len() > 0 { reasons.push("安排时间重叠，不调整会同时占用同一时段") }
+    let impact = combined_impact(e)
+    if !impact.complete { return nil }
+    // Only the actual outdoor intervals and declared windows can affect options.
+    // Timestamp, forecast revision and sub-threshold rain jitter are excluded.
+    for h in weather {
+        let relevant = false
+        for a in plans {
+            if a.outdoor && (overlap(h.start,h.end,a.start,a.end) || (a.movable && a.availability != nil && overlap(h.start,h.end,a.availability.min_start,a.availability.max_end))) { relevant = true }
+        }
+        if relevant { mask.push({start:h.start wet:wet(h)}) }
+    }
+    if impact.conflict && reasons.len() == 0 { reasons.push("户外活动存在降雨风险，不调整将保留该风险") }
+    let p = planning_of(e) let preference = "none" if p != nil { preference = p.preference }
+    {key:{plans:plans lat:e.lat lon:e.lon timezone:field(e,"timezone") preference:preference weather:mask}.to_json() affected:affected reasons:reasons conflict:impact.conflict}
+}
+fn queue_change_check(trigger){
+    let generation = input_generation let fingerprint = schedule_fingerprint()
+    start_timeout(0.1,||{
+        if generation == input_generation && fingerprint == schedule_fingerprint() { check_changes(trigger,false) }
+    })
+}
+fn check_changes(trigger,refresh){
+    if busy || loading || city_loading || dirty || status == "PARTIAL" || execution_group != nil { return }
+    let e = read_event() if e == nil || e.start <= time_now() { return }
+    let generation = input_generation let fingerprint = schedule_fingerprint()
+    // Invalidate a visible approval before fetching a replacement snapshot.
+    proposal = nil planning_advice = nil last_read = nil last_search = nil change_context = nil
+    event = e loading = true move("LOADING","正在检查保存的安排与天气变化…")
+    let w = read_weather_snapshot(e,time_now())
+    let fetched = true
+    if w != nil { weather_message = w.source+" Open-Meteo / 已校验保存的天气 / "+clock_stamp(whole(w.fetched_at),28800) }
+    if refresh || w == nil { fetched = try { fetch_weather() } catch { false } }
+    loading = false
+    if generation != input_generation || fingerprint != schedule_fingerprint() { move("STALE","检查期间计划已改变；请保存后重新检查。") return }
+    if !fetched { change_message = "天气不可用，风险未知；没有将未知天气当作安全。" move("FAILED",change_message) return }
+    // Yield after network/JSON validation instead of accumulating VM work.
+    start_timeout(0.05,|| finish_change_check(trigger,generation,fingerprint))
+}
+fn finish_change_check(trigger,generation,fingerprint){
+    if busy || loading || dirty || generation != input_generation || fingerprint != schedule_fingerprint() || status == "PARTIAL" || execution_group != nil { return }
+    let e = read_event() let w = read_weather_snapshot(e,time_now())
+    if w == nil { move("FAILED","天气已过期或不可用，风险未知；请刷新后重试。") return }
+    weather = w.hours
+    let facts = change_facts(e)
+    if facts == nil { move("FAILED","天气覆盖不完整，无法确认风险；原安排保留。") return }
+    let previous = read_json("change-response.json")
+    if previous.is_object() && field(previous,"key") == facts.key {
+        change_message = "相关事实没有实质变化，不重复建议。"
+        if previous.outcome == "DECLINED" { change_message = "已拒绝相同风险的建议；修改约束后才会重新提醒。" }
+        if !facts.conflict { move("NO_CHANGE","无需调整，现有安排保持不变。") }
+        else { move("RISK",change_message+" 可明确请求再次分析。") }
+        return
+    }
+    let marker = {key:facts.key outcome:if facts.conflict { "SEEN" } else { "NO_CHANGE" }}.to_json()
+    if !write_text("change-response.json",marker) || read_text("change-response.json") != marker { move("FAILED","变化检查状态无法保存；未启动自动分析，请检查存储。") return }
+    change_context = {trigger:trigger affected:facts.affected reasons:facts.reasons weather_source:w.source previous_check:previous.is_object()}
+    change_message = "无需调整：当前已知天气和计划没有冲突。"
+    if !facts.conflict { move("NO_CHANGE",change_message) return }
+    change_message = "发现重要变化：" for reason in facts.reasons { change_message = change_message+reason+"。" }
+    record_evidence("CHANGE_DETECTED trigger="+trigger+" affected="+facts.affected.to_json()+" weather="+w.source)
+    planning_mode = "agent" agent_task_kind = "choice" workflow_started = time_now()
+    start_timeout(0.05,||{
+        if generation == input_generation && fingerprint == schedule_fingerprint() && !busy && !loading && !dirty && status != "PARTIAL" { start_agent() }
+    })
+    move("RISK",change_message)
+}
+fn change_agent_failed(generation,reason){
+    if generation != task_generation { return }
+    busy = false
+    if change_context == nil { move("FAILED",reason) return }
+    change_message = "AI 暂不可用，已降级为规则候选；仍需选择、批准和独立核验。"
+    planning_mode = "user" move("RISK",change_message)
+    record_evidence("CHANGE_RULE_FALLBACK "+reason)
+    start_timeout(0.05,||{
+        if generation == task_generation && !busy && !loading && !dirty && status == "RISK" { preview_candidates() }
+    })
+}
 fn combined_impact(e){
     let impact = coverage(e.start,e.end)
     let p = planning_of(e)
@@ -392,6 +482,7 @@ fn finish_interpret(generation,text){
     move("DRAFT_REVIEW","这是 AI 理解草稿，请逐项核对所有新增、修改和取消。确认只填入表单，仍须手动保存；城市须真实查询确认。")
 }
 fn interpret_input(){
+    change_context = nil
     if busy || loading || status == "PARTIAL" { return }
     let text = ui.intent_input.text().trim()
     if text.len() < 2 || text.len() > 2000 { move("FAILED","请输入 2–2000 字符，说明同一天的活动、固定安排、允许窗口与偏好。") return }
@@ -516,6 +607,7 @@ fn finish_save(before,was_pending){
     if was_pending { move("STALE","Activity changed. Old approval is invalid; replan once for new approval.") }
     else { proposal = nil move("READY","Activity saved and independently read back. Analyze with Agent.") }
     record_evidence("USER_SAVE event_id=" + after.event_id + " revision=" + after.revision)
+    if !dirty { queue_change_check("saved_plan") }
 }
 fn boot(){
     proposal = nil execution_group = nil execution_result = nil busy = false
@@ -543,7 +635,7 @@ fn boot(){
     if selected_city != nil { ui.city_input.set_text(selected_city.name) city_message = "已保存："+selected_city.name+" / "+selected_city.country+" / "+selected_city.admin1+" / "+selected_city.admin2+" / "+selected_city.timezone }
     else { city_message = "旧记录仅有坐标，城市未确认。按原 UTC+8 显示；选择城市后再保存。" }
     ui.city_panel.render() ui.draft_label.set_text("已读取保存记录；未声明窗口不代表您全天有空。")
-    if group { show_group_result(journal) return }
+    if group { show_group_result(journal) if status == "COMPLETED" { queue_change_check("startup") } return }
     move("READY","Stored activity loaded. Old approvals are never resumed.")
     if fs.exists("execution.json") {
         let saved = read_json("execution.json")
@@ -553,6 +645,7 @@ fn boot(){
             else if field(saved,"status") != "COMPLETED" && field(saved,"before") != schedule_fingerprint() { move("PARTIAL","Previous write is uncertain. Inspect actual state before any new write.") }
         }
     }
+    if status == "READY" || status == "COMPLETED" { queue_change_check("startup") }
 }
 fn wet(h){
     h.rain >= 1 || h.chance >= 50 || (h.code >= 51 && h.code <= 67) || (h.code >= 80 && h.code <= 82) || h.code >= 95
@@ -719,6 +812,7 @@ fn read_context(token){
         if min_start <= time_now() { min_start = whole(time_now()/60)*60+60 }
     }
     let result = {task_id:active_task read_token:token events:[e] retrieved_at:time_now() data_source:"ripple-local-activity" impact:impact weather_source:w.source weather_revision:w.revision weather_fetched_at:w.fetched_at time_authority:authoritative_time(e.start,e.end) search_bounds:{min_start:min_start max_end:max_end max_candidates:3} calendar_scope:"Saved primary and related plans share one city/date; all other personal commitments unknown"}
+    if change_context != nil { result.change = change_context }
     if fingerprint != schedule_fingerprint() { return nil }
     last_read = {read_token:token events:[e] fingerprint:fingerprint bounds:result.search_bounds weather_fingerprint:read_text("weather.json")}
     result
@@ -795,6 +889,7 @@ fn expire_agent(generation){
     abandon_task("Agent response deadline exceeded; no schedule changed.")
     move("FAILED","Agent did not respond within 90 seconds. Activity unchanged; analyze explicitly again.")
     host.request("octos.turn.interrupt",{},fn(r){})
+    if change_context != nil { change_agent_failed(task_generation,"Agent response deadline exceeded") }
 }
 fn start_agent(){
     let id = "ripple-task-" + time_now() + "-" + (task_generation+1)
@@ -803,7 +898,7 @@ fn start_agent(){
     start_timeout(90, || expire_agent(generation))
     host.request("octos.session.open",{},fn(s){
         if generation != task_generation || !busy { return }
-        if !s.is_ok { busy = false move("FAILED","Agent unavailable: " + s.error) return }
+        if !s.is_ok { change_agent_failed(generation,"Agent unavailable: " + s.error) return }
         write_text("agent-session.json",s.data.to_json())
         let text = "Plan the user's outdoor activity. Current task_id=" + id + ". First call ripple.context.read with task_id. Inspect returned impact. If conflict=true, call ripple.slots.search copying read_token and ALL search_bounds exactly. Evaluate actual candidates and choose one. If conflict=false do not search. Return ONLY one raw JSON object, no Markdown, with exactly task_id, read_token, decision (PROPOSE / NO_CHANGE / NO_CANDIDATE), search_id, candidate_id. IDs must come from tools. For NO_CHANGE use null search_id and candidate_id; for NO_CANDIDATE use actual search_id and null candidate_id. Never invent dates, numbers or results. No execution tools exist; a PROPOSE choice requires user approval."
         if agent_task_kind == "interpret" {
@@ -811,10 +906,11 @@ fn start_agent(){
         } else {
             text = text+" Saved planning metadata may include linked plans, fixed/movable flags, priority and a soft time-of-day preference. Read all actual facts, use the SAME slots tool when impact.conflict=true (weather OR plan overlaps). Choose a returned candidate with minimum moved_count; among those prefer lower preference_penalty then lower priority_minutes/shift_minutes. The rule baseline_candidate_id is an auditable comparator, not mandatory. Never invent changes or ignore fixed events. A candidate with related_changes needs a separate human-reviewed group approval; you cannot approve or execute it. No conflicts means NO_CHANGE; never move an unrelated event merely to fill a schedule."
         }
+        if change_context != nil { text = text+" The user saved a plan or opened/refreshed this foreground app. Read the change field: determine affected goals from its real reasons and current events, evaluate consequences of keeping them, and use the existing tool to find the smallest valid adjustment. This is not permission to write. No invented weather or personal availability." }
         host.request("octos.turn.start",{text:text trigger:"person" from:"Ripple rain-conflict planning"},fn(r){
             if generation != task_generation || !busy { record_evidence("DISCARDED late MODEL callback") return }
             if r.is_ok { finish_model(generation,field(r.data,"text")) }
-            else { busy = false move("FAILED","Agent failed: " + r.error + "; activity unchanged.") }
+            else { change_agent_failed(generation,"Agent failed: " + r.error + "; activity unchanged.") }
         })
     })
 }
@@ -864,6 +960,7 @@ fn analyze_with_agent(){ planning_mode = "agent" analyze() }
 fn analyze(){
     if busy || loading || city_loading || status == "PARTIAL" { return }
     if dirty { move("FAILED","有未保存的修改，请先保存活动。") return }
+    change_context = nil
     let generation = input_generation
     agent_task_kind = "choice" interpretation_draft = nil planning_advice = nil
     proposal = nil event = read_event() replan_count = 0 workflow_started = time_now()
@@ -887,7 +984,13 @@ fn replan(){
     if !fetched { move("FAILED","Replan weather unavailable. Nothing changed.") return }
     if planning_mode == "user" { preview_candidates() } else { start_agent() }
 }
-fn decline(){ if !busy && (status == "AWAITING_APPROVAL" || status == "PLAN_REVIEW") { proposal = nil planning_advice = nil move("DECLINED","已拒绝这组建议；没有写入任何计划。") } }
+fn decline(){ if !busy && (status == "AWAITING_APPROVAL" || status == "PLAN_REVIEW") {
+    if change_context != nil {
+        let marker = read_json("change-response.json")
+        if marker.is_object() && field(marker,"key").is_string() { marker.outcome = "DECLINED" write_text("change-response.json",marker.to_json()) }
+    }
+    proposal = nil planning_advice = nil move("DECLINED","已拒绝这组建议；没有写入任何计划。")
+} }
 fn interrupt_task(){ if busy && status == "ANALYZING" { abandon_task("Cancelled; late results cannot create an approval.") host.request("octos.turn.interrupt",{},fn(r){}) } }
 fn finish_verify(){
     if execution_group != nil { finish_group_step() return }
@@ -1188,6 +1291,7 @@ ui := SolidView{width:Fill height:Fill flow:Down padding:16 spacing:10 draw_bg.c
         }}
         Label{width:Fill text:"可明确批准主活动及关联计划的本地改期；最多四项同城同日关联计划，无外部日历同步。半小时步长，最多 3 项方案；只搜索主活动及至多一项关联移动，不保证全局最优。降雨不等于完整户外安全评估。" draw_text.color:muted draw_text.text_style.font_size:12}
         weather_label := Label{width:Fill text:weather_message draw_text.color:muted}
+        Action{text:"刷新天气并检查变化" on_click:|| check_changes("weather_refresh",true)}
         View{width:Fill height:Fit flow:Right spacing:8
             Action{text:"查询天气与可用时段" on_click:|| check_availability()}
             Action{text:"Analyze with Agent" on_click:|| analyze_with_agent()}
@@ -1195,6 +1299,19 @@ ui := SolidView{width:Fill height:Fill flow:Down padding:16 spacing:10 draw_bg.c
         }
         call := Label{width:Fill text:"No real tool call yet." draw_text.color:muted draw_text.text_style.font_size:11}
         workflow_panel := View{width:Fill height:Fit flow:Down spacing:8 on_render:||{
+            let user_state = "发现风险"
+            if status == "NO_CHANGE" { user_state = "无需调整" }
+            else if status == "READY" || status == "EMPTY" { user_state = "等待检查" }
+            else if status == "DRAFT_REVIEW" || status == "NEEDS_DETAILS" { user_state = "待核对输入" }
+            else if status == "AWAITING_APPROVAL" || status == "PLAN_REVIEW" { user_state = "等待确认" }
+            else if status == "EXECUTING" || status == "VERIFYING" || status == "SAVING" { user_state = "正在执行" }
+            else if status == "COMPLETED" { user_state = "已核验" }
+            else if status == "PARTIAL" || status == "FAILED" || status == "STALE" || status == "NO_CANDIDATE" { user_state = "需要处理" }
+            else if status == "LOADING" || status == "CHECKING" || status == "ANALYZING" { user_state = "正在检查" }
+            else if status == "DECLINED" || status == "CANCELLED" { user_state = "已停止，安排保留" }
+            Label{width:Fill text:user_state draw_text.color:accent draw_text.text_style.font_size:20}
+            Label{width:Fill text:change_message draw_text.color:muted}
+            if change_context != nil { for a in change_context.affected { Label{width:Fill text:"受影响："+a.title draw_text.color:ink} } }
             Label{width:Fill text:status draw_text.color:accent draw_text.text_style.font_size:18}
             Label{width:Fill text:message draw_text.color:ink}
             if status == "DRAFT_REVIEW" && interpretation_draft != nil {
