@@ -22,7 +22,7 @@
     "support": "https://github.com/yuandhsh-lang/ripple/issues",
     "privacy_policy_url": "https://example.invalid/ripple-stage1-local-privacy"
   },
-  "release_notes": "0.6.2-rc.1：自然语言草稿改为可编辑中文卡片；新计划核对后直接保存并读回；首页、计划、天气、审批及失败提示统一整理。复用原有 Agent、约束校验与安全执行。本地候选，公开发布及 SDK 历史间歇计时风险仍未关闭。",
+  "release_notes": "0.6.2-rc.2：自然语言草稿改为可编辑中文卡片；新计划核对后直接保存并读回；首页、计划、天气、审批及失败提示统一整理。复用原有 Agent、约束校验与安全执行。本地候选，公开发布及 SDK 历史间歇计时风险仍未关闭。",
   "age_rating": "all",
   "license": "Apache-2.0"
 }

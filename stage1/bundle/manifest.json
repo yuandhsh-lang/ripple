@@ -23,7 +23,7 @@
   ],
   "id": "ripple",
   "integrity": {
-    "bundle_blake3": "1c28908bf2beb46393d148589f2cb67f38342ea2c7f49502f73bdfff895533e4"
+    "bundle_blake3": "051573262c5794a666db1b9b035f463e885f598b3904184c0bacb71593287596"
   },
   "name": "Ripple",
   "network": {
@@ -39,5 +39,5 @@
   "storage": {
     "max_bytes": 1048576
   },
-  "version": "0.6.2-rc.1"
+  "version": "0.6.2-rc.2"
 }
