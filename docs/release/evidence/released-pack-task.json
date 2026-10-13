@@ -1,0 +1,334 @@
+{
+  "classification": "ACTUALLY_DOWNLOADED_GITHUB_ATTESTED_RELEASE_OFFICIAL_RC6_FRESH_INSTALL_REAL_DEEPSEEK_APPROVED_TWO_ITEM_EXECUTION_LABELLED_WEATHER_REPLAY",
+  "release_commit": "7e150404a3073a77688d5e1670de018083fe82a4",
+  "pack_sha256": "60a4f96b18f0a95bf024da24aba83b1e57b10f8677128cd841969261386f90d4",
+  "installed_all_files_exact_download": [
+    "AGENT.md",
+    "listing.json",
+    "main.splash",
+    "manifest.json",
+    "PRIVACY.md",
+    "tools.json",
+    "assets\\icon.svg",
+    "screenshots\\01-startup.png",
+    "screenshots\\02-approval.png",
+    "screenshots\\03-completed.png",
+    "screenshots\\04-glance.png",
+    "screenshots\\05-negotiation.png",
+    "screenshots\\06-draft.png"
+  ],
+  "same_event": true,
+  "condition_save_no_reschedule": true,
+  "fixed_plans_unchanged": true,
+  "expected_matches_persistent_read": true,
+  "actual": {
+    "schema": 3,
+    "event_id": "ripple-1791934259.6033504",
+    "title": "骑车",
+    "start": 1792044000,
+    "end": 1792047600,
+    "lat": 39.9075,
+    "lon": 116.39723,
+    "revision": 4,
+    "data_source": "ripple-local-activity",
+    "timezone": "Asia/Shanghai",
+    "location": {
+      "id": 1816670,
+      "name": "北京",
+      "country": "中国",
+      "country_code": "CN",
+      "admin1": "北京市",
+      "admin2": "北京市",
+      "lat": 39.9075,
+      "lon": 116.39723,
+      "timezone": "Asia/Shanghai",
+      "source": "Open-Meteo / GeoNames"
+    },
+    "availability": {
+      "min_start": 1792044000,
+      "max_end": 1792047600
+    },
+    "planning": {
+      "version": 1,
+      "instruction": "明天下午三点在北京骑车一小时，可调整到09:00至11:00，希望上午完成。另有固定客户会议10:00至11:00、固定内部会议13:00至14:00、室内交流14:00至15:00可移动到12:00至15:00。全部同日在北京，会议室内，骑车户外。",
+      "primary_movable": true,
+      "priority": 3,
+      "preference": "morning",
+      "plans": [
+        {
+          "id": "new-1",
+          "title": "固定客户会议",
+          "start": 1792029600,
+          "end": 1792033200,
+          "active": true,
+          "movable": false,
+          "outdoor": false,
+          "priority": 3,
+          "availability": null
+        },
+        {
+          "id": "new-2",
+          "title": "固定内部会议",
+          "start": 1792040400,
+          "end": 1792044000,
+          "active": true,
+          "movable": false,
+          "outdoor": false,
+          "priority": 3,
+          "availability": null
+        },
+        {
+          "id": "new-3",
+          "title": "室内交流",
+          "start": 1792036800,
+          "end": 1792040400,
+          "active": true,
+          "movable": true,
+          "outdoor": false,
+          "priority": 3,
+          "availability": {
+            "min_start": 1792036800,
+            "max_end": 1792047600
+          }
+        }
+      ]
+    }
+  },
+  "base": {
+    "schema": 3,
+    "event_id": "ripple-1791934259.6033504",
+    "title": "骑车",
+    "start": 1792047600,
+    "end": 1792051200,
+    "lat": 39.9075,
+    "lon": 116.39723,
+    "revision": 1,
+    "data_source": "ripple-local-activity",
+    "timezone": "Asia/Shanghai",
+    "location": {
+      "id": 1816670,
+      "name": "北京",
+      "country": "中国",
+      "country_code": "CN",
+      "admin1": "北京市",
+      "admin2": "北京市",
+      "lat": 39.9075,
+      "lon": 116.39723,
+      "timezone": "Asia/Shanghai",
+      "source": "Open-Meteo / GeoNames"
+    },
+    "availability": {
+      "min_start": 1792026000,
+      "max_end": 1792033200
+    },
+    "planning": {
+      "version": 1,
+      "instruction": "明天下午三点在北京骑车一小时，可调整到09:00至11:00，希望上午完成。另有固定客户会议10:00至11:00、固定内部会议13:00至14:00、室内交流14:00至15:00可移动到12:00至15:00。全部同日在北京，会议室内，骑车户外。",
+      "primary_movable": true,
+      "priority": 3,
+      "preference": "morning",
+      "plans": [
+        {
+          "id": "new-1",
+          "title": "固定客户会议",
+          "start": 1792029600,
+          "end": 1792033200,
+          "active": true,
+          "movable": false,
+          "outdoor": false,
+          "priority": 3,
+          "availability": null
+        },
+        {
+          "id": "new-2",
+          "title": "固定内部会议",
+          "start": 1792040400,
+          "end": 1792044000,
+          "active": true,
+          "movable": false,
+          "outdoor": false,
+          "priority": 3,
+          "availability": null
+        },
+        {
+          "id": "new-3",
+          "title": "室内交流",
+          "start": 1792044000,
+          "end": 1792047600,
+          "active": true,
+          "movable": true,
+          "outdoor": false,
+          "priority": 3,
+          "availability": {
+            "min_start": 1792036800,
+            "max_end": 1792047600
+          }
+        }
+      ]
+    }
+  },
+  "condition_only": {
+    "schema": 3,
+    "event_id": "ripple-1791934259.6033504",
+    "title": "骑车",
+    "start": 1792047600,
+    "end": 1792051200,
+    "lat": 39.9075,
+    "lon": 116.39723,
+    "revision": 2,
+    "data_source": "ripple-local-activity",
+    "timezone": "Asia/Shanghai",
+    "location": {
+      "id": 1816670,
+      "name": "北京",
+      "country": "中国",
+      "country_code": "CN",
+      "admin1": "北京市",
+      "admin2": "北京市",
+      "lat": 39.9075,
+      "lon": 116.39723,
+      "timezone": "Asia/Shanghai",
+      "source": "Open-Meteo / GeoNames"
+    },
+    "availability": {
+      "min_start": 1792044000,
+      "max_end": 1792047600
+    },
+    "planning": {
+      "version": 1,
+      "instruction": "明天下午三点在北京骑车一小时，可调整到09:00至11:00，希望上午完成。另有固定客户会议10:00至11:00、固定内部会议13:00至14:00、室内交流14:00至15:00可移动到12:00至15:00。全部同日在北京，会议室内，骑车户外。",
+      "primary_movable": true,
+      "priority": 3,
+      "preference": "morning",
+      "plans": [
+        {
+          "id": "new-1",
+          "title": "固定客户会议",
+          "start": 1792029600,
+          "end": 1792033200,
+          "active": true,
+          "movable": false,
+          "outdoor": false,
+          "priority": 3,
+          "availability": null
+        },
+        {
+          "id": "new-2",
+          "title": "固定内部会议",
+          "start": 1792040400,
+          "end": 1792044000,
+          "active": true,
+          "movable": false,
+          "outdoor": false,
+          "priority": 3,
+          "availability": null
+        },
+        {
+          "id": "new-3",
+          "title": "室内交流",
+          "start": 1792044000,
+          "end": 1792047600,
+          "active": true,
+          "movable": true,
+          "outdoor": false,
+          "priority": 3,
+          "availability": {
+            "min_start": 1792036800,
+            "max_end": 1792047600
+          }
+        }
+      ]
+    }
+  },
+  "receipt": {
+    "weather_fingerprint": "{\"source\": \"FIXTURE\", \"provider\": \"Open-Meteo\", \"timezone\": \"GMT\", \"utc_offset_seconds\": 0, \"request_lat\": 39.9075, \"request_lon\": 116.39723, \"fetched_at\": 1791934313.2754285, \"revision\": \"release-labelled-weather-replay-1791934313\", \"hours\": [{\"start\": 1791849600, \"end\": 1791853200, \"code\": 0, \"rain\": 0, \"chance\": 0}, {\"start\": 1791853200, \"end\": 1791856800, \"code\": 0, \"rain\": 0, \"chance\": 0}, {\"start\": 1791856800, \"end\": 1791860400, \"code\": 0, \"rain\": 0, \"chance\": 0}, {\"start\": 1791860400, \"end\": 1791864000, \"code\": 0, \"rain\": 0, \"chance\": 0}, {\"start\": 1791864000, \"end\": 1791867600, \"code\": 1, \"rain\": 0, \"chance\": 0}, {\"start\": 1791867600, \"end\": 1791871200, \"code\": 1, \"rain\": 0, \"chance\": 0}, {\"start\": 1791871200, \"end\": 1791874800, \"code\": 1, \"rain\": 0, \"chance\": 0}, {\"start\": 1791874800, \"end\": 1791878400, \"code\": 1, \"rain\": 0, \"chance\": 0}, {\"start\": 1791878400, \"end\": 1791882000, \"code\": 0, \"rain\": 0, \"chance\": 0}, {\"start\": 1791882000, \"end\": 1791885600, \"code\": 0, \"rain\": 0, \"chance\": 0}, {\"start\": 1791885600, \"end\": 1791889200, \"code\": 0, \"rain\": 0, \"chance\": 0}, {\"start\": 1791889200, \"end\": 1791892800, \"code\": 0, \"rain\": 0, \"chance\": 0}, {\"start\": 1791892800, \"end\": 1791896400, \"code\": 0, \"rain\": 0, \"chance\": 0}, {\"start\": 1791896400, \"end\": 1791900000, \"code\": 0, \"rain\": 0, \"chance\": 0}, {\"start\": 1791900000, \"end\": 1791903600, \"code\": 0, \"rain\": 0, \"chance\": 0}, {\"start\": 1791903600, \"end\": 1791907200, \"code\": 0, \"rain\": 0, \"chance\": 0}, {\"start\": 1791907200, \"end\": 1791910800, \"code\": 0, \"rain\": 0, \"chance\": 0}, {\"start\": 1791910800, \"end\": 1791914400, \"code\": 0, \"rain\": 0, \"chance\": 0}, {\"start\": 1791914400, \"end\": 1791918000, \"code\": 0, \"rain\": 0, \"chance\": 0}, {\"start\": 1791918000, \"end\": 1791921600, \"code\": 0, \"rain\": 0, \"chance\": 0}, {\"start\": 1791921600, \"end\": 1791925200, \"code\": 0, \"rain\": 0, \"chance\": 0}, {\"start\": 1791925200, \"end\": 1791928800, \"code\": 0, \"rain\": 0, \"chance\": 0}, {\"start\": 1791928800, \"end\": 1791932400, \"code\": 0, \"rain\": 0, \"chance\": 0}, {\"start\": 1791932400, \"end\": 1791936000, \"code\": 0, \"rain\": 0, \"chance\": 0}, {\"start\": 1791936000, \"end\": 1791939600, \"code\": 0, \"rain\": 0, \"chance\": 0}, {\"start\": 1791939600, \"end\": 1791943200, \"code\": 0, \"rain\": 0, \"chance\": 0}, {\"start\": 1791943200, \"end\": 1791946800, \"code\": 0, \"rain\": 0, \"chance\": 0}, {\"start\": 1791946800, \"end\": 1791950400, \"code\": 0, \"rain\": 0, \"chance\": 0}, {\"start\": 1791950400, \"end\": 1791954000, \"code\": 2, \"rain\": 0, \"chance\": 0}, {\"start\": 1791954000, \"end\": 1791957600, \"code\": 2, \"rain\": 0, \"chance\": 0}, {\"start\": 1791957600, \"end\": 1791961200, \"code\": 2, \"rain\": 0, \"chance\": 0}, {\"start\": 1791961200, \"end\": 1791964800, \"code\": 0, \"rain\": 0, \"chance\": 0}, {\"start\": 1791964800, \"end\": 1791968400, \"code\": 0, \"rain\": 0, \"chance\": 0}, {\"start\": 1791968400, \"end\": 1791972000, \"code\": 1, \"rain\": 0, \"chance\": 1}, {\"start\": 1791972000, \"end\": 1791975600, \"code\": 1, \"rain\": 0, \"chance\": 3}, {\"start\": 1791975600, \"end\": 1791979200, \"code\": 0, \"rain\": 0, \"chance\": 4}, {\"start\": 1791979200, \"end\": 1791982800, \"code\": 0, \"rain\": 0, \"chance\": 3}, {\"start\": 1791982800, \"end\": 1791986400, \"code\": 0, \"rain\": 0, \"chance\": 1}, {\"start\": 1791986400, \"end\": 1791990000, \"code\": 0, \"rain\": 0, \"chance\": 0}, {\"start\": 1791990000, \"end\": 1791993600, \"code\": 0, \"rain\": 0, \"chance\": 0}, {\"start\": 1791993600, \"end\": 1791997200, \"code\": 0, \"rain\": 0, \"chance\": 0}, {\"start\": 1791997200, \"end\": 1792000800, \"code\": 0, \"rain\": 0, \"chance\": 0}, {\"start\": 1792000800, \"end\": 1792004400, \"code\": 0, \"rain\": 0, \"chance\": 0}, {\"start\": 1792004400, \"end\": 1792008000, \"code\": 0, \"rain\": 0, \"chance\": 0}, {\"start\": 1792008000, \"end\": 1792011600, \"code\": 0, \"rain\": 0, \"chance\": 0}, {\"start\": 1792011600, \"end\": 1792015200, \"code\": 0, \"rain\": 0, \"chance\": 0}, {\"start\": 1792015200, \"end\": 1792018800, \"code\": 0, \"rain\": 0, \"chance\": 0}, {\"start\": 1792018800, \"end\": 1792022400, \"code\": 0, \"rain\": 0, \"chance\": 0}, {\"start\": 1792022400, \"end\": 1792026000, \"code\": 0, \"rain\": 0, \"chance\": 0}, {\"start\": 1792026000, \"end\": 1792029600, \"code\": 61, \"rain\": 2, \"chance\": 80}, {\"start\": 1792029600, \"end\": 1792033200, \"code\": 0, \"rain\": 0, \"chance\": 0}, {\"start\": 1792033200, \"end\": 1792036800, \"code\": 0, \"rain\": 0, \"chance\": 0}, {\"start\": 1792036800, \"end\": 1792040400, \"code\": 0, \"rain\": 0, \"chance\": 0}, {\"start\": 1792040400, \"end\": 1792044000, \"code\": 0, \"rain\": 0, \"chance\": 0}, {\"start\": 1792044000, \"end\": 1792047600, \"code\": 0, \"rain\": 0, \"chance\": 0}, {\"start\": 1792047600, \"end\": 1792051200, \"code\": 61, \"rain\": 2, \"chance\": 80}, {\"start\": 1792051200, \"end\": 1792054800, \"code\": 0, \"rain\": 0, \"chance\": 0}, {\"start\": 1792054800, \"end\": 1792058400, \"code\": 0, \"rain\": 0, \"chance\": 0}, {\"start\": 1792058400, \"end\": 1792062000, \"code\": 0, \"rain\": 0, \"chance\": 0}, {\"start\": 1792062000, \"end\": 1792065600, \"code\": 0, \"rain\": 0, \"chance\": 0}, {\"start\": 1792065600, \"end\": 1792069200, \"code\": 1, \"rain\": 0, \"chance\": 0}, {\"start\": 1792069200, \"end\": 1792072800, \"code\": 1, \"rain\": 0, \"chance\": 0}, {\"start\": 1792072800, \"end\": 1792076400, \"code\": 1, \"rain\": 0, \"chance\": 0}, {\"start\": 1792076400, \"end\": 1792080000, \"code\": 3, \"rain\": 0, \"chance\": 0}, {\"start\": 1792080000, \"end\": 1792083600, \"code\": 3, \"rain\": 0, \"chance\": 0}, {\"start\": 1792083600, \"end\": 1792087200, \"code\": 3, \"rain\": 0, \"chance\": 0}, {\"start\": 1792087200, \"end\": 1792090800, \"code\": 3, \"rain\": 0, \"chance\": 0}, {\"start\": 1792090800, \"end\": 1792094400, \"code\": 3, \"rain\": 0, \"chance\": 0}, {\"start\": 1792094400, \"end\": 1792098000, \"code\": 3, \"rain\": 0, \"chance\": 0}, {\"start\": 1792098000, \"end\": 1792101600, \"code\": 3, \"rain\": 0, \"chance\": 0}, {\"start\": 1792101600, \"end\": 1792105200, \"code\": 3, \"rain\": 0, \"chance\": 0}, {\"start\": 1792105200, \"end\": 1792108800, \"code\": 3, \"rain\": 0, \"chance\": 0}, {\"start\": 1792108800, \"end\": 1792112400, \"code\": 3, \"rain\": 0, \"chance\": 0}, {\"start\": 1792112400, \"end\": 1792116000, \"code\": 3, \"rain\": 0, \"chance\": 0}, {\"start\": 1792116000, \"end\": 1792119600, \"code\": 3, \"rain\": 0, \"chance\": 0}, {\"start\": 1792119600, \"end\": 1792123200, \"code\": 3, \"rain\": 0, \"chance\": 1}, {\"start\": 1792123200, \"end\": 1792126800, \"code\": 3, \"rain\": 0, \"chance\": 3}, {\"start\": 1792126800, \"end\": 1792130400, \"code\": 3, \"rain\": 0, \"chance\": 6}, {\"start\": 1792130400, \"end\": 1792134000, \"code\": 3, \"rain\": 0, \"chance\": 10}, {\"start\": 1792134000, \"end\": 1792137600, \"code\": 3, \"rain\": 0, \"chance\": 14}, {\"start\": 1792137600, \"end\": 1792141200, \"code\": 3, \"rain\": 0, \"chance\": 20}, {\"start\": 1792141200, \"end\": 1792144800, \"code\": 3, \"rain\": 0, \"chance\": 30}, {\"start\": 1792144800, \"end\": 1792148400, \"code\": 3, \"rain\": 0, \"chance\": 41}, {\"start\": 1792148400, \"end\": 1792152000, \"code\": 3, \"rain\": 0, \"chance\": 49}, {\"start\": 1792152000, \"end\": 1792155600, \"code\": 3, \"rain\": 0.1, \"chance\": 50}, {\"start\": 1792155600, \"end\": 1792159200, \"code\": 51, \"rain\": 0.5, \"chance\": 49}, {\"start\": 1792159200, \"end\": 1792162800, \"code\": 53, \"rain\": 0.2, \"chance\": 49}, {\"start\": 1792162800, \"end\": 1792166400, \"code\": 51, \"rain\": 0.3, \"chance\": 54}, {\"start\": 1792166400, \"end\": 1792170000, \"code\": 51, \"rain\": 1.5, \"chance\": 61}, {\"start\": 1792170000, \"end\": 1792173600, \"code\": 80, \"rain\": 1.1, \"chance\": 67}, {\"start\": 1792173600, \"end\": 1792177200, \"code\": 55, \"rain\": 0.3, \"chance\": 71}, {\"start\": 1792177200, \"end\": 1792180800, \"code\": 51, \"rain\": 0, \"chance\": 74}, {\"start\": 1792180800, \"end\": 1792184400, \"code\": 3, \"rain\": 0, \"chance\": 78}, {\"start\": 1792184400, \"end\": 1792188000, \"code\": 3, \"rain\": 0.2, \"chance\": 83}, {\"start\": 1792188000, \"end\": 1792191600, \"code\": 51, \"rain\": 0.2, \"chance\": 90}, {\"start\": 1792191600, \"end\": 1792195200, \"code\": 51, \"rain\": 1.2, \"chance\": 94}, {\"start\": 1792195200, \"end\": 1792198800, \"code\": 55, \"rain\": 4.4, \"chance\": 96}, {\"start\": 1792198800, \"end\": 1792202400, \"code\": 81, \"rain\": 4.9, \"chance\": 96}, {\"start\": 1792202400, \"end\": 1792206000, \"code\": 81, \"rain\": 4.7, \"chance\": 96}, {\"start\": 1792206000, \"end\": 1792209600, \"code\": 81, \"rain\": 4.1, \"chance\": 97}, {\"start\": 1792209600, \"end\": 1792213200, \"code\": 63, \"rain\": 6.9, \"chance\": 97}, {\"start\": 1792213200, \"end\": 1792216800, \"code\": 81, \"rain\": 5.6, \"chance\": 98}, {\"start\": 1792216800, \"end\": 1792220400, \"code\": 81, \"rain\": 5.9, \"chance\": 99}, {\"start\": 1792220400, \"end\": 1792224000, \"code\": 81, \"rain\": 5.9, \"chance\": 100}, {\"start\": 1792224000, \"end\": 1792227600, \"code\": 81, \"rain\": 5.9, \"chance\": 100}, {\"start\": 1792227600, \"end\": 1792231200, \"code\": 81, \"rain\": 1.1, \"chance\": 99}, {\"start\": 1792231200, \"end\": 1792234800, \"code\": 55, \"rain\": 1.1, \"chance\": 96}, {\"start\": 1792234800, \"end\": 1792238400, \"code\": 55, \"rain\": 1.1, \"chance\": 90}, {\"start\": 1792238400, \"end\": 1792242000, \"code\": 55, \"rain\": 0, \"chance\": 80}, {\"start\": 1792242000, \"end\": 1792245600, \"code\": 2, \"rain\": 0, \"chance\": 67}, {\"start\": 1792245600, \"end\": 1792249200, \"code\": 1, \"rain\": 0, \"chance\": 53}, {\"start\": 1792249200, \"end\": 1792252800, \"code\": 0, \"rain\": 0, \"chance\": 37}, {\"start\": 1792252800, \"end\": 1792256400, \"code\": 0, \"rain\": 0, \"chance\": 19}, {\"start\": 1792256400, \"end\": 1792260000, \"code\": 0, \"rain\": 0, \"chance\": 6}, {\"start\": 1792260000, \"end\": 1792263600, \"code\": 0, \"rain\": 0, \"chance\": 1}, {\"start\": 1792263600, \"end\": 1792267200, \"code\": 0, \"rain\": 0, \"chance\": 0}, {\"start\": 1792267200, \"end\": 1792270800, \"code\": 1, \"rain\": 0, \"chance\": 0}, {\"start\": 1792270800, \"end\": 1792274400, \"code\": 2, \"rain\": 0, \"chance\": 0}, {\"start\": 1792274400, \"end\": 1792278000, \"code\": 1, \"rain\": 0, \"chance\": 0}, {\"start\": 1792278000, \"end\": 1792281600, \"code\": 1, \"rain\": 0, \"chance\": 0}, {\"start\": 1792281600, \"end\": 1792285200, \"code\": 0, \"rain\": 0, \"chance\": 0}, {\"start\": 1792285200, \"end\": 1792288800, \"code\": 1, \"rain\": 0, \"chance\": 0}, {\"start\": 1792288800, \"end\": 1792292400, \"code\": 3, \"rain\": 0, \"chance\": 0}, {\"start\": 1792292400, \"end\": 1792296000, \"code\": 3, \"rain\": 0, \"chance\": 0}, {\"start\": 1792296000, \"end\": 1792299600, \"code\": 2, \"rain\": 0, \"chance\": 0}, {\"start\": 1792299600, \"end\": 1792303200, \"code\": 1, \"rain\": 0, \"chance\": 0}, {\"start\": 1792303200, \"end\": 1792306800, \"code\": 0, \"rain\": 0, \"chance\": 0}, {\"start\": 1792306800, \"end\": 1792310400, \"code\": 0, \"rain\": 0, \"chance\": 0}, {\"start\": 1792310400, \"end\": 1792314000, \"code\": 0, \"rain\": 0, \"chance\": 0}, {\"start\": 1792314000, \"end\": 1792317600, \"code\": 0, \"rain\": 0, \"chance\": 0}, {\"start\": 1792317600, \"end\": 1792321200, \"code\": 0, \"rain\": 0, \"chance\": 0}, {\"start\": 1792321200, \"end\": 1792324800, \"code\": 0, \"rain\": 0, \"chance\": 0}, {\"start\": 1792324800, \"end\": 1792328400, \"code\": 0, \"rain\": 0, \"chance\": 0}, {\"start\": 1792328400, \"end\": 1792332000, \"code\": 0, \"rain\": 0, \"chance\": 0}, {\"start\": 1792332000, \"end\": 1792335600, \"code\": 0, \"rain\": 0, \"chance\": 0}, {\"start\": 1792335600, \"end\": 1792339200, \"code\": 0, \"rain\": 0, \"chance\": 0}, {\"start\": 1792339200, \"end\": 1792342800, \"code\": 0, \"rain\": 0, \"chance\": 0}, {\"start\": 1792342800, \"end\": 1792346400, \"code\": 0, \"rain\": 0, \"chance\": 0}, {\"start\": 1792346400, \"end\": 1792350000, \"code\": 0, \"rain\": 0, \"chance\": 0}, {\"start\": 1792350000, \"end\": 1792353600, \"code\": 0, \"rain\": 0, \"chance\": 0}, {\"start\": 1792353600, \"end\": 1792357200, \"code\": 0, \"rain\": 0, \"chance\": 0}, {\"start\": 1792357200, \"end\": 1792360800, \"code\": 0, \"rain\": 0, \"chance\": 0}, {\"start\": 1792360800, \"end\": 1792364400, \"code\": 0, \"rain\": 0, \"chance\": 0}, {\"start\": 1792364400, \"end\": 1792368000, \"code\": 0, \"rain\": 0, \"chance\": 0}, {\"start\": 1792368000, \"end\": 1792371600, \"code\": 0, \"rain\": 0, \"chance\": 0}, {\"start\": 1792371600, \"end\": 1792375200, \"code\": 0, \"rain\": 0, \"chance\": 0}, {\"start\": 1792375200, \"end\": 1792378800, \"code\": 0, \"rain\": 0, \"chance\": 0}, {\"start\": 1792378800, \"end\": 1792382400, \"code\": 0, \"rain\": 0, \"chance\": 0}, {\"start\": 1792382400, \"end\": 1792386000, \"code\": 0, \"rain\": 0, \"chance\": 0}, {\"start\": 1792386000, \"end\": 1792389600, \"code\": 1, \"rain\": 0, \"chance\": 0}, {\"start\": 1792389600, \"end\": 1792393200, \"code\": 1, \"rain\": 0, \"chance\": 2}, {\"start\": 1792393200, \"end\": 1792396800, \"code\": 2, \"rain\": 0, \"chance\": 6}, {\"start\": 1792396800, \"end\": 1792400400, \"code\": 3, \"rain\": 0, \"chance\": 8}, {\"start\": 1792400400, \"end\": 1792404000, \"code\": 3, \"rain\": 0, \"chance\": 8}, {\"start\": 1792404000, \"end\": 1792407600, \"code\": 3, \"rain\": 0, \"chance\": 8}, {\"start\": 1792407600, \"end\": 1792411200, \"code\": 3, \"rain\": 0, \"chance\": 8}, {\"start\": 1792411200, \"end\": 1792414800, \"code\": 3, \"rain\": 0, \"chance\": 9}, {\"start\": 1792414800, \"end\": 1792418400, \"code\": 3, \"rain\": 0, \"chance\": 10}, {\"start\": 1792418400, \"end\": 1792422000, \"code\": 3, \"rain\": 0, \"chance\": 11}, {\"start\": 1792422000, \"end\": 1792425600, \"code\": 3, \"rain\": 0, \"chance\": 12}, {\"start\": 1792425600, \"end\": 1792429200, \"code\": 3, \"rain\": 0, \"chance\": 13}, {\"start\": 1792429200, \"end\": 1792432800, \"code\": 3, \"rain\": 0, \"chance\": 14}, {\"start\": 1792432800, \"end\": 1792436400, \"code\": 3, \"rain\": 0, \"chance\": 15}, {\"start\": 1792436400, \"end\": 1792440000, \"code\": 3, \"rain\": 0, \"chance\": 15}, {\"start\": 1792440000, \"end\": 1792443600, \"code\": 3, \"rain\": 0, \"chance\": 15}, {\"start\": 1792443600, \"end\": 1792447200, \"code\": 3, \"rain\": 0, \"chance\": 15}, {\"start\": 1792447200, \"end\": 1792450800, \"code\": 3, \"rain\": 0, \"chance\": 15}]}",
+    "cursor": 2,
+    "operation_id": "ripple-task-1791934462.0374377-2",
+    "expires_at": 1791934913.2754285,
+    "kind": "RESCHEDULE_GROUP",
+    "status": "COMPLETED",
+    "version": 1,
+    "read_token": "script-tool-6",
+    "weather_revision": "release-labelled-weather-replay-1791934313",
+    "candidate_id": "ripple-task-1791934462.0374377-2:2:2:multi:1",
+    "candidate": {
+      "candidate_id": "ripple-task-1791934462.0374377-2:2:2:multi:1",
+      "start": 1792044000,
+      "end": 1792047600,
+      "time_authority": {
+        "epoch_unit": "unix_seconds_utc",
+        "display_zone": "UTC+08:00",
+        "start_utc": "2026-10-15T06:00:00Z",
+        "end_utc": "2026-10-15T07:00:00Z",
+        "start_utc8": "2026-10-15T14:00:00+08:00",
+        "end_utc8": "2026-10-15T15:00:00+08:00"
+      },
+      "starts": [
+        1792044000,
+        1792029600,
+        1792040400,
+        1792036800
+      ],
+      "related_changes": [
+        {
+          "id": "new-3",
+          "title": "室内交流",
+          "before_start": 1792044000,
+          "before_end": 1792047600,
+          "start": 1792036800,
+          "end": 1792040400
+        }
+      ],
+      "metrics": {
+        "moved_count": 2,
+        "shift_minutes": 180,
+        "priority_minutes": 540,
+        "preference_penalty": 1
+      },
+      "checks": {
+        "future": true,
+        "duration_seconds": 3600,
+        "full_weather_coverage": true,
+        "weather_safe": true,
+        "time_bounds": true,
+        "availability_declared": true,
+        "calendar_scope": "saved Ripple plans only; external commitments unknown"
+      }
+    },
+    "origin": "agent",
+    "expected": "{\"schema\":3,\"event_id\":\"ripple-1791934259.6033504\",\"title\":\"骑车\",\"start\":1792044000,\"end\":1792047600,\"lat\":39.9075,\"lon\":116.39723,\"revision\":4,\"data_source\":\"ripple-local-activity\",\"timezone\":\"Asia/Shanghai\",\"location\":{\"id\":1816670,\"name\":\"北京\",\"country\":\"中国\",\"country_code\":\"CN\",\"admin1\":\"北京市\",\"admin2\":\"北京市\",\"lat\":39.9075,\"lon\":116.39723,\"timezone\":\"Asia/Shanghai\",\"source\":\"Open-Meteo / GeoNames\"},\"availability\":{\"min_start\":1792044000,\"max_end\":1792047600},\"planning\":{\"version\":1,\"instruction\":\"明天下午三点在北京骑车一小时，可调整到09:00至11:00，希望上午完成。另有固定客户会议10:00至11:00、固定内部会议13:00至14:00、室内交流14:00至15:00可移动到12:00至15:00。全部同日在北京，会议室内，骑车户外。\",\"primary_movable\":true,\"priority\":3,\"preference\":\"morning\",\"plans\":[{\"id\":\"new-1\",\"title\":\"固定客户会议\",\"start\":1792029600,\"end\":1792033200,\"active\":true,\"movable\":false,\"outdoor\":false,\"priority\":3,\"availability\":null},{\"id\":\"new-2\",\"title\":\"固定内部会议\",\"start\":1792040400,\"end\":1792044000,\"active\":true,\"movable\":false,\"outdoor\":false,\"priority\":3,\"availability\":null},{\"id\":\"new-3\",\"title\":\"室内交流\",\"start\":1792036800,\"end\":1792040400,\"active\":true,\"movable\":true,\"outdoor\":false,\"priority\":3,\"availability\":{\"min_start\":1792036800,\"max_end\":1792047600}}]}}",
+    "before": "{\"schema\":3,\"event_id\":\"ripple-1791934259.6033504\",\"title\":\"骑车\",\"start\":1792047600,\"end\":1792051200,\"lat\":39.9075,\"lon\":116.39723,\"revision\":2,\"data_source\":\"ripple-local-activity\",\"timezone\":\"Asia/Shanghai\",\"location\":{\"id\":1816670,\"name\":\"北京\",\"country\":\"中国\",\"country_code\":\"CN\",\"admin1\":\"北京市\",\"admin2\":\"北京市\",\"lat\":39.9075,\"lon\":116.39723,\"timezone\":\"Asia/Shanghai\",\"source\":\"Open-Meteo / GeoNames\"},\"availability\":{\"min_start\":1792044000,\"max_end\":1792047600},\"planning\":{\"version\":1,\"instruction\":\"明天下午三点在北京骑车一小时，可调整到09:00至11:00，希望上午完成。另有固定客户会议10:00至11:00、固定内部会议13:00至14:00、室内交流14:00至15:00可移动到12:00至15:00。全部同日在北京，会议室内，骑车户外。\",\"primary_movable\":true,\"priority\":3,\"preference\":\"morning\",\"plans\":[{\"id\":\"new-1\",\"title\":\"固定客户会议\",\"start\":1792029600,\"end\":1792033200,\"active\":true,\"movable\":false,\"outdoor\":false,\"priority\":3,\"availability\":null},{\"id\":\"new-2\",\"title\":\"固定内部会议\",\"start\":1792040400,\"end\":1792044000,\"active\":true,\"movable\":false,\"outdoor\":false,\"priority\":3,\"availability\":null},{\"id\":\"new-3\",\"title\":\"室内交流\",\"start\":1792044000,\"end\":1792047600,\"active\":true,\"movable\":true,\"outdoor\":false,\"priority\":3,\"availability\":{\"min_start\":1792036800,\"max_end\":1792047600}}]}}",
+    "steps": [
+      {
+        "id": "new-3",
+        "title": "室内交流",
+        "before_start": 1792044000,
+        "before_end": 1792047600,
+        "start": 1792036800,
+        "end": 1792040400,
+        "before_revision": 2,
+        "after_revision": 3,
+        "before": "{\"schema\":3,\"event_id\":\"ripple-1791934259.6033504\",\"title\":\"骑车\",\"start\":1792047600,\"end\":1792051200,\"lat\":39.9075,\"lon\":116.39723,\"revision\":2,\"data_source\":\"ripple-local-activity\",\"timezone\":\"Asia/Shanghai\",\"location\":{\"id\":1816670,\"name\":\"北京\",\"country\":\"中国\",\"country_code\":\"CN\",\"admin1\":\"北京市\",\"admin2\":\"北京市\",\"lat\":39.9075,\"lon\":116.39723,\"timezone\":\"Asia/Shanghai\",\"source\":\"Open-Meteo / GeoNames\"},\"availability\":{\"min_start\":1792044000,\"max_end\":1792047600},\"planning\":{\"version\":1,\"instruction\":\"明天下午三点在北京骑车一小时，可调整到09:00至11:00，希望上午完成。另有固定客户会议10:00至11:00、固定内部会议13:00至14:00、室内交流14:00至15:00可移动到12:00至15:00。全部同日在北京，会议室内，骑车户外。\",\"primary_movable\":true,\"priority\":3,\"preference\":\"morning\",\"plans\":[{\"id\":\"new-1\",\"title\":\"固定客户会议\",\"start\":1792029600,\"end\":1792033200,\"active\":true,\"movable\":false,\"outdoor\":false,\"priority\":3,\"availability\":null},{\"id\":\"new-2\",\"title\":\"固定内部会议\",\"start\":1792040400,\"end\":1792044000,\"active\":true,\"movable\":false,\"outdoor\":false,\"priority\":3,\"availability\":null},{\"id\":\"new-3\",\"title\":\"室内交流\",\"start\":1792044000,\"end\":1792047600,\"active\":true,\"movable\":true,\"outdoor\":false,\"priority\":3,\"availability\":{\"min_start\":1792036800,\"max_end\":1792047600}}]}}",
+        "expected": "{\"schema\":3,\"event_id\":\"ripple-1791934259.6033504\",\"title\":\"骑车\",\"start\":1792047600,\"end\":1792051200,\"lat\":39.9075,\"lon\":116.39723,\"revision\":3,\"data_source\":\"ripple-local-activity\",\"timezone\":\"Asia/Shanghai\",\"location\":{\"id\":1816670,\"name\":\"北京\",\"country\":\"中国\",\"country_code\":\"CN\",\"admin1\":\"北京市\",\"admin2\":\"北京市\",\"lat\":39.9075,\"lon\":116.39723,\"timezone\":\"Asia/Shanghai\",\"source\":\"Open-Meteo / GeoNames\"},\"availability\":{\"min_start\":1792044000,\"max_end\":1792047600},\"planning\":{\"version\":1,\"instruction\":\"明天下午三点在北京骑车一小时，可调整到09:00至11:00，希望上午完成。另有固定客户会议10:00至11:00、固定内部会议13:00至14:00、室内交流14:00至15:00可移动到12:00至15:00。全部同日在北京，会议室内，骑车户外。\",\"primary_movable\":true,\"priority\":3,\"preference\":\"morning\",\"plans\":[{\"id\":\"new-1\",\"title\":\"固定客户会议\",\"start\":1792029600,\"end\":1792033200,\"active\":true,\"movable\":false,\"outdoor\":false,\"priority\":3,\"availability\":null},{\"id\":\"new-2\",\"title\":\"固定内部会议\",\"start\":1792040400,\"end\":1792044000,\"active\":true,\"movable\":false,\"outdoor\":false,\"priority\":3,\"availability\":null},{\"id\":\"new-3\",\"title\":\"室内交流\",\"start\":1792036800,\"end\":1792040400,\"active\":true,\"movable\":true,\"outdoor\":false,\"priority\":3,\"availability\":{\"min_start\":1792036800,\"max_end\":1792047600}}]}}",
+        "state": "CONFIRMED"
+      },
+      {
+        "id": "ripple-1791934259.6033504",
+        "title": "骑车",
+        "before_start": 1792047600,
+        "before_end": 1792051200,
+        "start": 1792044000,
+        "end": 1792047600,
+        "before_revision": 3,
+        "after_revision": 4,
+        "before": "{\"schema\":3,\"event_id\":\"ripple-1791934259.6033504\",\"title\":\"骑车\",\"start\":1792047600,\"end\":1792051200,\"lat\":39.9075,\"lon\":116.39723,\"revision\":3,\"data_source\":\"ripple-local-activity\",\"timezone\":\"Asia/Shanghai\",\"location\":{\"id\":1816670,\"name\":\"北京\",\"country\":\"中国\",\"country_code\":\"CN\",\"admin1\":\"北京市\",\"admin2\":\"北京市\",\"lat\":39.9075,\"lon\":116.39723,\"timezone\":\"Asia/Shanghai\",\"source\":\"Open-Meteo / GeoNames\"},\"availability\":{\"min_start\":1792044000,\"max_end\":1792047600},\"planning\":{\"version\":1,\"instruction\":\"明天下午三点在北京骑车一小时，可调整到09:00至11:00，希望上午完成。另有固定客户会议10:00至11:00、固定内部会议13:00至14:00、室内交流14:00至15:00可移动到12:00至15:00。全部同日在北京，会议室内，骑车户外。\",\"primary_movable\":true,\"priority\":3,\"preference\":\"morning\",\"plans\":[{\"id\":\"new-1\",\"title\":\"固定客户会议\",\"start\":1792029600,\"end\":1792033200,\"active\":true,\"movable\":false,\"outdoor\":false,\"priority\":3,\"availability\":null},{\"id\":\"new-2\",\"title\":\"固定内部会议\",\"start\":1792040400,\"end\":1792044000,\"active\":true,\"movable\":false,\"outdoor\":false,\"priority\":3,\"availability\":null},{\"id\":\"new-3\",\"title\":\"室内交流\",\"start\":1792036800,\"end\":1792040400,\"active\":true,\"movable\":true,\"outdoor\":false,\"priority\":3,\"availability\":{\"min_start\":1792036800,\"max_end\":1792047600}}]}}",
+        "expected": "{\"schema\":3,\"event_id\":\"ripple-1791934259.6033504\",\"title\":\"骑车\",\"start\":1792044000,\"end\":1792047600,\"lat\":39.9075,\"lon\":116.39723,\"revision\":4,\"data_source\":\"ripple-local-activity\",\"timezone\":\"Asia/Shanghai\",\"location\":{\"id\":1816670,\"name\":\"北京\",\"country\":\"中国\",\"country_code\":\"CN\",\"admin1\":\"北京市\",\"admin2\":\"北京市\",\"lat\":39.9075,\"lon\":116.39723,\"timezone\":\"Asia/Shanghai\",\"source\":\"Open-Meteo / GeoNames\"},\"availability\":{\"min_start\":1792044000,\"max_end\":1792047600},\"planning\":{\"version\":1,\"instruction\":\"明天下午三点在北京骑车一小时，可调整到09:00至11:00，希望上午完成。另有固定客户会议10:00至11:00、固定内部会议13:00至14:00、室内交流14:00至15:00可移动到12:00至15:00。全部同日在北京，会议室内，骑车户外。\",\"primary_movable\":true,\"priority\":3,\"preference\":\"morning\",\"plans\":[{\"id\":\"new-1\",\"title\":\"固定客户会议\",\"start\":1792029600,\"end\":1792033200,\"active\":true,\"movable\":false,\"outdoor\":false,\"priority\":3,\"availability\":null},{\"id\":\"new-2\",\"title\":\"固定内部会议\",\"start\":1792040400,\"end\":1792044000,\"active\":true,\"movable\":false,\"outdoor\":false,\"priority\":3,\"availability\":null},{\"id\":\"new-3\",\"title\":\"室内交流\",\"start\":1792036800,\"end\":1792040400,\"active\":true,\"movable\":true,\"outdoor\":false,\"priority\":3,\"availability\":{\"min_start\":1792036800,\"max_end\":1792047600}}]}}",
+        "state": "CONFIRMED"
+      }
+    ],
+    "input_generation": 2,
+    "search_id": "ripple-task-1791934462.0374377-2:2:2:multi",
+    "created": 1791934528.3057919
+  },
+  "audit": "1791934144.4367301 MODEL_FAILURE Agent unavailable: Waiting for the person to allow this app's agent (OctoSense asks the first time)\n1791934144.537634 GLANCE_WITHDRAW ok=true\n1791934152.2361472 TOOL call_id=script-tool-2 name=ripple.context.read context_read\n1791934259.7076654 USER_SAVE event_id=ripple-1791934259.6033504 revision=1\n1791934314.3181407 GLANCE_WITHDRAW ok=true\n1791934314.4031923 CHANGE_DETECTED trigger=startup affected=[{\"id\":\"ripple-1791934259.6033504\",\"title\":\"骑车\"}] weather=FIXTURE\n1791934316.4103713 TOOL call_id=script-tool-4 name=ripple.context.read context_read\n1791934318.5297267 TOOL call_id=script-tool-5 name=ripple.slots.search candidates=0\n1791934322.7293372 MODEL_CHOICE task_id=ripple-task-1791934314.5132718-1 verdict=NO_CANDIDATE attempt=0 output={\n  \"task_id\": \"ripple-task-1791934314.5132718-1\",\n  \"read_token\": \"script-tool-4\",\n  \"decision\": \"NO_CANDIDATE\",\n  \"search_id\": \"ripple-task-1791934314.5132718-1:1:1:multi\",\n  \"candidate_id\": null,\n  \"explanation\": \"在本次受限搜索范围内没有找到可行方案：您声明的上午可调整时段与固定客户会议发生重叠，且骑车为户外活动、当前仍存在降雨风险，固定会议不可移动。是否愿意再声明一个同日的可用时段，或保持原计划不变？\"\n}\n1791934322.975406 GLANCE_PUBLISH ok=true notify=true reply={\"card_id\":\"current-risk\",\"expires_at\":1791934912964,\"replaced\":false}\n1791934388.491995 GLANCE_OPEN route=risk\n1791934388.5115688 GLANCE_LIST ok=true reply=[{\"card_id\":\"current-risk\",\"expires_at\":1791934912964,\"priority\":70,\"published_at\":1791934322964,\"title\":\"测试天气重放 · 骑车\"}]\n1791934451.5580003 GLANCE_WITHDRAW ok=true\n1791934461.601657 USER_SAVE event_id=ripple-1791934259.6033504 revision=2\n1791934461.8401592 CHANGE_DETECTED trigger=saved_plan affected=[{\"id\":\"ripple-1791934259.6033504\",\"title\":\"骑车\"}] weather=FIXTURE\n1791934461.9821322 GLANCE_PUBLISH ok=true notify=true reply={\"card_id\":\"current-risk\",\"expires_at\":1791934912971,\"replaced\":false}\n1791934463.85201 TOOL call_id=script-tool-6 name=ripple.context.read context_read\n1791934465.9434488 TOOL call_id=script-tool-7 name=ripple.slots.search candidates=1\n1791934472.3028557 MODEL_CHOICE task_id=ripple-task-1791934462.0374377-2 verdict=PLAN_REVIEW attempt=0 output={\n  \"task_id\": \"ripple-task-1791934462.0374377-2\",\n  \"read_token\": \"script-tool-6\",\n  \"decision\": \"PROPOSE\",\n  \"search_id\": \"ripple-task-1791934462.0374377-2:2:2:multi\",\n  \"candidate_id\": \"ripple-task-1791934462.0374377-2:2:2:multi:1\"\n}\n1791934472.4947233 GLANCE_PUBLISH ok=true notify=false reply={\"card_id\":\"current-risk\",\"expires_at\":1791934912486,\"replaced\":true}\n1791934538.7597003 GLANCE_WITHDRAW ok=true\n1791934620.1869373 GLANCE_LIST ok=true reply=[]\n"
+}

@@ -2,7 +2,12 @@
 
 告诉 Ripple 想做什么；它理解安排、检查日程冲突和天气风险，提出可行调整，等您批准后真正保存，并独立读回核验。
 
-当前源码为 **0.6.4 发布准备版**，唯一原生应用入口是 [`bundle/main.splash`](bundle/main.splash)。这是 OctoScript / Splash 应用，运行于官方 OctoSense Windows RC6。GitHub 认证 Release、最终视频和 App Hub 接纳尚未完成；本地检查不代表上架。`v0.1.0` 保留原比赛提交，后续代码不代表截止日成绩。
+当前正式发布版本为 **0.6.4**，唯一原生应用入口是 [`bundle/main.splash`](bundle/main.splash)。这是 OctoScript / Splash 应用，运行于官方 OctoSense Windows RC6。GitHub 认证 Release 和正式下载包复验已完成。App Hub 审核和赛事新截止资格尚未确认；发布不代表上架或获奖。`v0.1.0` 保留原比赛提交，后续代码不代表截止日成绩。
+
+
+**[下载认证发布包](https://github.com/yuandhsh-lang/ripple/releases/tag/v0.6.4) · [114秒真实软件演示](https://github.com/yuandhsh-lang/ripple/releases/download/v0.6.4/Ripple-0.6.4-Real-Demo.mp4) · [正式交付核验](docs/release/FINAL_DELIVERY.md)**
+
+应用固定 Commit：`7e150404a3073a77688d5e1670de018083fe82a4`，Tag `v0.6.4`。演示来自实际下载包；天气风险变化明确标记为受控重放，DeepSeek、通知、审批、执行与读回均为真实软件运行。B站使用相同视频，由用户自行上传。
 
 ## 一件真实任务
 
@@ -30,7 +35,7 @@
 
 ## 实际应用画面
 
-下列画面来自相同业务源码的官方 RC6 实机验收，不是概念图。正式下载包复验截图和唯一正式 MP4 尚待发布门槛完成，历史视频不作为新版本证明。
+下列画面来自相同业务源码的官方 RC6 实机验收，不是概念图。正式下载包已在两个独立空 RC6 环境真实安装并完成核心任务。唯一正式视频为114秒的真实GPU窗口录屏；历史视频不作为新版证明。
 
 ![首页](bundle/screenshots/01-startup.png)
 ![整组审批](bundle/screenshots/02-approval.png)

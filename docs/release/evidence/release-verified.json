@@ -1,0 +1,56 @@
+{
+  "files": [
+    {
+      "name": "app.bundle.pack.json",
+      "url": "https://github.com/yuandhsh-lang/ripple/releases/download/v0.6.4/app.bundle.pack.json",
+      "bytes": 8584327,
+      "sha256": "60a4f96b18f0a95bf024da24aba83b1e57b10f8677128cd841969261386f90d4"
+    },
+    {
+      "name": "octosense-app-manifest.json",
+      "url": "https://github.com/yuandhsh-lang/ripple/releases/download/v0.6.4/octosense-app-manifest.json",
+      "bytes": 915,
+      "sha256": "1d2568def8957772c783d4f5410cc41201cbd0dee585b804379b792f488c2ce8"
+    },
+    {
+      "name": "release-receipt.json",
+      "url": "https://github.com/yuandhsh-lang/ripple/releases/download/v0.6.4/release-receipt.json",
+      "bytes": 337,
+      "sha256": "991dcd9335359d2a3979963f19611be7c1786e002837780880b0330734c1639d"
+    }
+  ],
+  "receipt": {
+    "schema": 1,
+    "app_id": "ripple",
+    "version": "0.6.4",
+    "repository": "yuandhsh-lang/ripple",
+    "commit": "7e150404a3073a77688d5e1670de018083fe82a4",
+    "tag": "v0.6.4",
+    "run": "38481044405",
+    "pack_sha256": "60a4f96b18f0a95bf024da24aba83b1e57b10f8677128cd841969261386f90d4",
+    "hub_admission": "not granted by this workflow"
+  },
+  "commands": [
+    {
+      "command": [
+        "F:\\\u684c\u9762\\01 \u9879\u76ee\u5f00\u53d1\\\u9ed1\u5ba2\u677e\\_audits\\Ripple\\Stage5-20261013-154643\\official\\hub-current.exe",
+        "publisher-unpack",
+        "F:\\\u684c\u9762\\01 \u9879\u76ee\u5f00\u53d1\\\u9ed1\u5ba2\u677e\\_audits\\Ripple\\Final-Delivery-20261014-043017\\release-download\\app.bundle.pack.json",
+        "--out",
+        "F:\\\u684c\u9762\\01 \u9879\u76ee\u5f00\u53d1\\\u9ed1\u5ba2\u677e\\_audits\\Ripple\\Final-Delivery-20261014-043017\\release-download\\bundle"
+      ],
+      "exit_code": 0,
+      "log": "F:\\\u684c\u9762\\01 \u9879\u76ee\u5f00\u53d1\\\u9ed1\u5ba2\u677e\\_audits\\Ripple\\Final-Delivery-20261014-043017\\release-download\\publisher-unpack.log"
+    },
+    {
+      "command": [
+        "F:\\\u684c\u9762\\01 \u9879\u76ee\u5f00\u53d1\\\u9ed1\u5ba2\u677e\\_audits\\Ripple\\Stage5-20261013-154643\\official\\hub-current.exe",
+        "publisher-verify",
+        "F:\\\u684c\u9762\\01 \u9879\u76ee\u5f00\u53d1\\\u9ed1\u5ba2\u677e\\_audits\\Ripple\\Final-Delivery-20261014-043017\\release-download\\bundle"
+      ],
+      "exit_code": 0,
+      "log": "F:\\\u684c\u9762\\01 \u9879\u76ee\u5f00\u53d1\\\u9ed1\u5ba2\u677e\\_audits\\Ripple\\Final-Delivery-20261014-043017\\release-download\\publisher-verify.log"
+    }
+  ],
+  "non_manifest_files_equal_tag": true
+}
