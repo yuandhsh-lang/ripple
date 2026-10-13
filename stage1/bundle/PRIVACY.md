@@ -1,4 +1,4 @@
-# Ripple 0.4.0-stage2 local privacy notice
+# Ripple 0.5.0-stage3 local privacy notice
 
 This unpublished local build manages one primary activity and up to four related same-city, same-day planning facts confirmed by the user. It has no external calendar integration or publisher backend.
 
@@ -16,4 +16,6 @@ The listing's example.invalid URL is an intentional local-fixture placeholder re
 
 Local acceptance evidence uses operator-entered demonstration activities and may contain their titles, locations, times and model/tool replies. Do not share these records with personal data. No credentials are included in the bundle or acceptance records.
 
-Stage 2 also stores the person-confirmed natural-language request, a soft time-of-day preference and up to four related same-day plans in the existing activity record. AI interpretation sends that request and current/saved facts through the official host Provider; planning tools supply only saved facts and checked weather/candidates. The interpretation is a draft until the person confirms and saves. Related multi-plan changes are advice only in this stage; no model can write the activity. Cancelled related plans remain represented as inactive, not silently deleted. Test credentials are supplied only to isolated host processes; the app never receives a Provider key.
+Stage 2 also stores the person-confirmed natural-language request, a soft time-of-day preference and up to four related same-day plans in the existing activity record. AI interpretation sends that request and current/saved facts through the official host Provider; planning tools supply only saved facts and checked weather/candidates. The interpretation is a draft until the person confirms and saves. Related changes require a separate complete preview and explicit user approval; no model can write the activity. Cancelled related plans remain represented as inactive, not silently deleted. Test credentials are supplied only to isolated host processes; the app never receives a Provider key.
+
+Stage 3 extends the existing execution receipt with the approved original/final record and per-plan before/expected checkpoints, identity, revision and read-back result. Steps are sequential, not an atomic database transaction. Restart reconciles by reading persisted records; it never replays an old approval. Partial or unknown results stop further writes; no automatic rollback occurs. The current planner still considers the primary plus at most one related move. All writes remain within Ripple local storage.

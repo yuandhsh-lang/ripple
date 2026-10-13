@@ -1,4 +1,4 @@
-"""Official RC6 Stage 2 test driver; synthetic activities, real provider/tools.
+"""Official RC6 Stage 2/3 test driver; isolated synthetic activities.
 
 RIPPLE_STAGE2_AUDIT: new sibling _audits/Ripple/Stage2-* folder.
 RIPPLE_TEST_RUN: fresh p4-stage2-* created with stage4/new_run.ps1.
@@ -12,17 +12,18 @@ sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'stage1'))
 import verify as v
 
 P=Path(__file__).resolve().parents[1]
-A=Path(os.environ['RIPPLE_STAGE2_AUDIT']).resolve()
-assert A.parent==(P.parent/'_audits/Ripple').resolve() and A.name.startswith('Stage2-')
+phase='3' if 'RIPPLE_STAGE3_AUDIT' in os.environ else '2'
+A=Path(os.environ['RIPPLE_STAGE'+phase+'_AUDIT']).resolve()
+assert A.parent==(P.parent/'_audits/Ripple').resolve() and A.name.startswith('Stage'+phase+'-')
 run=os.environ['RIPPLE_TEST_RUN']
-assert run.startswith('p4-stage2-') and all(c.islower() or c.isdigit() or c=='-' for c in run)
-evidence=os.environ.get('RIPPLE_STAGE2_HOST_EVIDENCE','rc6-ai')
+assert run.startswith('p4-stage'+phase+'-') and all(c.islower() or c.isdigit() or c=='-' for c in run)
+evidence=os.environ.get('RIPPLE_STAGE'+phase+'_HOST_EVIDENCE','rc6-ai' if phase=='2' else 'rc6-execution')
 assert evidence.startswith('rc6-') and all(c.islower() or c.isdigit() or c=='-' for c in evidence)
 v.R=P/'stage2/runtime/runs'/run;v.E=A/evidence;v.E.mkdir(exist_ok=True)
 v.CORE=v.R/'kernel-core';v.RC2=P/'stage4/runtime/rc6';v.HUB=P/'stage4/runtime/hub.exe';v.PORT=8187
 v.check_test_isolation()
-PREFIX=os.environ.get('RIPPLE_STAGE2_REVISION','s2-')
-assert PREFIX.startswith('s2-') and all(c.islower() or c.isdigit() or c=='-' for c in PREFIX)
+PREFIX=os.environ.get('RIPPLE_STAGE'+phase+'_REVISION','s'+phase+'-')
+assert PREFIX.startswith('s'+phase+'-') and all(c.islower() or c.isdigit() or c=='-' for c in PREFIX)
 APP=v.R/(PREFIX+'business-apps/ripple')
 
 def snapshot():return json.loads(v.request('/snap'))['s']

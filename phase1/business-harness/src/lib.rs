@@ -98,7 +98,7 @@ mod tests {
         let call=|name:&str,args:Value,cx:&mut Cx|->Value{
             let replies:Replies=Default::default();let out=replies.clone();
             script_tools::submit("ripple",name,args,"device","editor-protocol-harness",Duration::from_secs(60),Box::new(move|r|out.lock().unwrap().push(r))).unwrap();
-            pump(cx,&card);let answer=replies.lock().unwrap()[0].clone().unwrap();answer
+            pump(cx,&card);let received=replies.lock().unwrap().first().cloned();let answer=received.expect("actual handler did not complete").unwrap();answer
         };
         let setup=|label:&str,cx:&mut Cx|->Value{
             invoke(cx,&card,id!(editor_init),&[&(base+14400).to_string()]);
@@ -252,7 +252,7 @@ mod tests {
         let call=|name:&str,args:Value,cx:&mut Cx|->Result<Value,String>{
             let replies:Replies=Default::default();let out=replies.clone();
             script_tools::submit("ripple",name,args,"device","final-audit",Duration::from_secs(60),Box::new(move|r|out.lock().unwrap().push(r)))?;
-            pump(cx,&card);let answer=replies.lock().unwrap()[0].clone();answer
+            pump(cx,&card);let received=replies.lock().unwrap().first().cloned();let answer=received.expect("actual handler did not complete");answer
         };
         let plan=|id:&str,cx:&mut Cx|->(Value,Value){
             invoke(cx,&card,id!(audit_begin),&[id]);
@@ -381,7 +381,7 @@ mod tests {
         let call=|name:&str,args:Value,cx:&mut Cx|->Result<Value,String>{
             let replies:Replies=Default::default();let out=replies.clone();
             script_tools::submit("ripple",name,args,"device","business-protocol-harness",Duration::from_secs(60),Box::new(move|r|out.lock().unwrap().push(r)))?;
-            pump(cx,&card);let answer=replies.lock().unwrap().get(0).cloned().expect("actual handler did not complete");answer
+            pump(cx,&card);let received=replies.lock().unwrap().first().cloned();let answer=received.expect("actual handler did not complete");answer
         };
         let plan=|label:&str,cx:&mut Cx|->(Value,Value,Value){
             invoke(cx,&card,id!(fixture_begin),&[label]);
@@ -469,4 +469,5 @@ mod tests {
     }
     include!("stage1_tests.rs");
     include!("stage2_tests.rs");
+    include!("stage3_tests.rs");
 }

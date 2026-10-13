@@ -2,7 +2,7 @@
 
 唯一正式仓库：`F:\桌面\01 项目开发\黑客松\Ripple`，开发分支 `main`。2026-10-13 已从受保护的冻结分支切换到此前合并的开发提交；没有复制另一个仓库覆盖原 `.git`。
 
-开发应用是 `stage1/bundle/`，入口 `main.splash`，版本 `0.4.0-stage2`。根 `bundle/` 仍为 v0.1.0 历史交付。React/TypeScript 的 `src/` 是保留的早期原型。不要将 React 构建成功当成原生 Agent 完整验证。
+开发应用是 `stage1/bundle/`，入口 `main.splash`，版本 `0.5.0-stage3`。根 `bundle/` 仍为 v0.1.0 历史交付。React/TypeScript 的 `src/` 是保留的早期原型。不要将 React 构建成功当成原生 Agent 完整验证。
 
 本次源码统一没有新增业务逻辑；阶段三的时间编辑同步修复已经存在于合并提交。参赛版本接收仍为 `COMPETITION_VERSION_UNVERIFIED`，本地开发提交不等于比赛已接收。
 
@@ -65,3 +65,13 @@ cargo +1.97.1 test --locked --offline --manifest-path phase1/business-harness/Ca
 原版 RC6 的隔离复现驱动为 `stage2/planning_verify.py`，复用 `stage1/verify.py`。先用 `stage4/new_run.ps1` 建立全新 `p4-stage2-*` 空环境；设置 `RIPPLE_TEST_RUN` 和仓库外 `RIPPLE_STAGE2_AUDIT`，再运行 `prepare` / `start`。测试 Provider 必须在该新环境单独授权，凭据只由测试进程环境提供，不能复制历史 Provider/core。模型的可用名称由实际 Provider 查询确认，本轮使用 `deepseek-flash`。驱动只是本地签名测试安装，不是公开发布。
 
 SDK 严格验收除了 Cargo 返回 0，还必须检查日志没有 `"level":"error"`；保存源码哈希及失败日志。避免与原生宿主启动、shader 编译同时运行 SDK；同一源码在并发负载中的预算诊断不能用一次成功覆盖。Stage 2 原始报告在并列 `_audits/Ripple/Stage2-20261013-030438`，其中记录精确验证边界和未关闭风险。
+
+## 当前 Stage 3 执行边界
+
+Stage 2 的理解、工具和搜索继续复用。关联建议先显示完整变更集合，再单独批准整组（不默认授权，也不提供子集勾选）。当前规划搜索仍最多移动主活动及一项关联计划。每步复用 write_event/execute/finish_verify；同一 schedule.txt 的 revision 每项加一，execution.json 保存各步完整检查点。没有原子事务或跨进程 CAS 保证。循环交换、约束变化、陈旧天气和未知结果均停止；不自动回滚。
+
+重启只读核对实际记录与收据，不重放后续步骤。确认部分结果后，可明确结束本次执行并重新规划批准；损坏/不匹配的原始记录保持原样。无外部日历写入或后台监听。
+
+原版 RC6 测试继续用 stage2/planning_verify.py；Stage 3 设置 RIPPLE_STAGE3_AUDIT（并列 Stage3-* 审计目录）、RIPPLE_TEST_RUN（由 stage4/new_run.ps1 新建 p4-stage3-*），可选 RIPPLE_STAGE3_REVISION。该驱动只用于隔离本地验收，不是新开发目录。不要运行 octosense.exe --help：该 GUI 程序会忽略它并启动默认环境；只使用经过隔离检查的 start 入口。
+
+SDK 严格检查同时拒绝任意 script time budget exceeded 文本（包括日志等级不是 error 的初始化错误）。RIPPLE_STAGE3_CASE 可在独立进程定向运行一个故障场景，默认仍运行全部；所有断言和官方预算相同。Stage 3 审计：../_audits/Ripple/Stage3-20261013-121408。
