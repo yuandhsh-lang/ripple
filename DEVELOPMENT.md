@@ -2,7 +2,7 @@
 
 唯一正式仓库：`F:\桌面\01 项目开发\黑客松\Ripple`，开发分支 `main`。2026-10-13 已从受保护的冻结分支切换到此前合并的开发提交；没有复制另一个仓库覆盖原 `.git`。
 
-开发应用是 `stage1/bundle/`，入口 `main.splash`，版本 `0.6.1-rc.1`。根 `bundle/` 仍为 v0.1.0 历史交付。React/TypeScript 的 `src/` 是保留的早期原型。不要将 React 构建成功当成原生 Agent 完整验证。
+开发应用是 `stage1/bundle/`，入口 `main.splash`，版本 `0.6.2-rc.1`。根 `bundle/` 仍为 v0.1.0 历史交付。React/TypeScript 的 `src/` 是保留的早期原型。不要将 React 构建成功当成原生 Agent 完整验证。
 
 本次源码统一没有新增业务逻辑；阶段三的时间编辑同步修复已经存在于合并提交。参赛版本接收仍为 `COMPETITION_VERSION_UNVERIFIED`，本地开发提交不等于比赛已接收。
 
@@ -87,3 +87,7 @@ SDK 严格检查同时拒绝任意 script time budget exceeded 文本（包括�
 ## Stage 5 本地交付候选
 
 0.6.1-rc.1 是截止日后的开发候选版，未公开发布。复用原业务，仅修复忙时重复理解点击清空说明的守卫顺序。隔离驱动支持 RIPPLE_STAGE5_AUDIT / RIPPLE_STAGE5_REVISION / RIPPLE_TEST_RUN，仍必须新建 p4-stage5-*。当轮包、官方版本核对、真实模型记录、视频与复现指南保存在 ../_audits/Ripple/Stage5-20261013-154643；验收结论以 REPORT.md 为准，不由版本名推断。
+
+## 0.6.2 产品体验候选
+
+原生首页以自然语言为主，中文草稿逐项编辑，新计划确认后复用原保存入口与独立读回。已保存计划的时间变更仍转手动审核或原建议审批。新增展示层与草稿守卫；未增加 Agent、存储、权限或依赖。最新实际测试及限制位于 ../_audits/Ripple/Product-UX-20261013-223104。历史 SDK 间歇超限仍未关闭，不以一次成功代替稳定性结论。

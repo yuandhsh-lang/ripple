@@ -55,6 +55,9 @@ mod tests {
         let names=cx.widget_tree().compact_dump(&cx);
         std::fs::write(jail.join("mounted-widget-tree.txt"),names).unwrap();
         assert_eq!(cx.widget_tree().find_all_anywhere_including_skipped(ids!(call)).len(),1);
+        for path in [ids!(title_input), ids!(schedule_panel), ids!(workflow_panel)] {
+            assert_eq!(cx.widget_tree().find_all_anywhere_including_skipped(path).len(),1,"required native editor/view exists: {path:?}");
+        }
         // This private protocol fixture is digest-checked, never installed/published.
         let bundle=jail.join("protocol-fixture-bundle");
         std::fs::create_dir(&bundle).unwrap();
@@ -77,6 +80,21 @@ mod tests {
     fn pump(cx:&mut Cx,card:&SplashRef) {
         script_tools::pump(cx,"ripple",card);
         makepad_platform::makepad_script_std::handle_script_tasks(cx);
+    }
+
+    #[test]
+    fn native_ux_mount_and_manual_form() {
+        let bundle=root().join("stage1/bundle");
+        let mut source=std::fs::read_to_string(bundle.join("main.splash")).unwrap();
+        source.push_str(r#"
+            fn ux_mount(){ ui.title_input.set_text("UI lifecycle probe") repaint() }
+            fn ux_read(){ fs.write("ux-mount.json",{title:ui.title_input.text()}.to_json()) }
+        "#);
+        let (mut cx,_ui,card,reg,jail)=fixture("ux-mount",&source,&bundle);
+        invoke(&mut cx,&card,id!(ux_mount),&[]);
+        invoke(&mut cx,&card,id!(ux_read),&[]);
+        assert_eq!(read(jail.join("ux-mount.json"))["title"],"UI lifecycle probe");
+        drop(reg);
     }
 
     #[test]
@@ -162,7 +180,7 @@ mod tests {
         "#);
         let (mut cx,_ui,card,reg,jail)=fixture("storage-jail",&source,&bundle);
         let now=std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_secs();
-        invoke(&mut cx,&card,id!(fault_clock),&[&((now/3600+24)*3600).to_string()]);
+        invoke(&mut cx,&card,id!(fault_clock),&[&(((now+28800)/86400+1)*86400-28800+9*3600).to_string()]);
         let stamp=read(jail.join("clock.json"))["utc8"].as_str().unwrap().replace('T'," ");let start=&stamp[..16];
         invoke(&mut cx,&card,id!(fault_save),&["Before quota",start]);
         let before=std::fs::read(jail.join("schedule.txt")).unwrap();
@@ -237,7 +255,8 @@ mod tests {
         "#);
         let (mut cx,_ui,card,reg,jail)=fixture("audit-jail",&source,&bundle);
         let now=std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_secs();
-        let base=(now/3600+1)*3600;
+        // Keep the two-hour boundary fixture on one Asia/Shanghai date, even at night.
+        let base=((now+28800)/86400+1)*86400-28800;
         let save=|title:&str,epoch:u64,cx:&mut Cx| {
             invoke(cx,&card,id!(audit_clock),&[&epoch.to_string()]);
             let stamp=read(jail.join("clock.json"))["utc8"].as_str().unwrap().replace('T'," ");
@@ -471,4 +490,5 @@ mod tests {
     include!("stage2_tests.rs");
     include!("stage3_tests.rs");
     include!("stage4_tests.rs");
+    include!("ux_tests.rs");
 }
