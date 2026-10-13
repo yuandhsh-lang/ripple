@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "subtitle": "Outdoor activity rain-conflict planning with human approval",
-  "description": "Unpublished local build. Choose a city, enter a primary outdoor activity and a same-day availability window, or ask AI to prepare a review-only draft with up to four related same-city plans. Related rescheduling needs a complete change preview and separate explicit approval, then each local write is independently verified. Partial or unknown outcomes stop further steps; restart never replays an old approval. City mode supports China / Asia/Shanghai only. Open-Meteo supplies city lookup and live weather. View deterministic candidates or ask the host-selected Agent; both share the same constraints, human approval and independent persisted read-back. No external calendar sync. City name goes to geocoding; coordinates go to weather; private activity context reaches the Provider only through the Agent path after host consent.",
+  "subtitle": "计划变化后的建议、明确批准与独立核验",
+  "description": "本地发布候选版。用自然语言建立一个户外主计划和最多四项同城关联安排，确认城市、时间和可用窗口后保存。启动、保存或刷新天气时，Ripple 检查新增冲突和天气实质风险，调用宿主配置的真实 Agent 与两个只读工具提出有限调整。每项修改必须先经用户批准，再逐项写入和独立读回；部分失败停止并在重启后只读核对。仅支持中国 Asia/Shanghai、同日、15–240 分钟。无外部日历同步、无后台监控。城市查询和天气使用 Open-Meteo；允许 Agent 后相关计划事实会发送给所选模型 Provider。尚未公开发行或获 App Hub 接纳。",
   "category": "productivity",
   "keywords": [
     "agent",
@@ -22,7 +22,7 @@
     "support": "https://github.com/yuandhsh-lang/ripple/issues",
     "privacy_policy_url": "https://example.invalid/ripple-stage1-local-privacy"
   },
-  "release_notes": "Local Stage 3: reuse the same approval, unique schedule writer and execution receipt for sequential approved related-plan changes. Per-plan read-back, partial failure and read-only restart reconciliation. No atomic transaction or external calendar sync. Not a public release; screenshots show the earlier core flow.",
+  "release_notes": "0.6.1-rc.1：继承 Stage 1–4 的变化分析、原审批和执行；修复忙碌时重复点击清空变化说明的问题。当前本地候选版，真实截图来自本轮官方 RC6 验收。SDK 间歇计时风险仍须阅读交付报告。",
   "age_rating": "all",
   "license": "Apache-2.0"
 }

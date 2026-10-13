@@ -482,8 +482,8 @@ fn finish_interpret(generation,text){
     move("DRAFT_REVIEW","这是 AI 理解草稿，请逐项核对所有新增、修改和取消。确认只填入表单，仍须手动保存；城市须真实查询确认。")
 }
 fn interpret_input(){
-    change_context = nil
     if busy || loading || status == "PARTIAL" { return }
+    change_context = nil
     let text = ui.intent_input.text().trim()
     if text.len() < 2 || text.len() > 2000 { move("FAILED","请输入 2–2000 字符，说明同一天的活动、固定安排、允许窗口与偏好。") return }
     interpret_text = text interpretation_draft = nil agent_task_kind = "interpret" workflow_started = time_now() start_agent()

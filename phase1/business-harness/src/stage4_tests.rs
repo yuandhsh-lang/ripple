@@ -41,6 +41,9 @@ fn stage4_change_response_and_existing_execution() {
         invoke(cx,&card,id!(s4_begin),&[]);let context=call("ripple.context.read",json!({"task_id":"s4-change"}),cx);let mut args=context["search_bounds"].clone();args["task_id"]=json!("s4-change");args["read_token"]=context["read_token"].clone();let search=call("ripple.slots.search",args,cx);
         let choice=json!({"task_id":"s4-change","read_token":context["read_token"],"decision":"PROPOSE","search_id":search["search_id"],"candidate_id":search["candidates"][0]["candidate_id"]});invoke(cx,&card,id!(s4_finish),&[&choice.to_string()]);(context,search)
     };
+    invoke(&mut cx,&card,id!(s4_begin),&[]);let before_busy=report(&mut cx);
+    invoke(&mut cx,&card,id!(interpret_input),&[]);let after_busy=report(&mut cx);
+    assert_eq!(after_busy["change"],before_busy["change"],"a busy repeat click must preserve the active change explanation");
     let (context,search)=propose(&mut cx);assert!(context["change"].is_object());assert_eq!(report(&mut cx)["status"],"AWAITING_APPROVAL");
     assert_eq!(read(jail.join("schedule.txt")),added);invoke(&mut cx,&card,id!(decline),&[]);assert_eq!(read(jail.join("change-response.json"))["outcome"],"DECLINED");
     invoke(&mut cx,&card,id!(boot),&[]);invoke(&mut cx,&card,id!(s4_check),&[]);assert_eq!(read(jail.join("change-response.json"))["outcome"],"DECLINED");assert_eq!(read(jail.join("schedule.txt")),added);

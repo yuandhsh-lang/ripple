@@ -1,4 +1,4 @@
-# Ripple 0.6.0-stage4 local privacy notice
+# Ripple 0.6.1-rc.1 local privacy notice
 
 This unpublished local build manages one primary activity and up to four related same-city, same-day planning facts confirmed by the user. It has no external calendar integration or publisher backend.
 
