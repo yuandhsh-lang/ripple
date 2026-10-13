@@ -6,6 +6,7 @@ fn stage4_change_response_and_existing_execution() {
     source.push_str(r#"
       fn s4_check(){ finish_change_check("sdk_replay",input_generation,schedule_fingerprint()) }
       fn s4_facts(){ let e=read_event() let w=read_weather_snapshot(e,time_now()) weather=w.hours fs.write("facts.json",change_facts(e).to_json()) }
+      fn s4_card(){ fs.write("glance-payload.json",{payload:glance_payload()}.to_json()) }
       fn s4_report(){ fs.write("state.json",{status:status busy:busy verified:verified change:change_context message:message mode:planning_mode change_message:change_message}.to_json()) }
       fn s4_outage(){ change_agent_failed(task_generation,"EXPLICIT_SDK_PROVIDER_OUTAGE") }
       fn s4_rule_begin(){ preview_candidates() }
@@ -31,6 +32,8 @@ fn stage4_change_response_and_existing_execution() {
         {"id":"new-meeting","title":"十点固定会议","start":day+10*3600,"end":day+11*3600,"active":true,"movable":false,"outdoor":false,"priority":5,"availability":null},
         {"id":"unrelated","title":"下午会议","start":day+15*3600,"end":day+16*3600,"active":true,"movable":false,"outdoor":false,"priority":3,"availability":null}]);
     save("schedule.txt",&added);invoke(&mut cx,&card,id!(s4_check),&[]);let detected=report(&mut cx);assert_eq!(detected["status"],"RISK");assert_eq!(detected["change"]["affected"].as_array().unwrap().len(),2);assert_eq!(read(jail.join("schedule.txt")),added);
+    invoke(&mut cx,&card,id!(s4_card),&[]);let risk_card=read(jail.join("glance-payload.json"));
+    assert!(risk_card["payload"].is_object());assert!(risk_card["payload"]["title"].as_str().unwrap().contains("测试天气重放"));assert!(!risk_card["payload"]["summary"].as_str().unwrap().contains("骑行"),"public summary must not expose activity titles");
     let call=|name:&str,args:Value,cx:&mut Cx|->Value{
         let replies:Replies=Default::default();let out=replies.clone();
         script_tools::submit("ripple",name,args,"device","stage4-fixture",Duration::from_secs(60),Box::new(move|r|out.lock().unwrap().push(r))).unwrap();pump(cx,&card);
@@ -46,6 +49,7 @@ fn stage4_change_response_and_existing_execution() {
     assert_eq!(after_busy["change"],before_busy["change"],"a busy repeat click must preserve the active change explanation");
     let (context,search)=propose(&mut cx);assert!(context["change"].is_object());assert_eq!(report(&mut cx)["status"],"AWAITING_APPROVAL");
     assert_eq!(read(jail.join("schedule.txt")),added);invoke(&mut cx,&card,id!(decline),&[]);assert_eq!(read(jail.join("change-response.json"))["outcome"],"DECLINED");
+    invoke(&mut cx,&card,id!(s4_card),&[]);assert!(read(jail.join("glance-payload.json"))["payload"].is_null(),"declined risk must withdraw its card");
     invoke(&mut cx,&card,id!(boot),&[]);invoke(&mut cx,&card,id!(s4_check),&[]);assert_eq!(read(jail.join("change-response.json"))["outcome"],"DECLINED");assert_eq!(read(jail.join("schedule.txt")),added);
     // Explicit retry is allowed. Stale authorization still cannot write.
     propose(&mut cx);let mut edited=added.clone();edited["revision"]=json!(3);edited["availability"]["min_start"]=json!(day+9*3600);save("schedule.txt",&edited);invoke(&mut cx,&card,id!(confirm),&[]);invoke(&mut cx,&card,id!(execute),&[]);assert_eq!(report(&mut cx)["status"],"STALE");assert_eq!(read(jail.join("schedule.txt")),edited);

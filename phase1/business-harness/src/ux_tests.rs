@@ -25,6 +25,7 @@ fn reviewed_draft_save_and_edit_guards() {
     invoke(&mut cx,&card,id!(ux_seed),&[&draft.to_string()]);
     assert_eq!(report(&mut cx)["status"],"DRAFT_REVIEW");assert!(!jail.join("schedule.txt").exists());
     invoke(&mut cx,&card,id!(save_reviewed_draft),&[]);assert!(!jail.join("schedule.txt").exists(),"city needs human confirmation");
+    invoke(&mut cx,&card,id!(city_input_changed),&[]);assert_eq!(report(&mut cx)["status"],"DRAFT_REVIEW","city lookup must preserve the reviewed draft");assert!(report(&mut cx)["draft"].is_object());
     invoke(&mut cx,&card,id!(ux_city),&[&city.to_string()]);
     invoke(&mut cx,&card,id!(ux_edit),&["-1"]);let mut edit=report(&mut cx)["edit"].clone();
     edit["left"]=json!("09:00");edit["right"]=json!("09:30");

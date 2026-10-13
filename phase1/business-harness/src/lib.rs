@@ -429,6 +429,15 @@ mod tests {
         assert_eq!(search["candidates"][0]["end"].as_u64().unwrap()-search["candidates"][0]["start"].as_u64().unwrap(),7200);
         let mut invented=choice.clone();invented["candidate_id"]=json!("invented");invoke(&mut cx,&card,id!(fixture_finish),&[&invented.to_string()]);
         invoke(&mut cx,&card,id!(fixture_report),&[]);assert_ne!(read(jail.join("report.json"))["status"],"AWAITING_APPROVAL");assert_eq!(read(jail.join("schedule.txt")),before);
+        // Explicit model-output fault, then one valid correction: original approval remains mandatory.
+        assert_eq!(read(jail.join("report.json"))["status"],"ANALYZING");
+        invoke(&mut cx,&card,id!(fixture_finish),&[&choice.to_string()]);invoke(&mut cx,&card,id!(fixture_report),&[]);
+        assert_eq!(read(jail.join("report.json"))["status"],"AWAITING_APPROVAL");assert_eq!(read(jail.join("schedule.txt")),before);
+        let (_,_,bad_again)=plan("correction-cap",&mut cx);let mut invalid=bad_again.clone();invalid["candidate_id"]=json!("fixed-meeting-conflicting-unreturned-time");
+        invoke(&mut cx,&card,id!(fixture_finish),&[&invalid.to_string()]);invoke(&mut cx,&card,id!(fixture_finish),&[&invalid.to_string()]);invoke(&mut cx,&card,id!(fixture_report),&[]);
+        assert_eq!(read(jail.join("report.json"))["status"],"FAILED");
+        invoke(&mut cx,&card,id!(fixture_finish),&[&bad_again.to_string()]);invoke(&mut cx,&card,id!(confirm),&[]);invoke(&mut cx,&card,id!(execute),&[]);assert_eq!(read(jail.join("schedule.txt")),before,"second failure and late third reply must never write");
+        write("bounded-correction.json",&json!({"classification":"ACTUAL_VM_INJECTED_MODEL_CHOICES_NOT_REAL_AI","specific_rejection":true,"valid_second_requires_approval":true,"second_invalid_stops":true,"late_third_cannot_approve":true}));
         let (_,_,declined)=plan("decline-valid",&mut cx);invoke(&mut cx,&card,id!(fixture_finish),&[&declined.to_string()]);
         invoke(&mut cx,&card,id!(fixture_report),&[]);assert_eq!(read(jail.join("report.json"))["status"],"AWAITING_APPROVAL");
         invoke(&mut cx,&card,id!(decline),&[]);invoke(&mut cx,&card,id!(confirm),&[]);invoke(&mut cx,&card,id!(execute),&[]);assert_eq!(read(jail.join("schedule.txt")),before);

@@ -1,4 +1,4 @@
-# Ripple 0.6.1-rc.1 local privacy notice
+# Ripple 0.6.3-rc.1 local privacy notice
 
 This unpublished local build manages one primary activity and up to four related same-city, same-day planning facts confirmed by the user. It has no external calendar integration or publisher backend.
 
@@ -8,7 +8,7 @@ Selecting Analyze fetches live Open-Meteo weather using the entered coordinates.
 
 City search sends only the typed city name (and normal connection metadata) to geocoding-api.open-meteo.com. It does not send the activity title, availability, schedule or Agent context. Location results are based on GeoNames via Open-Meteo; the selected country, administrative areas, representative coordinates, source and timezone are stored with the activity. No GPS is collected. City coordinates are approximate representative points, not a person's exact location. City mode supports China / Asia/Shanghai; unsupported timezones are rejected. Advanced coordinates retain an explicit UTC+8 interpretation without inventing a city.
 
-The optional same-day availability is stored as UTC bounds in the activity and execution receipts. Missing bounds mean undeclared availability, not all-day free time. Legacy records are read without bulk migration; only an explicit save writes schema 3. The weather/candidate button uses deterministic rules locally and does not contact a model Provider. The separate Agent button uses the same checked facts and declared constraints. Neither path accesses any other calendar. New ordinary diagnostics record identifiers and outcomes rather than complete activity/tool/model content; existing diagnostic files are preserved.
+The optional same-day availability is stored as UTC bounds in the activity and execution receipts. Missing bounds mean undeclared availability, not all-day free time. Legacy records are read without bulk migration; only an explicit save writes schema 3. The weather/candidate button uses deterministic rules locally and does not contact a model Provider. The separate Agent button uses the same checked facts and declared constraints. Neither path accesses any other calendar. Bounded diagnostic records contain model choice IDs, verdicts and optional no-solution explanations; these may contain plan details. Existing records are preserved.
 
 Only Save activity and an explicitly approved change can write the Ripple activity. Independent storage read-back is required to display COMPLETED. Decline and cancelled or expired planning cannot write the activity. Pending approvals are not resumed after restart.
 
@@ -21,3 +21,6 @@ Stage 2 also stores the person-confirmed natural-language request, a soft time-o
 Stage 3 extends the existing execution receipt with the approved original/final record and per-plan before/expected checkpoints, identity, revision and read-back result. Steps are sequential, not an atomic database transaction. Restart reconciles by reading persisted records; it never replays an old approval. Partial or unknown results stop further writes; no automatic rollback occurs. The current planner still considers the primary plus at most one related move. All writes remain within Ripple local storage.
 
 Stage 4 checks saved plans and weather on application startup, explicit weather refresh, and saving a plan. Meaningful risks may invoke the same configured AI provider and its two read-only tools. A small change-response.json in the existing app storage remembers the latest semantic facts and dismissal to avoid repeat suggestions. Closing the application stops checks. Plans still change only after explicit approval; partial or unknown writes stop further analysis.
+
+## 系统风险提醒
+Ripple 在已支持的前台检查时机通过官方 Glance 发布一张本应用风险卡片，并请求宿主桌面提醒。公开卡片仅显示日期和必要风险摘要，不包含活动名称、地点或模型协议。相同事实只尝试一次弹窗；拒绝、风险解除、方案失效或结果待核对时撤回卡片。宿主通知设置决定是否显示，卡片本身不能批准或执行日程。通知尝试指纹保存在已有 change-response.json 中，不建立其他计划数据库。

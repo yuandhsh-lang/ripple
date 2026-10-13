@@ -19,11 +19,12 @@
     "octos.session.open",
     "octos.turn.start",
     "octos.turn.interrupt",
-    "net"
+    "net",
+    "glance"
   ],
   "id": "ripple",
   "integrity": {
-    "bundle_blake3": "051573262c5794a666db1b9b035f463e885f598b3904184c0bacb71593287596"
+    "bundle_blake3": "48ef7a681afe716e99961e3ba23e2d2edc9a1d13bb7477d753493f084064ab27"
   },
   "name": "Ripple",
   "network": {
@@ -39,5 +40,5 @@
   "storage": {
     "max_bytes": 1048576
   },
-  "version": "0.6.2-rc.2"
+  "version": "0.6.3-rc.1"
 }
