@@ -1,27 +1,31 @@
-# Ripple OctoScript privacy notice
+# Ripple 隐私说明
 
-Version: 0.1.0 · Updated: 2026-10-06 · Publisher: yuandhsh-lang
+适用于 0.6.4 源码及其后续同版本正式发布包。维护者：yuandhsh-lang。更新时间：2026-10-14。
 
-This notice covers the OctoSense script app delivered in `bundle/`. The older React prototype in this repository is a separate historical reference.
+Ripple 没有开发者运营的后端、账号系统、分析埋点或广告。它只管理用户明确保存的应用内部日程，不读取系统日历、Google Calendar、通讯录、文件目录或 GPS。
 
-Ripple uses one clearly labelled synthetic outdoor test schedule. It does not connect to Google Calendar, read a personal calendar, request an account login, or collect passwords, OAuth tokens or API keys.
+## 保存什么
 
-## Data stored on the device
+宿主应用沙箱保存活动名称、北京时间对应的 UTC 起止时间、所选城市与代表坐标、时间窗口、固定/可调整属性、偏好、关联安排、稳定 ID 和版本。另保存天气快照、最近变化去重状态、批准的完整变更、逐项执行收据及读回结果。应用诊断日志有 24 KB 上限；总存储授权 1 MiB。存储失败不会报告保存成功。
 
-The app's own sandbox stores the test schedule's start/end times, the entered coordinates and a revision value; the last verified expected record; and a bounded audit log of timestamps and workflow states. The storage grant is limited to 65,536 bytes. Forecast data and pending proposals remain in memory. Pending approvals are not resumed after restart.
+宿主另行保存 Agent 会话和工具记录；其保留期限由宿主控制。Ripple 不自动删除历史会话或用户数据。取消关联计划标记为不活跃，不表示从所有历史收据中擦除。
 
-Analyze, Decline and Cancel do not write the schedule. Confirm checks the current source and weather, writes the approved time, then reads the stored record independently before showing COMPLETED.
+## 网络与 AI
 
-Delete test removes the schedule and saved outcome. The bounded audit log remains in the app's storage. Removing all app data through the host's app-data controls, where offered, removes the remaining local files; those host controls have not been verified in the current Windows card-host test environment.
+城市查询向 `geocoding-api.open-meteo.com` 发送城市关键词；天气查询向 `api.open-meteo.com` 发送所选坐标、时区及预报字段。服务方会接收通常的网络连接信息。城市坐标是代表位置，不是实时定位。天气来源 [Open-Meteo](https://open-meteo.com/)，地名数据来源 GeoNames；第三方条款以其官方页面为准。
 
-## Weather requests
+用户允许宿主 Agent 后，自然语言需求、相关活动名称、时间、地点、约束、天气影响及合法候选会发送给宿主所选模型 Provider。本机验收使用 DeepSeek；使用者自行配置和授权 Provider，需遵守其隐私政策与计费条件。Ripple 无权读取模型密钥，仓库、安装包和演示中不包含密钥。
 
-When you select Load real weather, Ripple sends the latitude and longitude you entered to `https://api.open-meteo.com/v1/forecast`. It requests hourly weather codes, precipitation and precipitation probability. It does not request device location permission. Open-Meteo receives the request and connection information, including the requesting network's IP address. Its handling of those requests is governed by its own [terms and privacy information](https://open-meteo.com/en/terms).
+应用只声明两个 Open-Meteo 网络域名；模型网络由宿主 Provider 通道负责。模型不能直接写日程。用户确认草稿才保存；已有计划改期必须独立批准，实际写入后再次从持久化存储读回。
 
-Ripple does not send schedule titles, stored schedule records or its audit log to that service. The app has no publisher-operated backend, analytics, advertising, AI-provider request or other declared network destination.
+## 通知与选择
 
-## Screenshots and support
+Glance 风险卡片可能显示活动简称、日期和时段及风险摘要，旁人可能看到，请避免在活动名称中填写敏感内容。卡片不展示精确地点或完整模型记录；显示由宿主权限和通知设置决定。拒绝、风险解除、天气过期或需人工核对时尝试撤回。通知失败不影响审批边界，也不代表计划已改动。
 
-Acceptance screenshots and a demonstration recording can show the test schedule, entered coordinates, weather and workflow state. Use synthetic data and approximate test coordinates when sharing them. Development logs and runtime test directories are outside the bundle and are not part of the app delivery.
+关闭应用后不继续监测。检查时机为启动、用户保存、天气刷新及主动分析；重要变化才请求重新规划，相同事实或已拒绝风险避免重复提醒。
 
-Support: [yuandhsh-lang/ripple Issues](https://github.com/yuandhsh-lang/ripple/issues). GitHub Issues are public; do not include passwords, keys, tokens or personal calendar information in a support report.
+## 数据管理与联系
+
+用户可在 Ripple 编辑或取消计划，并通过宿主提供的数据管理方式管理应用数据和模型会话。卸载是否清除历史记录取决于宿主，Ripple 不承诺自动完全删除。测试资料只含操作员创建的演示计划；公开证据应去掉敏感内容。
+
+隐私问题请在 [项目支持入口](https://github.com/yuandhsh-lang/ripple/issues) 提交不含私人信息的说明。不要提交密钥、个人日程或完整宿主数据。详细支持范围见 [SUPPORT.md](SUPPORT.md)。

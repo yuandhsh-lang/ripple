@@ -1,18 +1,31 @@
 {
   "schema": 1,
-  "subtitle": "Weather-aware test schedules with approval and read-back",
-  "description": "Ripple is an OctoSense script app prototype for reviewing weather conflicts before changing an outdoor test schedule. It retrieves real hourly forecasts from Open-Meteo for coordinates you enter, creates one synthetic 60-minute test schedule in its own storage, and proposes a dry earlier time on the same UTC+8 day. Analysis does not change the schedule. You can confirm, decline, or cancel a proposal. Confirmation checks that the source schedule and weather are still current, writes the approved time, then independently reads the stored record. COMPLETED appears only when the read-back matches the expected schedule. Empty, failure, and stale states are visible, and a verified stored result survives app restart. This preliminary version uses only app-owned test data; it does not access Google Calendar or your personal calendar. It has been exercised on Windows card-host; other platforms and the full OctoSense shell have not been verified.",
+  "subtitle": "说清安排，核对保存；变化时建议，批准后执行",
+  "description": "Ripple 理解用户计划，检查日程冲突和降雨风险，提出符合已声明约束的调整方案；用户独立批准后，逐项执行并从持久化存储读回核验。自然语言生成可核对草稿，支持一个主活动和最多四项同城同日关联安排；无解时可以协商可调整条件，条件确认不替代改期审批。真实 AI 使用宿主配置的 Provider 和两个只读工具；模型不可用时明确降级为规则。天气及城市查询来自 Open-Meteo。启动、保存、刷新天气或明确分析时检查；通过官方 Glance 请求卡片与桌面提醒，显示取决于宿主权限和设置。已打开应用的提醒可能需要点击“查看系统提醒状态”。仅验证 Windows 官方 RC6；Asia/Shanghai、同日、15–240 分钟。只管理 Ripple 内部计划，不同步外部日历，不提供全天后台监控。SDK 历史间歇时间预算风险尚未完全归因，详见版本说明。",
   "category": "productivity",
-  "keywords": ["schedule", "weather", "approval", "read-back"],
-  "screenshots": ["screenshots/01-pending.png", "screenshots/02-completed.png", "screenshots/03-declined.png", "screenshots/04-cancelled.png", "screenshots/05-stale.png", "screenshots/06-empty.png", "screenshots/07-failed.png", "screenshots/08-restart.png"],
+  "keywords": [
+    "agent",
+    "rain",
+    "human-approval"
+  ],
+  "screenshots": [
+    "screenshots/01-startup.png",
+    "screenshots/02-approval.png",
+    "screenshots/03-completed.png",
+    "screenshots/04-glance.png",
+    "screenshots/05-negotiation.png",
+    "screenshots/06-draft.png"
+  ],
   "icon": "assets/icon.svg",
-  "platforms": ["windows"],
+  "platforms": [
+    "windows"
+  ],
   "publisher": {
     "name": "yuandhsh-lang",
     "support": "https://github.com/yuandhsh-lang/ripple/issues",
-    "privacy_policy_url": "https://github.com/yuandhsh-lang/ripple/blob/main/PRIVACY.md"
+    "privacy_policy_url": "https://github.com/yuandhsh-lang/ripple/blob/v0.6.4/PRIVACY.md"
   },
-  "release_notes": "Initial native OctoScript prototype: live Open-Meteo weather, app-owned synthetic schedule, pending proposals, explicit approval, independent storage read-back, decline/cancel/stale/failure/empty states, and restart persistence. Windows card-host tested.",
+  "release_notes": "0.6.4 发布准备：统一正式 OctoScript 入口和交付说明，继承 0.6.4-rc.4 的真实 Agent、天气、Glance、整组审批和独立读回。修复模型 JSON 外围代码围栏解析、减少重复读取、天气过期时撤回通知，风险卡片指向实际受影响活动。实际发布、来源证明和审核状态以对应 Release 与 Issue 为准；历史计时及暖启动路由限制见已知限制。",
   "age_rating": "all",
   "license": "Apache-2.0"
 }

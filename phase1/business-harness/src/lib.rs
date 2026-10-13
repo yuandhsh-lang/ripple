@@ -93,7 +93,7 @@ mod tests {
 
     #[test]
     fn native_ux_mount_and_manual_form() {
-        let bundle=root().join("stage1/bundle");
+        let bundle=root().join("bundle");
         let mut source=std::fs::read_to_string(bundle.join("main.splash")).unwrap();
         source.push_str(r#"
             fn ux_mount(){ ui.title_input.set_text("UI lifecycle probe") repaint() }
@@ -108,7 +108,7 @@ mod tests {
 
     #[test]
     fn editor_time_after_verified_reschedule() {
-        let bundle=root().join("stage1/bundle");
+        let bundle=root().join("bundle");
         let mut source=std::fs::read_to_string(bundle.join("main.splash")).unwrap();
         source.push_str(r#"
           fn editor_init(epoch){ manual_location=true selected_city=nil ui.available_start.set_text("00:00") ui.available_end.set_text("23:59") let before=schedule_fingerprint() ui.title_input.set_text("Editor regression") ui.start_input.set_text(clock_stamp(epoch.to_f64(),28800).replace("T"," ").split("+")[0].strip_suffix(":00")) ui.duration.set_text("60") ui.latitude.set_text("31.23") ui.longitude.set_text("121.47") save_activity() finish_save(before,false) }
@@ -180,7 +180,7 @@ mod tests {
 
     #[test]
     fn storage_errors_leave_activity_intact_and_feedback_recoverable() {
-        let bundle=root().join("stage1/bundle");
+        let bundle=root().join("bundle");
         let mut source=std::fs::read_to_string(bundle.join("main.splash")).unwrap();
         source.push_str(r#"
           fn fault_save(title,start){ manual_location=true selected_city=nil ui.available_start.set_text("00:00") ui.available_end.set_text("23:59") let before=schedule_fingerprint() let pending=status=="AWAITING_APPROVAL" ui.title_input.set_text(title) ui.start_input.set_text(start) ui.duration.set_text("60") ui.latitude.set_text("31.23") ui.longitude.set_text("121.47") save_activity() finish_save(before,pending) }
@@ -216,7 +216,7 @@ mod tests {
 
     #[test]
     fn forecast_failures_do_not_replace_prior_forecast() {
-        let bundle=root().join("stage1/bundle");
+        let bundle=root().join("bundle");
         let mut source=std::fs::read_to_string(bundle.join("main.splash")).unwrap();
         source.push_str(r#"
           fn weather_save(start){ manual_location=true selected_city=nil ui.available_start.set_text("00:00") ui.available_end.set_text("23:59") let before=schedule_fingerprint() let pending=status=="AWAITING_APPROVAL" ui.title_input.set_text("Weather reliability") ui.start_input.set_text(start) ui.duration.set_text("60") ui.latitude.set_text("31.23") ui.longitude.set_text("121.47") save_activity() finish_save(before,pending) }
@@ -249,7 +249,7 @@ mod tests {
 
     #[test]
     fn final_audit_boundaries_and_write_reconciliation() {
-        let bundle=root().join("stage1/bundle");
+        let bundle=root().join("bundle");
         let mut source=std::fs::read_to_string(bundle.join("main.splash")).unwrap();
         source.push_str(r#"
           fn audit_save(title,start){ manual_location=true selected_city=nil ui.available_start.set_text("00:00") ui.available_end.set_text("23:59") let before=schedule_fingerprint() let pending=status=="AWAITING_APPROVAL" ui.title_input.set_text(title) ui.start_input.set_text(start) ui.duration.set_text("120") ui.latitude.set_text("31.23") ui.longitude.set_text("121.47") save_activity() finish_save(before,pending) }
@@ -370,7 +370,7 @@ mod tests {
 
     #[test]
     fn business_abi_approval_readback_and_guards() {
-        let bundle=root().join("stage1/bundle");
+        let bundle=root().join("bundle");
         let mut source=std::fs::read_to_string(bundle.join("main.splash")).unwrap();
         source.push_str(r#"
           fn fixture_inputs(title,start,duration,lat,lon){ manual_location=true selected_city=nil ui.available_start.set_text("00:00") ui.available_end.set_text("23:59") let before=schedule_fingerprint() let pending=status=="AWAITING_APPROVAL" ui.title_input.set_text(title) ui.start_input.set_text(start) ui.duration.set_text(duration) ui.latitude.set_text(lat) ui.longitude.set_text(lon) save_activity() finish_save(before,pending) }

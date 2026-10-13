@@ -1,0 +1,6 @@
+octo: hub stamp -> 179c21bc42ba829dc2faf5bea1123d9858ef984e7eba723f4b576499fd24d5c1
+octo: F:\桌面\01 项目开发\黑客松\_audits\Ripple\Stage5-20261013-154643\official\hub-current.exe check F:\桌面\01 项目开发\黑客松\Ripple\bundle --allow-unsigned
+ripple 0.6.4 — PASSED
+  [warning] publisher-signature: unsigned: accountability rests on the hub alone
+  declarations: capabilities {"glance", "net", "octos.session.open", "octos.turn.interrupt", "octos.turn.start", "runtime", "storage"}, hosts {"api.open-meteo.com", "geocoding-api.open-meteo.com"}, storage 1048576 bytes, agent read-only
+

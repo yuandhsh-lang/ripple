@@ -1,0 +1,22 @@
+[
+  {
+    "path": "docs\\release\\evidence\\agent-execution.json",
+    "sha256": "c36ab403914af4efe958630da098490bea0f696e5f5b8023edfafba419f3b5a0",
+    "bytes": 47400
+  },
+  {
+    "path": "docs\\release\\evidence\\agent-negotiation.json",
+    "sha256": "c9f9923fdf680095b77fba85ceb47680104b6f093f05352696be2d5ea80c60e8",
+    "bytes": 11499
+  },
+  {
+    "path": "docs\\release\\evidence\\native-independent.json",
+    "sha256": "c19c060f4418a4bf4dd710ee70d74a20d76db69c3663480033fc72b65a4862f8",
+    "bytes": 36649
+  },
+  {
+    "path": "docs\\release\\evidence\\sdk-commands.json",
+    "sha256": "7cfd6b7ed8402e09d373fa5b57e3f2285d766bcfcdcfc4b0e2b926a03db5098f",
+    "bytes": 2508
+  }
+]

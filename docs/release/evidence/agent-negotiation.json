@@ -1,0 +1,251 @@
+{
+  "classification": "OFFICIAL_RC6_REAL_PROVIDER_SYNTHETIC_USER_TASK",
+  "session": {
+    "conversation": true,
+    "model": {
+      "lane": "primary",
+      "model": "deepseek-flash",
+      "provider": "deepseek"
+    },
+    "open": true,
+    "shared_history": true
+  },
+  "records": [
+    {
+      "v": 1,
+      "seq": 18,
+      "event": {
+        "record_kind": "notification",
+        "kind": "envelope_v2",
+        "session_id": "_main:api:octosense#peerctx-ripple-22a12f906cd27b73.d3b92fb7-p1-card-ripple-g1",
+        "topic": "peerctx-ripple-22a12f906cd27b73.d3b92fb7-p1-card-ripple-g1",
+        "envelope": {
+          "thread_id": "d3c0ce9a-5a2d-4c13-a599-81c2624dc645",
+          "seq": 9,
+          "cursor": {
+            "stream": "_main:api:octosense#peerctx-ripple-22a12f906cd27b73.d3b92fb7-p1-card-ripple-g1\u0000~cwd-6c79443431c72811",
+            "seq": 18
+          },
+          "turn_id": "d3c0ce9a-5a2d-4c13-a599-81c2624dc645",
+          "payload": {
+            "type": "tool_start",
+            "data": {
+              "tool_call_id": "call_00_8FGtTU5NUonS8Aczdamx7524",
+              "name": "ripple_context_read",
+              "arguments_preview": "task_id: \"ripple-task-1791931285.133594-1\""
+            }
+          }
+        }
+      }
+    },
+    {
+      "v": 1,
+      "seq": 20,
+      "event": {
+        "record_kind": "notification",
+        "kind": "envelope_v2",
+        "session_id": "_main:api:octosense#peerctx-ripple-22a12f906cd27b73.d3b92fb7-p1-card-ripple-g1",
+        "topic": "peerctx-ripple-22a12f906cd27b73.d3b92fb7-p1-card-ripple-g1",
+        "envelope": {
+          "thread_id": "d3c0ce9a-5a2d-4c13-a599-81c2624dc645",
+          "seq": 10,
+          "cursor": {
+            "stream": "_main:api:octosense#peerctx-ripple-22a12f906cd27b73.d3b92fb7-p1-card-ripple-g1\u0000~cwd-6c79443431c72811",
+            "seq": 20
+          },
+          "turn_id": "d3c0ce9a-5a2d-4c13-a599-81c2624dc645",
+          "payload": {
+            "type": "tool_end",
+            "data": {
+              "tool_call_id": "call_00_8FGtTU5NUonS8Aczdamx7524",
+              "status": "complete",
+              "output_preview": "{\"calendar_scope\":\"Saved primary and related plans share one city/date; all other personal commitments unknown\",\"change\":{\"affected\":[{\"id\":\"ripple-1791931165.3630526\",\"title\":\"骑车\"}],\"previous_che...",
+              "duration_ms": 79
+            }
+          }
+        }
+      }
+    },
+    {
+      "v": 1,
+      "seq": 22,
+      "event": {
+        "record_kind": "progress",
+        "session_id": "_main:api:octosense#peerctx-ripple-22a12f906cd27b73.d3b92fb7-p1-card-ripple-g1",
+        "turn_id": "d3c0ce9a-5a2d-4c13-a599-81c2624dc645",
+        "metadata": {
+          "kind": "tool_completed",
+          "duration_ms": 79,
+          "success": true,
+          "tool": "ripple_context_read",
+          "tool_call_id": "call_00_8FGtTU5NUonS8Aczdamx7524"
+        }
+      }
+    },
+    {
+      "v": 1,
+      "seq": 125,
+      "event": {
+        "record_kind": "notification",
+        "kind": "envelope_v2",
+        "session_id": "_main:api:octosense#peerctx-ripple-22a12f906cd27b73.d3b92fb7-p1-card-ripple-g1",
+        "topic": "peerctx-ripple-22a12f906cd27b73.d3b92fb7-p1-card-ripple-g1",
+        "envelope": {
+          "thread_id": "d3c0ce9a-5a2d-4c13-a599-81c2624dc645",
+          "seq": 108,
+          "cursor": {
+            "stream": "_main:api:octosense#peerctx-ripple-22a12f906cd27b73.d3b92fb7-p1-card-ripple-g1\u0000~cwd-6c79443431c72811",
+            "seq": 125
+          },
+          "turn_id": "d3c0ce9a-5a2d-4c13-a599-81c2624dc645",
+          "payload": {
+            "type": "tool_start",
+            "data": {
+              "tool_call_id": "call_00_m4OP58zym03KZyjum3SF4980",
+              "name": "ripple_slots_search",
+              "arguments_preview": "task_id: \"ripple-task-1791931285.133594-1\", read_token: \"[REDACTED]\", min_start: 1792026000, max_end: 1792033200, max_candidates: 3"
+            }
+          }
+        }
+      }
+    },
+    {
+      "v": 1,
+      "seq": 127,
+      "event": {
+        "record_kind": "notification",
+        "kind": "envelope_v2",
+        "session_id": "_main:api:octosense#peerctx-ripple-22a12f906cd27b73.d3b92fb7-p1-card-ripple-g1",
+        "topic": "peerctx-ripple-22a12f906cd27b73.d3b92fb7-p1-card-ripple-g1",
+        "envelope": {
+          "thread_id": "d3c0ce9a-5a2d-4c13-a599-81c2624dc645",
+          "seq": 109,
+          "cursor": {
+            "stream": "_main:api:octosense#peerctx-ripple-22a12f906cd27b73.d3b92fb7-p1-card-ripple-g1\u0000~cwd-6c79443431c72811",
+            "seq": 127
+          },
+          "turn_id": "d3c0ce9a-5a2d-4c13-a599-81c2624dc645",
+          "payload": {
+            "type": "tool_end",
+            "data": {
+              "tool_call_id": "call_00_m4OP58zym03KZyjum3SF4980",
+              "status": "complete",
+              "output_preview": "{\"baseline_candidate_id\":null,\"calendar_source\":\"RIPPLE_LOCAL\",\"candidates\":[],\"constraints\":{\"duration_seconds\":3600,\"max_candidates\":3,\"max_end\":1792033200,\"min_start\":1792026000,\"time_authority\":{\"...",
+              "duration_ms": 109
+            }
+          }
+        }
+      }
+    },
+    {
+      "v": 1,
+      "seq": 129,
+      "event": {
+        "record_kind": "progress",
+        "session_id": "_main:api:octosense#peerctx-ripple-22a12f906cd27b73.d3b92fb7-p1-card-ripple-g1",
+        "turn_id": "d3c0ce9a-5a2d-4c13-a599-81c2624dc645",
+        "metadata": {
+          "kind": "tool_completed",
+          "duration_ms": 109,
+          "success": true,
+          "tool": "ripple_slots_search",
+          "tool_call_id": "call_00_m4OP58zym03KZyjum3SF4980"
+        }
+      }
+    },
+    {
+      "v": 1,
+      "seq": 610,
+      "event": {
+        "record_kind": "notification",
+        "kind": "envelope_v2",
+        "session_id": "_main:api:octosense#peerctx-ripple-22a12f906cd27b73.d3b92fb7-p1-card-ripple-g1",
+        "topic": "peerctx-ripple-22a12f906cd27b73.d3b92fb7-p1-card-ripple-g1",
+        "envelope": {
+          "thread_id": "d3c0ce9a-5a2d-4c13-a599-81c2624dc645",
+          "seq": 587,
+          "cursor": {
+            "stream": "_main:api:octosense#peerctx-ripple-22a12f906cd27b73.d3b92fb7-p1-card-ripple-g1\u0000~cwd-6c79443431c72811",
+            "seq": 610
+          },
+          "turn_id": "d3c0ce9a-5a2d-4c13-a599-81c2624dc645",
+          "payload": {
+            "type": "assistant_persisted",
+            "data": {
+              "text": "{\"task_id\":\"ripple-task-1791931285.133594-1\",\"read_token\":\"script-tool-2\",\"decision\":\"NO_CANDIDATE\",\"search_id\":\"ripple-task-1791931285.133594-1:1:1:multi\",\"candidate_id\":null,\"explanation\":\"在您已声明的可调整窗口内，受同日的固定客户会议与内部会议、以及可移动的室内交流占用影响，本次受支持搜索未找到既能避开降雨风险、又不移动固定安排的可行时段。是否要再声明同日另一个时间窗口，或保留原计划？\"}",
+              "assistant_segment_id": "d3c0ce9a-5a2d-4c13-a599-81c2624dc645:assistant:iteration:3",
+              "meta": {
+                "message_id": "_main:api:octosense#peerctx-ripple-22a12f906cd27b73.d3b92fb7-p1-card-ripple-g1:5:1791931294480019200",
+                "persisted_at": "2026-10-13T22:41:34.480019200Z"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "v": 1,
+      "seq": 725,
+      "event": {
+        "record_kind": "notification",
+        "kind": "turn_completed",
+        "session_id": "_main:api:octosense#peerctx-ripple-22a12f906cd27b73.d3b92fb7-p1-card-ripple-g1",
+        "topic": "peerctx-ripple-22a12f906cd27b73.d3b92fb7-p1-card-ripple-g1",
+        "turn_id": "d3c0ce9a-5a2d-4c13-a599-81c2624dc645",
+        "cursor": {
+          "stream": "_main:api:octosense#peerctx-ripple-22a12f906cd27b73.d3b92fb7-p1-card-ripple-g1\u0000~cwd-6c79443431c72811",
+          "seq": 725
+        },
+        "tokens_in": 2690,
+        "tokens_out": 878,
+        "session_result": {
+          "committed_seq": 5,
+          "message_id": "_main:api:octosense#peerctx-ripple-22a12f906cd27b73.d3b92fb7-p1-card-ripple-g1:5:1791931294480019200"
+        },
+        "token_usage": {
+          "input_tokens": 2690,
+          "output_tokens": 878,
+          "reasoning_tokens": 562,
+          "cache_read_tokens": 32512
+        }
+      }
+    }
+  ],
+  "tools": [
+    {
+      "ts": "2026-10-13T22:41:27.969957200+00:00",
+      "peer": "ripple-22a12f906cd27b73",
+      "context_id": "d3b92fb7-p1-card-ripple-g1",
+      "session_id": "_main:api:octosense#peerctx-ripple-22a12f906cd27b73.d3b92fb7-p1-card-ripple-g1",
+      "turn_id": "d3c0ce9a-5a2d-4c13-a599-81c2624dc645",
+      "tools_version": 2,
+      "tool": "ripple.context.read",
+      "app": "ripple",
+      "tool_call_id": "call_00_8FGtTU5NUonS8Aczdamx7524",
+      "risk": "read",
+      "decision": "allowed",
+      "outcome": "ok",
+      "duration_ms": 76,
+      "args_bytes": 45,
+      "result_bytes": 3190
+    },
+    {
+      "ts": "2026-10-13T22:41:30.153062400+00:00",
+      "peer": "ripple-22a12f906cd27b73",
+      "context_id": "d3b92fb7-p1-card-ripple-g1",
+      "session_id": "_main:api:octosense#peerctx-ripple-22a12f906cd27b73.d3b92fb7-p1-card-ripple-g1",
+      "turn_id": "d3c0ce9a-5a2d-4c13-a599-81c2624dc645",
+      "tools_version": 2,
+      "tool": "ripple.slots.search",
+      "app": "ripple",
+      "tool_call_id": "call_00_m4OP58zym03KZyjum3SF4980",
+      "risk": "read",
+      "decision": "allowed",
+      "outcome": "ok",
+      "duration_ms": 105,
+      "args_bytes": 137,
+      "result_bytes": 1598
+    }
+  ],
+  "audit": "1791931059.2035725 MODEL_FAILURE Agent unavailable: Waiting for the person to allow this app's agent (OctoSense asks the first time)\n1791931059.304779 GLANCE_WITHDRAW ok=true\n1791931078.9309566 TOOL call_id=script-tool-2 name=ripple.context.read context_read\n1791931165.4826908 USER_SAVE event_id=ripple-1791931165.3630526 revision=1\n1791931183.7567022 TOOL call_id=script-tool-3 name=ripple.context.read context_read\n1791931218.2824447 USER_SAVE event_id=ripple-1791931165.3630526 revision=2\n1791931284.9755602 GLANCE_WITHDRAW ok=true\n1791931285.0485387 CHANGE_DETECTED trigger=startup affected=[{\"id\":\"ripple-1791931165.3630526\",\"title\":\"骑车\"}] weather=FIXTURE\n1791931287.961145 TOOL call_id=script-tool-2 name=ripple.context.read context_read\n1791931290.1417394 TOOL call_id=script-tool-3 name=ripple.slots.search candidates=0\n1791931295.4440954 MODEL_CHOICE task_id=ripple-task-1791931285.133594-1 verdict=NO_CANDIDATE attempt=0 output={\"task_id\":\"ripple-task-1791931285.133594-1\",\"read_token\":\"script-tool-2\",\"decision\":\"NO_CANDIDATE\",\"search_id\":\"ripple-task-1791931285.133594-1:1:1:multi\",\"candidate_id\":null,\"explanation\":\"在您已声明的可调整窗口内，受同日的固定客户会议与内部会议、以及可移动的室内交流占用影响，本次受支持搜索未找到既能避开降雨风险、又不移动固定安排的可行时段。是否要再声明同日另一个时间窗口，或保留原计划？\"}\n1791931295.7000709 GLANCE_PUBLISH ok=true notify=true reply={\"card_id\":\"current-risk\",\"expires_at\":1791931860690,\"replaced\":false}\n"
+}

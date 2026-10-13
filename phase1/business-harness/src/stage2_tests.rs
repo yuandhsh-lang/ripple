@@ -1,7 +1,7 @@
 // Real pinned VM and AppTools ABI. Model/weather bodies here are explicit fixtures.
 #[test]
 fn stage2_interpretation_coordination_and_guards() {
-    let bundle=root().join("stage1/bundle");
+    let bundle=root().join("bundle");
     let mut source=std::fs::read_to_string(bundle.join("main.splash")).unwrap();
     source.push_str(r#"
       fn s2_setup(epoch){ busy=false loading=false status="READY" agent_task_kind="choice" planning_draft=nil manual_location=true selected_city=nil ui.title_input.set_text("Synthetic cycle") ui.start_input.set_text(local_date(epoch.to_f64())+" "+local_clock(epoch.to_f64())) ui.duration.set_text("60") ui.latitude.set_text("22.54554") ui.longitude.set_text("114.0683") ui.available_start.set_text("09:00") ui.available_end.set_text("17:00") let before=schedule_fingerprint() save_activity() finish_save(before,false) }

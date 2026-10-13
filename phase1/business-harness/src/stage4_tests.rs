@@ -1,7 +1,7 @@
 // Actual VM/tools/storage; synthetic plans, weather replay and model selection.
 #[test]
 fn stage4_change_response_and_existing_execution() {
-    let bundle=root().join("stage1/bundle");
+    let bundle=root().join("bundle");
     let mut source=std::fs::read_to_string(bundle.join("main.splash")).unwrap();
     source.push_str(r#"
       fn s4_check(){ finish_change_check("sdk_replay",input_generation,schedule_fingerprint()) }

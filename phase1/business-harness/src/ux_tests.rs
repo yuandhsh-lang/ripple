@@ -2,7 +2,7 @@
 // Explicit draft fixtures here are not real model evidence.
 #[test]
 fn reviewed_draft_save_and_edit_guards() {
-    let bundle=root().join("stage1/bundle");
+    let bundle=root().join("bundle");
     let mut source=std::fs::read_to_string(bundle.join("main.splash")).unwrap();
     source.push_str(r#"
       fn ux_seed(text){ busy=false loading=false review_index=-2 review_edit=nil interpret_text="EXPLICIT UX FIXTURE" let d=validate_draft(text.parse_json()) interpretation_draft={data:d fingerprint:schedule_fingerprint() inputs:input_generation} move("DRAFT_REVIEW","Fixture draft, not a real model") }

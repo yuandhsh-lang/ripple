@@ -2,7 +2,7 @@
 // HTTP bodies/weather below are explicit fixtures, never live-network evidence.
 #[test]
 fn stage1_city_window_compatibility_and_approval() {
-    let bundle=root().join("stage1/bundle");
+    let bundle=root().join("bundle");
     let mut source=std::fs::read_to_string(bundle.join("main.splash")).unwrap();
     source.push_str(r#"
       fn s1_geo(query,code,body){ ui.city_input.set_text(query) city_query=query city_results=geocode_results(code.to_f64(),body) }

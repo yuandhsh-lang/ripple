@@ -1,0 +1,650 @@
+{
+  "schema": 1,
+  "tools": [
+    {
+      "name": "ripple.context.read",
+      "description": "Read actual saved primary/linked plans, fixed constraints, preferences and validated weather; in interpretation mode read the person request and current input facts for a review-only draft. No write authority.",
+      "implemented_by": "app",
+      "risk": "read",
+      "private_data": true,
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "task_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 96
+          }
+        },
+        "required": [
+          "task_id"
+        ],
+        "additionalProperties": false
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "task_id": {
+            "type": "string"
+          },
+          "read_token": {
+            "type": "string"
+          },
+          "events": {
+            "type": "array",
+            "maxItems": 1,
+            "items": {
+              "type": "object",
+              "properties": {
+                "schema": {
+                  "type": "integer"
+                },
+                "event_id": {
+                  "type": "string"
+                },
+                "title": {
+                  "type": "string"
+                },
+                "start": {
+                  "type": "integer"
+                },
+                "end": {
+                  "type": "integer"
+                },
+                "lat": {
+                  "type": "number"
+                },
+                "lon": {
+                  "type": "number"
+                },
+                "revision": {
+                  "type": "integer"
+                },
+                "data_source": {
+                  "type": "string"
+                },
+                "timezone": {
+                  "type": "string",
+                  "enum": [
+                    "Asia/Shanghai",
+                    "UTC+08:00"
+                  ]
+                },
+                "location": {
+                  "type": [
+                    "object",
+                    "null"
+                  ],
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "country": {
+                      "type": "string"
+                    },
+                    "country_code": {
+                      "type": "string"
+                    },
+                    "admin1": {
+                      "type": "string"
+                    },
+                    "admin2": {
+                      "type": "string"
+                    },
+                    "timezone": {
+                      "type": "string"
+                    },
+                    "source": {
+                      "type": "string"
+                    },
+                    "id": {
+                      "type": "integer",
+                      "minimum": 1
+                    },
+                    "lat": {
+                      "type": "number",
+                      "minimum": -90,
+                      "maximum": 90
+                    },
+                    "lon": {
+                      "type": "number",
+                      "minimum": -180,
+                      "maximum": 180
+                    }
+                  },
+                  "additionalProperties": false,
+                  "required": [
+                    "name",
+                    "country",
+                    "country_code",
+                    "admin1",
+                    "admin2",
+                    "timezone",
+                    "source",
+                    "id",
+                    "lat",
+                    "lon"
+                  ]
+                },
+                "availability": {
+                  "type": [
+                    "object",
+                    "null"
+                  ],
+                  "properties": {
+                    "min_start": {
+                      "type": "integer"
+                    },
+                    "max_end": {
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "min_start",
+                    "max_end"
+                  ],
+                  "additionalProperties": false
+                },
+                "planning": {
+                  "type": "object",
+                  "properties": {
+                    "version": {
+                      "type": "integer"
+                    },
+                    "instruction": {
+                      "type": "string"
+                    },
+                    "primary_movable": {
+                      "type": "boolean"
+                    },
+                    "priority": {
+                      "type": "integer"
+                    },
+                    "preference": {
+                      "type": "string",
+                      "enum": [
+                        "none",
+                        "morning",
+                        "afternoon",
+                        "evening"
+                      ]
+                    },
+                    "plans": {
+                      "type": "array",
+                      "maxItems": 4,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "title": {
+                            "type": "string"
+                          },
+                          "start": {
+                            "type": "integer"
+                          },
+                          "end": {
+                            "type": "integer"
+                          },
+                          "active": {
+                            "type": "boolean"
+                          },
+                          "movable": {
+                            "type": "boolean"
+                          },
+                          "outdoor": {
+                            "type": "boolean"
+                          },
+                          "priority": {
+                            "type": "integer"
+                          },
+                          "availability": {
+                            "type": [
+                              "object",
+                              "null"
+                            ],
+                            "properties": {
+                              "min_start": {
+                                "type": "integer"
+                              },
+                              "max_end": {
+                                "type": "integer"
+                              }
+                            },
+                            "required": [
+                              "min_start",
+                              "max_end"
+                            ],
+                            "additionalProperties": false
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "title",
+                          "start",
+                          "end",
+                          "active",
+                          "movable",
+                          "outdoor",
+                          "priority",
+                          "availability"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": [
+                    "version",
+                    "instruction",
+                    "primary_movable",
+                    "priority",
+                    "preference",
+                    "plans"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "schema",
+                "event_id",
+                "title",
+                "start",
+                "end",
+                "lat",
+                "lon",
+                "revision",
+                "data_source"
+              ]
+            }
+          },
+          "retrieved_at": {
+            "type": "number"
+          },
+          "data_source": {
+            "type": "string"
+          },
+          "impact": {
+            "type": "object"
+          },
+          "weather_source": {
+            "type": "string",
+            "enum": [
+              "LIVE",
+              "FIXTURE"
+            ]
+          },
+          "weather_revision": {
+            "type": "string"
+          },
+          "weather_fetched_at": {
+            "type": "number"
+          },
+          "time_authority": {
+            "type": "object"
+          },
+          "search_bounds": {
+            "type": "object"
+          },
+          "calendar_scope": {
+            "type": "string"
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "interpret"
+            ]
+          },
+          "request_text": {
+            "type": "string"
+          },
+          "today": {
+            "type": "string"
+          },
+          "timezone": {
+            "type": "string"
+          },
+          "current_inputs": {
+            "type": "object",
+            "properties": {
+              "title": {
+                "type": "string"
+              },
+              "start_text": {
+                "type": "string"
+              },
+              "duration_minutes": {
+                "type": "string"
+              },
+              "window_start": {
+                "type": "string"
+              },
+              "window_end": {
+                "type": "string"
+              },
+              "city_query": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "title",
+              "start_text",
+              "duration_minutes",
+              "window_start",
+              "window_end",
+              "city_query"
+            ],
+            "additionalProperties": false
+          },
+          "change": {
+            "type": "object"
+          },
+          "local_planning_facts": {
+            "type": "array",
+            "maxItems": 5,
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "title": {
+                  "type": "string"
+                },
+                "start": {
+                  "type": "string"
+                },
+                "end": {
+                  "type": "string"
+                },
+                "timezone": {
+                  "type": "string"
+                },
+                "window": {
+                  "type": "string"
+                },
+                "movable": {
+                  "type": "boolean"
+                },
+                "outdoor": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "id",
+                "title",
+                "start",
+                "end",
+                "timezone",
+                "window",
+                "movable",
+                "outdoor"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "task_id",
+          "read_token",
+          "events",
+          "retrieved_at",
+          "data_source",
+          "calendar_scope"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "ripple.slots.search",
+      "description": "Read-only bounded search using the exact read_token/bounds. With linked plans, preserve fixed/unrelated events and enumerate the primary plus at most one movable related plan. Minimum changed count among enumerated placements; related changes are advice only. No personal calendar access.",
+      "implemented_by": "app",
+      "risk": "read",
+      "private_data": true,
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "task_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 96
+          },
+          "read_token": {
+            "type": "string",
+            "minLength": 1
+          },
+          "min_start": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4102444799
+          },
+          "max_end": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4102444799
+          },
+          "max_candidates": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 3
+          }
+        },
+        "required": [
+          "task_id",
+          "read_token",
+          "min_start",
+          "max_end",
+          "max_candidates"
+        ],
+        "additionalProperties": false
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "task_id": {
+            "type": "string"
+          },
+          "search_id": {
+            "type": "string"
+          },
+          "read_token": {
+            "type": "string"
+          },
+          "context_revision": {
+            "type": "integer"
+          },
+          "weather_revision": {
+            "type": "string"
+          },
+          "weather_source": {
+            "type": "string",
+            "enum": [
+              "LIVE",
+              "FIXTURE"
+            ]
+          },
+          "weather_fetched_at": {
+            "type": "number"
+          },
+          "expires_at": {
+            "type": "number"
+          },
+          "calendar_source": {
+            "type": "string",
+            "const": "RIPPLE_LOCAL"
+          },
+          "constraints": {
+            "type": "object"
+          },
+          "candidates": {
+            "type": "array",
+            "maxItems": 3,
+            "items": {
+              "type": "object",
+              "properties": {
+                "candidate_id": {
+                  "type": "string"
+                },
+                "start": {
+                  "type": "integer"
+                },
+                "end": {
+                  "type": "integer"
+                },
+                "time_authority": {
+                  "type": "object"
+                },
+                "checks": {
+                  "type": "object"
+                },
+                "starts": {
+                  "type": "array",
+                  "maxItems": 5,
+                  "items": {
+                    "type": "integer"
+                  }
+                },
+                "related_changes": {
+                  "type": "array",
+                  "maxItems": 1,
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "title": {
+                        "type": "string"
+                      },
+                      "before_start": {
+                        "type": "integer"
+                      },
+                      "before_end": {
+                        "type": "integer"
+                      },
+                      "start": {
+                        "type": "integer"
+                      },
+                      "end": {
+                        "type": "integer"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "title",
+                      "before_start",
+                      "before_end",
+                      "start",
+                      "end"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "metrics": {
+                  "type": "object",
+                  "properties": {
+                    "moved_count": {
+                      "type": "integer"
+                    },
+                    "shift_minutes": {
+                      "type": "number"
+                    },
+                    "priority_minutes": {
+                      "type": "number"
+                    },
+                    "preference_penalty": {
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "moved_count",
+                    "shift_minutes",
+                    "priority_minutes",
+                    "preference_penalty"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "required": [
+                "candidate_id",
+                "start",
+                "end",
+                "time_authority",
+                "checks"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "baseline_candidate_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "search_scope": {
+            "type": "string"
+          },
+          "local_planning_facts": {
+            "type": "array",
+            "maxItems": 5,
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "title": {
+                  "type": "string"
+                },
+                "start": {
+                  "type": "string"
+                },
+                "end": {
+                  "type": "string"
+                },
+                "timezone": {
+                  "type": "string"
+                },
+                "window": {
+                  "type": "string"
+                },
+                "movable": {
+                  "type": "boolean"
+                },
+                "outdoor": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "id",
+                "title",
+                "start",
+                "end",
+                "timezone",
+                "window",
+                "movable",
+                "outdoor"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "task_id",
+          "search_id",
+          "read_token",
+          "context_revision",
+          "weather_revision",
+          "weather_source",
+          "weather_fetched_at",
+          "expires_at",
+          "calendar_source",
+          "constraints",
+          "candidates"
+        ],
+        "additionalProperties": false
+      }
+    }
+  ]
+}

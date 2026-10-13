@@ -1,0 +1,13 @@
+Ripple
+Copyright 2026 yuandhsh-lang
+Licensed under the Apache License, Version 2.0; see LICENSE.
+
+The native bundle contains Ripple OctoScript source, an SVG Ripple icon, and
+actual application screenshots. It does not redistribute the OctoSense host,
+SDK, model weights, or a provider credential. Dependencies used by the retained
+React prototype are recorded in package-lock.json and retain their own licenses.
+
+Weather forecasts: Open-Meteo (https://open-meteo.com/).
+City lookup: Open-Meteo Geocoding, based on GeoNames.
+Forecast data attribution and applicable terms: https://open-meteo.com/en/terms
+The app's Apache license does not replace third-party service terms.

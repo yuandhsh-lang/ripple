@@ -1,0 +1,43 @@
+{
+  "source_hashes": {
+    "bundle\\AGENT.md": "5cb8972da63548646b9194cdb020eef2925d8f43e61b26e674cec683a56e220e",
+    "bundle\\listing.json": "6e1c19291d0be905f84c470591b78bc89d60d6a827874193e53e61c101575064",
+    "bundle\\main.splash": "d14cbb333ac3b299facbce30b862cc91e29edb1d94fda63b11c09ce96bd32bd5",
+    "bundle\\manifest.json": "2c44b56b62a3dc70fc83bcfa7579d34871fbd90f33ad544a9855261cb98354e8",
+    "bundle\\PRIVACY.md": "60dfd6e06ce0d1050a66aefa5a27b5ab9a91fa42322bfe69a2506ba9d4f87482",
+    "bundle\\tools.json": "37a72b0f68039cbf1254bc4d6b90a4d7b0ad3c29305adb80591fead807b3871a",
+    "bundle\\assets\\icon.svg": "87df7c23a4bc5d74014c9dde982c3c847dd50aafe3c86207946107a9d1649280",
+    "bundle\\screenshots\\01-startup.png": "c6ffc68148eb5d90e008363685b04dfe057c70f04572f491938dc7fdab9618ac",
+    "bundle\\screenshots\\02-approval.png": "87e84793e32d76e3da24d3108cd1f9126bb66a639f340c350f6d0e5449b6ff0e",
+    "bundle\\screenshots\\03-completed.png": "6883a1b53066f6ebe2b25769b7646490424d283fce4f069ee513832dee346ee2",
+    "phase1\\business-harness\\src\\lib.rs": "a151f529ff10b3ad33ca988fcca77c6a614c7d7a3e5bf92cb1d774bc1eaa4f58",
+    "phase1\\business-harness\\src\\stage1_tests.rs": "4a1cff1f2a62d1989d0a5b052886aebbeb1224e62707e52aee3f4d1df7b7fae0",
+    "phase1\\business-harness\\src\\stage2_tests.rs": "0c815a5f219a39ccbc454e342641fa3843cf98314e733cfe57252082bf07bd26",
+    "phase1\\business-harness\\src\\stage3_tests.rs": "2d629d185ada60337efb0cdae4cfc5ab3dd08f8d292fd357c63b5e840b30408c",
+    "phase1\\business-harness\\src\\stage4_tests.rs": "906ab66c4aab43a39ba23ff634d3c2bd9e9638bda26173c4ff031e33ce232bf4",
+    "phase1\\business-harness\\src\\ux_tests.rs": "af37b5308829b7709c99b2d64663e9923a4d8c2a7c05a9e4b27e7c4cc89eecde"
+  },
+  "head": "60b0a6755031b4ab8857357240054dd567f8f945",
+  "case_selector": null,
+  "records": [
+    {
+      "command": [
+        "cargo",
+        "+1.97.1",
+        "test",
+        "--locked",
+        "--offline",
+        "--manifest-path",
+        "phase1/business-harness/Cargo.toml",
+        "--",
+        "--test-threads=1",
+        "--nocapture"
+      ],
+      "cwd": "F:\\桌面\\01 项目开发\\黑客松\\Ripple",
+      "at": "2026-10-13T22:34:25.229627+00:00",
+      "exit_code": 0,
+      "log": "F:\\桌面\\01 项目开发\\黑客松\\_audits\\Ripple\\Final-Delivery-20261014-043017\\sdk-root-retry\\0.log",
+      "log_sha256": "393b689a1a76f58e9033651e1a75718def5e762afd6a67681e7b3d7a23b644fe"
+    }
+  ]
+}

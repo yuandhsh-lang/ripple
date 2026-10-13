@@ -2,7 +2,7 @@
 // explicit fixtures; this suite never claims an official native model session.
 #[test]
 fn stage3_group_execution_and_recovery() {
-    let bundle=root().join("stage1/bundle");
+    let bundle=root().join("bundle");
     let mut source=std::fs::read_to_string(bundle.join("main.splash")).unwrap();
     source.push_str(r#"
       fn s3_begin(id){ workflow_started=time_now() agent_task_kind="choice" begin_task(id) move("ANALYZING","Explicit SDK fixture") }
