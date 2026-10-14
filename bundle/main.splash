@@ -91,6 +91,7 @@ let history_queue = []
 let history_pending = false
 let history_failed = false
 let history_sequence = -1
+let history_attempts = 0
 let history_last = ""
 let history_page = 0
 let history_loading = false
@@ -287,37 +288,64 @@ fn approval_changes(p){
 fn history_approval(p){
     history_enqueue({key:p.task_id+":approved" at:whole(time_now()) state:"EXECUTING" label:"用户批准本次变更" authorization:"已明确批准" message:"批准不代表执行成功；结果以独立读回为准。" receipt:p.task_id changes:approval_changes(p)})
 }
+fn history_schedule(delay){
+    if history_queue.len() > 0 && !history_pending { history_pending = true start_timeout(delay,||{ history_pending = false history_flush() }) }
+}
+fn history_retry(){
+    history_failed = true
+    // Only bounded, read-back-checked history writes retry. Never execute plans.
+    if history_attempts < 2 { history_attempts = history_attempts+1 history_schedule(if history_attempts == 1 { 0.1 } else { 0.5 }) }
+}
+fn history_recover(){
+    if history_sequence >= 0 { return true }
+    let raw = read_text("history-index.json")
+    let index = try { if raw == nil || raw.len() > 256 { nil } else { raw.parse_json() } } catch { nil }
+    if raw == nil && fs.exists("history-index.json") { history_failed = true return false }
+    if raw != nil && (!index.is_object() || !field(index,"sequence").is_number() || index.sequence < 0 || index.sequence%1 != 0 || index.sequence > 1000000000) { history_failed = true return false }
+    let sequence = if index == nil { 0 } else { index.sequence }
+    if field(index,"incomplete") == true { history_failed = true }
+    let next_text = read_text("history-"+((sequence+1)%32)+".json")
+    let next = try { if next_text == nil || next_text.len() > 8192 { nil } else { next_text.parse_json() } } catch { nil }
+    // Reconcile just the immediate complete slot left before an interrupted index commit.
+    if next.is_object() && field(next,"sequence") == sequence+1 && field(next,"key").is_string() && valid_epoch(field(next,"at")) && field(next,"label").is_string() && field(next,"message").is_string() && field(next,"changes").is_array() && next.changes.len() <= 5 {
+        let text = {sequence:sequence+1 incomplete:history_failed || field(index,"incomplete") == true}.to_json()
+        if !write_text("history-index.json",text) || read_text("history-index.json") != text { history_failed = true return false }
+        history_sequence = sequence+1
+    } else {
+        if raw == nil && fs.exists("history-1.json") { history_failed = true return false }
+        history_sequence = sequence
+    }
+    true
+}
 fn history_enqueue(row){
-    if row.key == history_last { return } history_last = row.key
-    if history_queue.len() >= 8 { history_failed = true return }
-    history_queue.push(row)
-    if !history_pending { history_pending = true start_timeout(0.05,|| history_flush()) }
+    if row.key == history_last { return }
+    for pending in history_queue { if pending.key == row.key { return } }
+    if history_queue.len() >= 8 || row.to_json().len() > 8192 { history_failed = true return }
+    history_queue.push(row) history_attempts = 0 history_schedule(0.01)
 }
 fn history_flush(){
-    history_pending = false
-    if history_queue.len() == 0 { return }
-    if busy || loading { return }
-    let rows = [history_queue[0]] let rest = [] for i in history_queue.len() { if i > 0 { rest.push(history_queue[i]) } } history_queue = rest
-    if history_sequence < 0 {
-        let raw = read_text("history-index.json") let index = try { if raw == nil || raw.len() > 256 { nil } else { raw.parse_json() } } catch { nil }
-        if raw == nil && fs.exists("history-1.json") { history_failed = true return }
-        if raw != nil && (!index.is_object() || !field(index,"sequence").is_number() || index.sequence < 0 || index.sequence%1 != 0 || index.sequence > 1000000000) { history_failed = true return }
-        history_sequence = if index == nil { 0 } else { index.sequence }
-    }
-    for row in rows {
-        let last = read_json("history-"+(history_sequence%32)+".json")
-        if last.is_object() && field(last,"key") == row.key { continue }
+    if history_queue.len() == 0 || busy || loading { return }
+    if !history_recover() { history_retry() return }
+    let row = history_queue[0]
+    let last = read_json("history-"+(history_sequence%32)+".json")
+    if !last.is_object() || field(last,"key") != row.key {
         let number = history_sequence+1 row.sequence = number let text = row.to_json()
-        if text.len() > 8192 || !write_text("history-"+(number%32)+".json",text) || read_text("history-"+(number%32)+".json") != text || !write_text("history-index.json",{sequence:number incomplete:history_failed}.to_json()) { history_failed = true return }
+        let index = {sequence:number incomplete:history_failed}.to_json()
+        if number > 1000000000 || !write_text("history-"+(number%32)+".json",text) || read_text("history-"+(number%32)+".json") != text || !write_text("history-index.json",index) || read_text("history-index.json") != index { history_retry() return }
         history_sequence = number
     }
-    if history_queue.len() > 0 { history_pending = true start_timeout(0.05,|| history_flush()) }
+    // A row leaves memory only after both the slot and index are confirmed.
+    history_last = row.key history_attempts = 0
+    let rest = [] for i in history_queue.len() { if i > 0 { rest.push(history_queue[i]) } } history_queue = rest
+    history_schedule(0.01)
 }
 fn open_history(){
     if history_loading { return }
     history_open = !history_open
     if !history_open { ui.history_panel.render() return }
     history_rows = [] history_page = 0 history_message = "正在读取最近历史…" history_loading = true ui.history_panel.render()
+    history_attempts = 0 history_schedule(0.01)
+    if !history_recover() { history_loading = false history_message = "历史索引无法确认，记录不完整；请核对最近执行收据。" ui.history_panel.render() return }
     let index_raw = read_text("history-index.json")
     let index = try { if index_raw == nil || index_raw.len() > 256 { nil } else { index_raw.parse_json() } } catch { nil }
     if index == nil { history_loading = false history_message = "暂无可读取的历史摘要。不会为旧操作补造记录；可核对最近执行收据。" if fs.exists("history-index.json") || fs.exists("history-1.json") || history_failed { history_message = "历史索引缺失或损坏，记录不完整；执行结果请以独立读回为准。" } ui.history_panel.render() return }
@@ -325,6 +353,7 @@ fn open_history(){
     if !count.is_number() || count < 0 || count%1 != 0 || count > 1000000000 { history_loading = false history_message = "历史索引损坏，保留原文件；请核对最近执行收据。" ui.history_panel.render() return }
     history_message = "最近 32 条摘要 · 仅记录此功能启用后的操作，不是不可篡改台账。"
     if field(index,"incomplete") == true || history_failed { history_message = history_message+" 部分历史未成功保存。" }
+    if history_queue.len() > 0 { history_message = history_message+" 另有 "+history_queue.len()+" 条摘要待保存，可稍后重新打开核对。" }
     history_read_step(count,0)
 }
 fn history_read_step(number,total){
@@ -351,7 +380,7 @@ fn repaint(){
 fn move(state,text){
     status = state message = text if state != "COMPLETED" { verified = false }
     try { history_note(state,text) } catch { history_failed = true }
-    if !busy && !loading && history_queue.len() > 0 && !history_pending { history_pending = true start_timeout(0.05,|| history_flush()) }
+    if !busy && !loading { history_schedule(0.01) }
     // Coalesce presentation after the business callback returns; never extend the VM budget.
     if !repaint_pending { repaint_pending = true start_timeout(0.01,||{ repaint_pending = false repaint() }) }
     if !glance_update_pending { glance_update_pending = true start_timeout(0.1,||{ glance_update_pending = false sync_glance() }) }
@@ -1083,7 +1112,7 @@ fn boot_state(){
     repaint()
     proposal = nil execution_group = nil execution_result = nil busy = false
     let journal_text = read_text("execution.json")
-    let journal = read_json("execution.json")
+    let journal = try { if journal_text == nil { nil } else { journal_text.parse_json() } } catch { nil }
     let group = journal.is_object() && field(journal,"kind") == "RESCHEDULE_GROUP"
     group_receipt_text = journal_text
     event = read_event()

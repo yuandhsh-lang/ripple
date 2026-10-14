@@ -68,3 +68,31 @@ fn bounded_history_restart_and_corruption(){
  std::fs::write(jail.join("history-1.json"),"{broken}").unwrap();invoke(&mut cx,&card,id!(open_history),&[]);invoke(&mut cx,&card,id!(open_history),&[]);invoke(&mut cx,&card,id!(ic_report),&[]);let corrupt=read(jail.join("ic-state.json"));assert!(corrupt["history_message"].as_str().unwrap().contains("损坏"));assert_eq!(corrupt["history"].as_array().unwrap().len(),1);assert!(!jail.join("schedule.txt").exists());assert!(!jail.join("execution.json").exists());
  write("history.json",&json!({"classification":"ACTUAL_VM_CONTROLLED_STATE_TRANSITIONS_NOT_REAL_APPROVAL","normal":state,"corrupt":corrupt,"zero_execution_writes":true}));drop(reg);
 }
+
+#[test]
+fn history_write_failure_keeps_queue_and_recovers_orphan_slot(){
+ let b=root().join("bundle");let mut source=ics_source();
+ source.push_str(r#"
+ fn hf_enqueue(key){ history_enqueue({key:key at:whole(time_now()) state:"DECLINED" label:"Controlled refusal" authorization:"未授权" message:"SDK fault fixture; no schedule change" receipt:"" changes:[]}) }
+ fn hf_report(){ fs.write("hf-state.json",{queued:history_queue.len() sequence:history_sequence failed:history_failed pending:history_pending status:status verified:verified}.to_json()) }
+ fn hf_restart(){ history_sequence=-1 history_last="" history_queue=[] history_pending=false history_open=false history_loading=false }
+ "#);
+ let (mut cx,_ui,card,reg,jail)=fixture("history-write-recovery",&source,&b);
+ let index=jail.join("history-index.json");std::fs::write(&index,r#"{"sequence":0,"incomplete":false}"#).unwrap();
+ let mut permissions=index.metadata().unwrap().permissions();permissions.set_readonly(true);std::fs::set_permissions(&index,permissions).unwrap();
+ invoke(&mut cx,&card,id!(hf_enqueue),&["actual-readonly-failure"]);invoke(&mut cx,&card,id!(history_flush),&[]);invoke(&mut cx,&card,id!(hf_report),&[]);
+ let failed=read(jail.join("hf-state.json"));
+ let mut permissions=index.metadata().unwrap().permissions();permissions.set_readonly(false);std::fs::set_permissions(&index,permissions).unwrap();
+ assert_eq!(failed["queued"],1,"failed index commit must not discard the pending history row");
+ assert_eq!(read(&index)["sequence"],0);assert_eq!(read(jail.join("history-1.json"))["key"],"actual-readonly-failure");
+ invoke(&mut cx,&card,id!(history_flush),&[]);invoke(&mut cx,&card,id!(hf_report),&[]);
+ assert_eq!(read(&index)["sequence"],1);assert_eq!(read(jail.join("hf-state.json"))["queued"],0);
+ invoke(&mut cx,&card,id!(hf_enqueue),&["actual-readonly-failure"]);invoke(&mut cx,&card,id!(history_flush),&[]);assert_eq!(read(&index)["sequence"],1);
+ // Controlled crash boundary: the complete next slot exists, but its index commit did not.
+ let mut orphan=read(jail.join("history-1.json"));orphan["key"]=json!("orphan-second-refusal");orphan["sequence"]=json!(2);std::fs::write(jail.join("history-2.json"),orphan.to_string()).unwrap();
+ invoke(&mut cx,&card,id!(hf_restart),&[]);invoke(&mut cx,&card,id!(open_history),&[]);invoke(&mut cx,&card,id!(ic_report),&[]);
+ assert_eq!(read(&index)["sequence"],2,"opening history must reconcile only the valid immediate orphan slot");
+ assert_eq!(read(jail.join("ic-state.json"))["history"].as_array().unwrap().len(),2);
+ assert!(!jail.join("schedule.txt").exists());assert!(!jail.join("execution.json").exists());
+ write("history-write-recovery.json",&json!({"classification":"ACTUAL_SDK_WINDOWS_READONLY_FAILURE_AND_CONTROLLED_CRASH_BOUNDARY","failed":failed,"recovered_index":read(&index),"history":read(jail.join("ic-state.json"))["history"],"zero_schedule_and_execution_writes":true}));drop(reg);
+}

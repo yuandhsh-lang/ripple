@@ -12,6 +12,7 @@ mod tests {
         // The official registry is thread-local and append-only. A test creates
         // many Cx instances on one thread; register its host vocabulary once.
         static HOST_TOOLS_READY: std::cell::Cell<bool> = const { std::cell::Cell::new(false) };
+        static INIT_TRACE_READY: std::cell::Cell<bool> = const { std::cell::Cell::new(false) };
     }
     fn root() -> PathBuf { PathBuf::from(std::env::var("RIPPLE_TEST_ROOT").unwrap()) }
     fn evidence() -> PathBuf { PathBuf::from(std::env::var("RIPPLE_TEST_EVIDENCE").unwrap()) }
@@ -38,8 +39,24 @@ mod tests {
         card.set_host_tag(&mut cx,Some("ripple".into()));
         card.set_sandbox_dir(&mut cx,Some(jail.clone()));
         card.set_policy(&mut cx,Some(vec![]),Some(2_000_000));
+        // Opt-in diagnosis only; the ordinary strict suite uses the exact app source.
+        let mut traced=String::new();
+        if std::env::var_os("RIPPLE_INIT_PHASES").is_some() {
+            INIT_TRACE_READY.with(|ready| { if !ready.replace(true) { makepad_widgets::widget_async::register_splash_isolate_mod(init_probe_module); } });
+            let mut app=source.to_string();
+            if let Ok(path)=std::env::var("RIPPLE_INIT_BASELINE") {
+                let current=std::fs::read_to_string(root().join("bundle/main.splash")).unwrap();
+                app=std::fs::read_to_string(path).unwrap()+source.strip_prefix(&current).expect("preserve test hooks");
+            }
+            traced=format!("mod.ripple_init_probe.mark(\"first_statement_after_parse\")\n{app}");
+            for (anchor,phase) in [("fn whole(t)","before_date_helpers"),("let Action =","before_ui_prototypes"),("ui := SolidView","before_ui_tree"),("\nstart_timeout(0.05","after_ui_tree_before_boot_timer")] {
+                traced=traced.replacen(anchor,&format!("mod.ripple_init_probe.mark(\"{phase}\")\n{anchor}"),1);
+            }
+            INIT_MARKS.with(|m|m.borrow_mut().clear());
+        }
         let initialization_started=std::time::Instant::now();
-        card.set_text(&mut cx,source);
+        card.set_text(&mut cx,if traced.is_empty(){source}else{&traced});
+        if !traced.is_empty() { eprintln!("RIPPLE_INIT_PHASE {}",json!({"label":label,"marks":INIT_MARKS.with(|m|m.borrow().clone()),"total_us":initialization_started.elapsed().as_micros()})); }
         if std::env::var_os("RIPPLE_TRACE_CALLS").is_some() { eprintln!("RIPPLE_INIT label={label} source_bytes={} elapsed_us={}",source.len(),initialization_started.elapsed().as_micros()); }
         widget_tree::set_ui_root(&mut cx,&ui);
         // Mount/draw the real widget tree, as official card_layout_tests do.

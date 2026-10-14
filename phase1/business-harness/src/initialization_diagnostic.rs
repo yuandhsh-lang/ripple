@@ -2,6 +2,19 @@
 thread_local! {
     static INIT_MARKS: std::cell::RefCell<Vec<Value>> = const { std::cell::RefCell::new(Vec::new()) };
 }
+#[cfg(windows)]
+fn init_thread_cpu_ms() -> Option<f64> {
+    #[link(name="kernel32")]
+    unsafe extern "system" {
+        fn GetCurrentThread() -> *mut std::ffi::c_void;
+        fn GetThreadTimes(thread:*mut std::ffi::c_void,created:*mut u64,exit:*mut u64,kernel:*mut u64,user:*mut u64) -> i32;
+    }
+    let (mut created,mut exit,mut kernel,mut user)=(0,0,0,0);
+    unsafe { if GetThreadTimes(GetCurrentThread(),&mut created,&mut exit,&mut kernel,&mut user)==0 { return None; } }
+    Some((kernel+user) as f64/10000.0)
+}
+#[cfg(not(windows))]
+fn init_thread_cpu_ms() -> Option<f64> { None }
 fn init_probe_module(vm: &mut ScriptVm) {
     let module = vm.new_module(id!(ripple_init_probe));
     vm.add_method(module, id_lut!(mark), script_args_def!(phase=NIL), |vm,args| {
@@ -9,7 +22,7 @@ fn init_probe_module(vm: &mut ScriptVm) {
         vm.string_with(v,|_,s|phase.push_str(s));
         let now=makepad_widgets::makepad_script::ScriptRunBudget::from_durations(Duration::ZERO,Duration::ZERO,512).hard_deadline;
         let budget=vm.bx.run_budget.unwrap();
-        INIT_MARKS.with(|marks| marks.borrow_mut().push(json!({"phase":phase,"entry_elapsed_ms":(now-budget.hard_deadline+0.064)*1000.0,"instructions_until_sample":budget.instructions_until_sample})));
+        INIT_MARKS.with(|marks| marks.borrow_mut().push(json!({"phase":phase,"entry_elapsed_ms":(now-budget.hard_deadline+0.064)*1000.0,"thread_cpu_ms":init_thread_cpu_ms(),"instructions_until_sample":budget.instructions_until_sample})));
         NIL
     });
 }
@@ -42,10 +55,10 @@ fn initialization_phase_diagnostic() {
             card.set_host_tag(&mut cx,Some("ripple".into()));card.set_sandbox_dir(&mut cx,Some(jail.clone()));card.set_policy(&mut cx,Some(vec![]),Some(2_000_000));
             for kind in ["cold_isolate_full_parse","warm_isolate_append_re_evaluation"] {
                 INIT_MARKS.with(|m|m.borrow_mut().clear());
-                let start=std::time::Instant::now();card.set_text(&mut cx,&source);let total=start.elapsed().as_micros();
+                let cpu_start=init_thread_cpu_ms();let start=std::time::Instant::now();card.set_text(&mut cx,&source);let total=start.elapsed().as_micros();let cpu_end=init_thread_cpu_ms();
                 let marks=INIT_MARKS.with(|m|m.borrow().clone());
                 let files:Vec<_>=std::fs::read_dir(&jail).unwrap().map(|x|x.unwrap().file_name().to_string_lossy().into_owned()).collect();
-                let row=json!({"iteration":iteration,"case":case["name"],"kind":kind,"set_text_us":total,"marks":marks,"files_before_boot":files});
+                let row=json!({"iteration":iteration,"case":case["name"],"kind":kind,"set_text_us":total,"thread_cpu_start_ms":cpu_start,"thread_cpu_end_ms":cpu_end,"marks":marks,"files_before_boot":files});
                 eprintln!("INIT_PHASE_RESULT {row}");results.push(row);
                 assert!(marks.iter().any(|m|m["phase"]=="after_ui_tree_before_boot_timer"),"initialization must reach the end marker");
                 if config["maximum_snapshot"].as_bool()==Some(true) && case["name"]=="candidate" {
