@@ -16,4 +16,4 @@
 
 7. **Agent 范围与工具风险？** 一个 read-only Agent、两个 implemented_by=app/risk=read/private_data=true 的工具 `ripple.context.read` 和 `ripple.slots.search`。返回相关计划、验证天气和合法候选，无发送、删除、消费、外部共享或写日程工具，未设置 shareable。Glance 由应用展示层调用，而非给模型执行权限。已有日程变化经原整组预览和显式批准后由唯一执行路径写入，不能将协商或通知点击当授权。无需 confirm=app 工具，但真实 UI 审批仍保护执行。
 
-8. **建议路由：human-review。** 此扫描回答由开发者完成，不冒充官方 reviewer 接纳。请审核未关闭 SDK 间歇预算风险、暖启动通知 route 限制、Provider 及天气依赖。GitHub attestation、下载正式包复验、正式 MP4 尚未完成时，不能批准为全部交付通过。历史 v0.1.0 初赛评审记录独立保留。
+8. **建议路由：human-review。** 此扫描回答由开发者完成，不冒充官方 reviewer 接纳。请审核未关闭 SDK 间歇预算风险、暖启动通知 route 限制、Provider 及天气依赖。GitHub attestation、下载正式包复验和实机 MP4 已完成，见 [当前验收](../docs/release/VALIDATION.md) 与 [媒体清单](../docs/release/PRESENTATION.md)。这些结果不代替 Hub 人工审核。历史 v0.1.0 初赛评审记录独立保留。

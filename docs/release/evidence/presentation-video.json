@@ -1,0 +1,268 @@
+{
+  "version": "0.6.4",
+  "app_commit": "7e150404a3073a77688d5e1670de018083fe82a4",
+  "created": "2026-10-14",
+  "video": "Ripple-0.6.4-Product-Demo.mp4",
+  "sha256": "c136c8059f38d16258512f7cc15dbe6c06e2f94750443cffced7bb9b84c4f7ab",
+  "bytes": 3907838,
+  "duration": 114.0,
+  "width": 1920,
+  "height": 1080,
+  "fps": "30/1",
+  "frames": 3420,
+  "video_codec": "h264",
+  "audio_codec": "aac",
+  "audio_sample_rate": 48000,
+  "decode_exit": 0,
+  "playback": {
+    "started": "2026-10-14T08:47:21.7726579+08:00",
+    "ended": "2026-10-14T08:49:16.8504087+08:00",
+    "exit_code": 0
+  },
+  "visual_review": "All 22 scene midpoints and playback samples checked; only native Ripple and Glance content, no terminal/browser/editor insertion. Input, approval and read-back retained. No human participant usability study.",
+  "diagnostics": {
+    "black_intervals": [],
+    "freeze_detector_intervals": [
+      {
+        "start": 51.3,
+        "duration": 7.7,
+        "classification": "Actual unchanged AI no-solution explanation with narration and reading time; not an observed capture stall."
+      }
+    ],
+    "long_audio_silence_over_8s": []
+  },
+  "source": "Windows Graphics Capture; one event and installation, followed by same-event restart. Source VFR normalized to 30fps preserving timestamps. No speedup.",
+  "source_files": [
+    {
+      "name": "presentation-raw.mp4",
+      "sha256": "e585af7e1f2752a2904f48ba3bdb92541e1768e668ce3a39be1d9f23cd8cdcca"
+    },
+    {
+      "name": "restart-tail.mp4",
+      "sha256": "f308eb017dd4d21d9ba19ea4028c2558f1b0f80cb313405c98191986b5c14a7f"
+    }
+  ],
+  "narration": "Local Microsoft Huihui Desktop via System.Speech, no music or voice cloning.",
+  "cuts": [
+    {
+      "index": 0,
+      "source": "presentation-raw.mp4",
+      "start": 3,
+      "duration": 6,
+      "crop": "max",
+      "caption": "从发现变化，到完成改期",
+      "voice": "Ripple，帮你协调天气和日程变化。",
+      "timeline": 0
+    },
+    {
+      "index": 1,
+      "source": "presentation-raw.mp4",
+      "start": 29.0,
+      "duration": 2,
+      "crop": "max",
+      "caption": "一句话安排计划",
+      "voice": "一句话，说清骑行、会议和交流。",
+      "timeline": 6
+    },
+    {
+      "index": 2,
+      "source": "presentation-raw.mp4",
+      "start": 31.1,
+      "duration": 3,
+      "crop": "max",
+      "caption": "交给 AI 整理草稿",
+      "voice": "",
+      "timeline": 8
+    },
+    {
+      "index": 3,
+      "source": "presentation-raw.mp4",
+      "start": 87.7,
+      "duration": 7,
+      "crop": "max",
+      "caption": "先核对草稿，还没有保存",
+      "voice": "AI先整理草稿，时间和可调整条件由我核对。",
+      "timeline": 11
+    },
+    {
+      "index": 4,
+      "source": "presentation-raw.mp4",
+      "start": 95,
+      "duration": 6,
+      "crop": "max",
+      "caption": "固定与可调整，分别确认",
+      "voice": "固定会议保留，交流活动可以调整。",
+      "timeline": 18
+    },
+    {
+      "index": 5,
+      "source": "presentation-raw.mp4",
+      "start": 143,
+      "duration": 7,
+      "crop": "max",
+      "caption": "确认城市：北京 · 北京市",
+      "voice": "选择北京，确认城市，然后保存计划。",
+      "timeline": 24
+    },
+    {
+      "index": 6,
+      "source": "presentation-raw.mp4",
+      "start": 150.5,
+      "duration": 3,
+      "crop": "max",
+      "caption": "明确确认保存",
+      "voice": "",
+      "timeline": 31
+    },
+    {
+      "index": 7,
+      "source": "presentation-raw.mp4",
+      "start": 157,
+      "duration": 4,
+      "crop": "max",
+      "caption": "已保存的四项安排",
+      "voice": "四项安排，已按时间保存。",
+      "timeline": 34
+    },
+    {
+      "index": 8,
+      "source": "presentation-raw.mp4",
+      "start": 164,
+      "duration": 6,
+      "crop": "max",
+      "caption": "LIVE：此时原时段没有降雨风险",
+      "voice": "先访问真实天气接口，此时没有降雨风险。",
+      "timeline": 38
+    },
+    {
+      "index": 9,
+      "source": "presentation-raw.mp4",
+      "start": 205,
+      "duration": 7,
+      "crop": "glance",
+      "caption": "以下天气变化为受控重放 · FIXTURE",
+      "voice": "接下来重放降雨快照，验证天气变化。",
+      "timeline": 44
+    },
+    {
+      "index": 10,
+      "source": "presentation-raw.mp4",
+      "start": 220,
+      "duration": 8,
+      "crop": "wide",
+      "caption": "真实 AI 调用工具：原窗口内没有合法候选",
+      "voice": "原生提醒出现。AI调用工具，确认原窗口内无解。",
+      "timeline": 51
+    },
+    {
+      "index": 11,
+      "source": "presentation-raw.mp4",
+      "start": 282.5,
+      "duration": 5,
+      "crop": "wide",
+      "caption": "点击卡片箭头，打开 Ripple",
+      "voice": "从卡片箭头回到应用。",
+      "timeline": 59
+    },
+    {
+      "index": 12,
+      "source": "presentation-raw.mp4",
+      "start": 295,
+      "duration": 4,
+      "crop": "normal",
+      "caption": "暖态路径：再点“查看系统提醒状态”",
+      "voice": "暖态下，再查看提醒状态。",
+      "timeline": 64
+    },
+    {
+      "index": 13,
+      "source": "presentation-raw.mp4",
+      "start": 299.3,
+      "duration": 3,
+      "crop": "normal",
+      "caption": "选择补充条件，而非批准改期",
+      "voice": "我选择补充时间。",
+      "timeline": 68
+    },
+    {
+      "index": 14,
+      "source": "presentation-raw.mp4",
+      "start": 318.5,
+      "duration": 6,
+      "crop": "normal",
+      "caption": "新允许窗口：14:00–15:00",
+      "voice": "把可调整时间改为下午两点到三点。",
+      "timeline": 71
+    },
+    {
+      "index": 15,
+      "source": "presentation-raw.mp4",
+      "start": 331.5,
+      "duration": 6,
+      "crop": "normal",
+      "caption": "确认新条件 · 原计划尚未改期",
+      "voice": "这只确认新条件，改期仍须另行批准。",
+      "timeline": 77
+    },
+    {
+      "index": 16,
+      "source": "presentation-raw.mp4",
+      "start": 357.7,
+      "duration": 6,
+      "crop": "wide",
+      "caption": "重新规划：建议只调整两项",
+      "voice": "AI重新搜索，给出通过检查的两项调整。",
+      "timeline": 83
+    },
+    {
+      "index": 17,
+      "source": "presentation-raw.mp4",
+      "start": 388.5,
+      "duration": 6,
+      "crop": "normal",
+      "caption": "核对原时间、新时间和固定会议",
+      "voice": "交流提前到中午，骑行改到两点。",
+      "timeline": 89
+    },
+    {
+      "index": 18,
+      "source": "presentation-raw.mp4",
+      "start": 397,
+      "duration": 4,
+      "crop": "detail",
+      "caption": "单独批准整个变更集合",
+      "voice": "核对变更，单独批准。",
+      "timeline": 95
+    },
+    {
+      "index": 19,
+      "source": "presentation-raw.mp4",
+      "start": 401,
+      "duration": 4,
+      "crop": "normal",
+      "caption": "逐项写入，再独立读回",
+      "voice": "逐项写入，独立读回。",
+      "timeline": 99
+    },
+    {
+      "index": 20,
+      "source": "presentation-raw.mp4",
+      "start": 531.8,
+      "duration": 5,
+      "crop": "normal",
+      "caption": "两项已核验，调整完成",
+      "voice": "两项均已核验，才显示调整完成。",
+      "timeline": 103
+    },
+    {
+      "index": 21,
+      "source": "restart-tail.mp4",
+      "start": 1,
+      "duration": 6,
+      "crop": "wide",
+      "caption": "同一任务重启后：计划保留，提醒已撤回",
+      "voice": "重启后，计划仍在，风险提醒已撤回。",
+      "timeline": 108
+    }
+  ]
+}

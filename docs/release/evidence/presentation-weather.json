@@ -1,0 +1,2443 @@
+{
+  "classification": "DOWNLOADED_RELEASE_REAL_LIVE_FETCH_THEN_LABELLED_WEATHER_ONLY_REPLAY",
+  "before_live": {
+    "source": "LIVE",
+    "provider": "Open-Meteo",
+    "timezone": "GMT",
+    "utc_offset_seconds": 0,
+    "request_lat": 39.9075,
+    "request_lon": 116.39723,
+    "fetched_at": 1791937516.2272704,
+    "revision": "live-1791937516.2272706",
+    "hours": [
+      {
+        "start": 1791936000,
+        "end": 1791939600,
+        "code": 0,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1791939600,
+        "end": 1791943200,
+        "code": 0,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1791943200,
+        "end": 1791946800,
+        "code": 0,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1791946800,
+        "end": 1791950400,
+        "code": 0,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1791950400,
+        "end": 1791954000,
+        "code": 2,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1791954000,
+        "end": 1791957600,
+        "code": 2,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1791957600,
+        "end": 1791961200,
+        "code": 2,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1791961200,
+        "end": 1791964800,
+        "code": 0,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1791964800,
+        "end": 1791968400,
+        "code": 0,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1791968400,
+        "end": 1791972000,
+        "code": 1,
+        "rain": 0,
+        "chance": 1
+      },
+      {
+        "start": 1791972000,
+        "end": 1791975600,
+        "code": 1,
+        "rain": 0,
+        "chance": 3
+      },
+      {
+        "start": 1791975600,
+        "end": 1791979200,
+        "code": 0,
+        "rain": 0,
+        "chance": 4
+      },
+      {
+        "start": 1791979200,
+        "end": 1791982800,
+        "code": 0,
+        "rain": 0,
+        "chance": 3
+      },
+      {
+        "start": 1791982800,
+        "end": 1791986400,
+        "code": 0,
+        "rain": 0,
+        "chance": 1
+      },
+      {
+        "start": 1791986400,
+        "end": 1791990000,
+        "code": 0,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1791990000,
+        "end": 1791993600,
+        "code": 0,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1791993600,
+        "end": 1791997200,
+        "code": 0,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1791997200,
+        "end": 1792000800,
+        "code": 0,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792000800,
+        "end": 1792004400,
+        "code": 0,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792004400,
+        "end": 1792008000,
+        "code": 0,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792008000,
+        "end": 1792011600,
+        "code": 0,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792011600,
+        "end": 1792015200,
+        "code": 0,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792015200,
+        "end": 1792018800,
+        "code": 0,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792018800,
+        "end": 1792022400,
+        "code": 0,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792022400,
+        "end": 1792026000,
+        "code": 0,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792026000,
+        "end": 1792029600,
+        "code": 0,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792029600,
+        "end": 1792033200,
+        "code": 0,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792033200,
+        "end": 1792036800,
+        "code": 0,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792036800,
+        "end": 1792040400,
+        "code": 0,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792040400,
+        "end": 1792044000,
+        "code": 0,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792044000,
+        "end": 1792047600,
+        "code": 0,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792047600,
+        "end": 1792051200,
+        "code": 0,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792051200,
+        "end": 1792054800,
+        "code": 0,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792054800,
+        "end": 1792058400,
+        "code": 0,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792058400,
+        "end": 1792062000,
+        "code": 0,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792062000,
+        "end": 1792065600,
+        "code": 0,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792065600,
+        "end": 1792069200,
+        "code": 1,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792069200,
+        "end": 1792072800,
+        "code": 1,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792072800,
+        "end": 1792076400,
+        "code": 1,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792076400,
+        "end": 1792080000,
+        "code": 3,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792080000,
+        "end": 1792083600,
+        "code": 3,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792083600,
+        "end": 1792087200,
+        "code": 3,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792087200,
+        "end": 1792090800,
+        "code": 3,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792090800,
+        "end": 1792094400,
+        "code": 3,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792094400,
+        "end": 1792098000,
+        "code": 3,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792098000,
+        "end": 1792101600,
+        "code": 3,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792101600,
+        "end": 1792105200,
+        "code": 3,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792105200,
+        "end": 1792108800,
+        "code": 3,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792108800,
+        "end": 1792112400,
+        "code": 3,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792112400,
+        "end": 1792116000,
+        "code": 3,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792116000,
+        "end": 1792119600,
+        "code": 3,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792119600,
+        "end": 1792123200,
+        "code": 3,
+        "rain": 0,
+        "chance": 1
+      },
+      {
+        "start": 1792123200,
+        "end": 1792126800,
+        "code": 3,
+        "rain": 0,
+        "chance": 3
+      },
+      {
+        "start": 1792126800,
+        "end": 1792130400,
+        "code": 3,
+        "rain": 0,
+        "chance": 6
+      },
+      {
+        "start": 1792130400,
+        "end": 1792134000,
+        "code": 3,
+        "rain": 0,
+        "chance": 10
+      },
+      {
+        "start": 1792134000,
+        "end": 1792137600,
+        "code": 3,
+        "rain": 0,
+        "chance": 14
+      },
+      {
+        "start": 1792137600,
+        "end": 1792141200,
+        "code": 3,
+        "rain": 0,
+        "chance": 20
+      },
+      {
+        "start": 1792141200,
+        "end": 1792144800,
+        "code": 3,
+        "rain": 0,
+        "chance": 30
+      },
+      {
+        "start": 1792144800,
+        "end": 1792148400,
+        "code": 3,
+        "rain": 0,
+        "chance": 41
+      },
+      {
+        "start": 1792148400,
+        "end": 1792152000,
+        "code": 3,
+        "rain": 0,
+        "chance": 49
+      },
+      {
+        "start": 1792152000,
+        "end": 1792155600,
+        "code": 3,
+        "rain": 0.1,
+        "chance": 50
+      },
+      {
+        "start": 1792155600,
+        "end": 1792159200,
+        "code": 51,
+        "rain": 0.5,
+        "chance": 49
+      },
+      {
+        "start": 1792159200,
+        "end": 1792162800,
+        "code": 53,
+        "rain": 0.2,
+        "chance": 49
+      },
+      {
+        "start": 1792162800,
+        "end": 1792166400,
+        "code": 51,
+        "rain": 0.3,
+        "chance": 54
+      },
+      {
+        "start": 1792166400,
+        "end": 1792170000,
+        "code": 51,
+        "rain": 1.5,
+        "chance": 61
+      },
+      {
+        "start": 1792170000,
+        "end": 1792173600,
+        "code": 80,
+        "rain": 1.1,
+        "chance": 67
+      },
+      {
+        "start": 1792173600,
+        "end": 1792177200,
+        "code": 55,
+        "rain": 0.3,
+        "chance": 71
+      },
+      {
+        "start": 1792177200,
+        "end": 1792180800,
+        "code": 51,
+        "rain": 0,
+        "chance": 74
+      },
+      {
+        "start": 1792180800,
+        "end": 1792184400,
+        "code": 3,
+        "rain": 0,
+        "chance": 78
+      },
+      {
+        "start": 1792184400,
+        "end": 1792188000,
+        "code": 3,
+        "rain": 0.2,
+        "chance": 83
+      },
+      {
+        "start": 1792188000,
+        "end": 1792191600,
+        "code": 51,
+        "rain": 0.2,
+        "chance": 90
+      },
+      {
+        "start": 1792191600,
+        "end": 1792195200,
+        "code": 51,
+        "rain": 1.2,
+        "chance": 94
+      },
+      {
+        "start": 1792195200,
+        "end": 1792198800,
+        "code": 55,
+        "rain": 4.4,
+        "chance": 96
+      },
+      {
+        "start": 1792198800,
+        "end": 1792202400,
+        "code": 81,
+        "rain": 4.9,
+        "chance": 96
+      },
+      {
+        "start": 1792202400,
+        "end": 1792206000,
+        "code": 81,
+        "rain": 4.7,
+        "chance": 96
+      },
+      {
+        "start": 1792206000,
+        "end": 1792209600,
+        "code": 81,
+        "rain": 4.1,
+        "chance": 97
+      },
+      {
+        "start": 1792209600,
+        "end": 1792213200,
+        "code": 63,
+        "rain": 6.9,
+        "chance": 97
+      },
+      {
+        "start": 1792213200,
+        "end": 1792216800,
+        "code": 81,
+        "rain": 5.6,
+        "chance": 98
+      },
+      {
+        "start": 1792216800,
+        "end": 1792220400,
+        "code": 81,
+        "rain": 5.9,
+        "chance": 99
+      },
+      {
+        "start": 1792220400,
+        "end": 1792224000,
+        "code": 81,
+        "rain": 5.9,
+        "chance": 100
+      },
+      {
+        "start": 1792224000,
+        "end": 1792227600,
+        "code": 81,
+        "rain": 5.9,
+        "chance": 100
+      },
+      {
+        "start": 1792227600,
+        "end": 1792231200,
+        "code": 81,
+        "rain": 1.1,
+        "chance": 99
+      },
+      {
+        "start": 1792231200,
+        "end": 1792234800,
+        "code": 55,
+        "rain": 1.1,
+        "chance": 96
+      },
+      {
+        "start": 1792234800,
+        "end": 1792238400,
+        "code": 55,
+        "rain": 1.1,
+        "chance": 90
+      },
+      {
+        "start": 1792238400,
+        "end": 1792242000,
+        "code": 55,
+        "rain": 0,
+        "chance": 80
+      },
+      {
+        "start": 1792242000,
+        "end": 1792245600,
+        "code": 2,
+        "rain": 0,
+        "chance": 67
+      },
+      {
+        "start": 1792245600,
+        "end": 1792249200,
+        "code": 1,
+        "rain": 0,
+        "chance": 53
+      },
+      {
+        "start": 1792249200,
+        "end": 1792252800,
+        "code": 0,
+        "rain": 0,
+        "chance": 37
+      },
+      {
+        "start": 1792252800,
+        "end": 1792256400,
+        "code": 0,
+        "rain": 0,
+        "chance": 19
+      },
+      {
+        "start": 1792256400,
+        "end": 1792260000,
+        "code": 0,
+        "rain": 0,
+        "chance": 6
+      },
+      {
+        "start": 1792260000,
+        "end": 1792263600,
+        "code": 0,
+        "rain": 0,
+        "chance": 1
+      },
+      {
+        "start": 1792263600,
+        "end": 1792267200,
+        "code": 0,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792267200,
+        "end": 1792270800,
+        "code": 1,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792270800,
+        "end": 1792274400,
+        "code": 2,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792274400,
+        "end": 1792278000,
+        "code": 1,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792278000,
+        "end": 1792281600,
+        "code": 1,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792281600,
+        "end": 1792285200,
+        "code": 0,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792285200,
+        "end": 1792288800,
+        "code": 1,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792288800,
+        "end": 1792292400,
+        "code": 3,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792292400,
+        "end": 1792296000,
+        "code": 3,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792296000,
+        "end": 1792299600,
+        "code": 2,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792299600,
+        "end": 1792303200,
+        "code": 1,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792303200,
+        "end": 1792306800,
+        "code": 0,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792306800,
+        "end": 1792310400,
+        "code": 0,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792310400,
+        "end": 1792314000,
+        "code": 0,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792314000,
+        "end": 1792317600,
+        "code": 0,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792317600,
+        "end": 1792321200,
+        "code": 0,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792321200,
+        "end": 1792324800,
+        "code": 0,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792324800,
+        "end": 1792328400,
+        "code": 0,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792328400,
+        "end": 1792332000,
+        "code": 0,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792332000,
+        "end": 1792335600,
+        "code": 0,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792335600,
+        "end": 1792339200,
+        "code": 0,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792339200,
+        "end": 1792342800,
+        "code": 0,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792342800,
+        "end": 1792346400,
+        "code": 0,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792346400,
+        "end": 1792350000,
+        "code": 0,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792350000,
+        "end": 1792353600,
+        "code": 0,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792353600,
+        "end": 1792357200,
+        "code": 0,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792357200,
+        "end": 1792360800,
+        "code": 0,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792360800,
+        "end": 1792364400,
+        "code": 0,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792364400,
+        "end": 1792368000,
+        "code": 0,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792368000,
+        "end": 1792371600,
+        "code": 0,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792371600,
+        "end": 1792375200,
+        "code": 0,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792375200,
+        "end": 1792378800,
+        "code": 0,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792378800,
+        "end": 1792382400,
+        "code": 0,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792382400,
+        "end": 1792386000,
+        "code": 0,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792386000,
+        "end": 1792389600,
+        "code": 1,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792389600,
+        "end": 1792393200,
+        "code": 1,
+        "rain": 0,
+        "chance": 2
+      },
+      {
+        "start": 1792393200,
+        "end": 1792396800,
+        "code": 2,
+        "rain": 0,
+        "chance": 6
+      },
+      {
+        "start": 1792396800,
+        "end": 1792400400,
+        "code": 3,
+        "rain": 0,
+        "chance": 8
+      },
+      {
+        "start": 1792400400,
+        "end": 1792404000,
+        "code": 3,
+        "rain": 0,
+        "chance": 8
+      },
+      {
+        "start": 1792404000,
+        "end": 1792407600,
+        "code": 3,
+        "rain": 0,
+        "chance": 8
+      },
+      {
+        "start": 1792407600,
+        "end": 1792411200,
+        "code": 3,
+        "rain": 0,
+        "chance": 8
+      },
+      {
+        "start": 1792411200,
+        "end": 1792414800,
+        "code": 3,
+        "rain": 0,
+        "chance": 9
+      },
+      {
+        "start": 1792414800,
+        "end": 1792418400,
+        "code": 3,
+        "rain": 0,
+        "chance": 10
+      },
+      {
+        "start": 1792418400,
+        "end": 1792422000,
+        "code": 3,
+        "rain": 0,
+        "chance": 11
+      },
+      {
+        "start": 1792422000,
+        "end": 1792425600,
+        "code": 3,
+        "rain": 0,
+        "chance": 12
+      },
+      {
+        "start": 1792425600,
+        "end": 1792429200,
+        "code": 3,
+        "rain": 0,
+        "chance": 13
+      },
+      {
+        "start": 1792429200,
+        "end": 1792432800,
+        "code": 3,
+        "rain": 0,
+        "chance": 14
+      },
+      {
+        "start": 1792432800,
+        "end": 1792436400,
+        "code": 3,
+        "rain": 0,
+        "chance": 15
+      },
+      {
+        "start": 1792436400,
+        "end": 1792440000,
+        "code": 3,
+        "rain": 0,
+        "chance": 15
+      },
+      {
+        "start": 1792440000,
+        "end": 1792443600,
+        "code": 3,
+        "rain": 0,
+        "chance": 15
+      },
+      {
+        "start": 1792443600,
+        "end": 1792447200,
+        "code": 3,
+        "rain": 0,
+        "chance": 15
+      },
+      {
+        "start": 1792447200,
+        "end": 1792450800,
+        "code": 3,
+        "rain": 0,
+        "chance": 15
+      },
+      {
+        "start": 1792450800,
+        "end": 1792454400,
+        "code": 3,
+        "rain": 0,
+        "chance": 14
+      },
+      {
+        "start": 1792454400,
+        "end": 1792458000,
+        "code": 3,
+        "rain": 0,
+        "chance": 13
+      },
+      {
+        "start": 1792458000,
+        "end": 1792461600,
+        "code": 3,
+        "rain": 0,
+        "chance": 12
+      },
+      {
+        "start": 1792461600,
+        "end": 1792465200,
+        "code": 3,
+        "rain": 0,
+        "chance": 11
+      },
+      {
+        "start": 1792465200,
+        "end": 1792468800,
+        "code": 3,
+        "rain": 0,
+        "chance": 10
+      },
+      {
+        "start": 1792468800,
+        "end": 1792472400,
+        "code": 3,
+        "rain": 0,
+        "chance": 9
+      },
+      {
+        "start": 1792472400,
+        "end": 1792476000,
+        "code": 3,
+        "rain": 0,
+        "chance": 8
+      },
+      {
+        "start": 1792476000,
+        "end": 1792479600,
+        "code": 3,
+        "rain": 0,
+        "chance": 7
+      },
+      {
+        "start": 1792479600,
+        "end": 1792483200,
+        "code": 3,
+        "rain": 0,
+        "chance": 7
+      },
+      {
+        "start": 1792483200,
+        "end": 1792486800,
+        "code": 2,
+        "rain": 0,
+        "chance": 7
+      },
+      {
+        "start": 1792486800,
+        "end": 1792490400,
+        "code": 2,
+        "rain": 0,
+        "chance": 7
+      },
+      {
+        "start": 1792490400,
+        "end": 1792494000,
+        "code": 1,
+        "rain": 0,
+        "chance": 8
+      },
+      {
+        "start": 1792494000,
+        "end": 1792497600,
+        "code": 1,
+        "rain": 0,
+        "chance": 8
+      },
+      {
+        "start": 1792497600,
+        "end": 1792501200,
+        "code": 1,
+        "rain": 0,
+        "chance": 9
+      },
+      {
+        "start": 1792501200,
+        "end": 1792504800,
+        "code": 0,
+        "rain": 0,
+        "chance": 9
+      },
+      {
+        "start": 1792504800,
+        "end": 1792508400,
+        "code": 0,
+        "rain": 0,
+        "chance": 10
+      },
+      {
+        "start": 1792508400,
+        "end": 1792512000,
+        "code": 0,
+        "rain": 0,
+        "chance": 11
+      },
+      {
+        "start": 1792512000,
+        "end": 1792515600,
+        "code": 0,
+        "rain": 0,
+        "chance": 11
+      },
+      {
+        "start": 1792515600,
+        "end": 1792519200,
+        "code": 0,
+        "rain": 0,
+        "chance": 12
+      },
+      {
+        "start": 1792519200,
+        "end": 1792522800,
+        "code": 0,
+        "rain": 0,
+        "chance": 12
+      },
+      {
+        "start": 1792522800,
+        "end": 1792526400,
+        "code": 0,
+        "rain": 0,
+        "chance": 12
+      },
+      {
+        "start": 1792526400,
+        "end": 1792530000,
+        "code": 0,
+        "rain": 0,
+        "chance": 12
+      },
+      {
+        "start": 1792530000,
+        "end": 1792533600,
+        "code": 0,
+        "rain": 0,
+        "chance": 12
+      },
+      {
+        "start": 1792533600,
+        "end": 1792537200,
+        "code": 0,
+        "rain": 0,
+        "chance": 12
+      }
+    ]
+  },
+  "after_fixture": {
+    "source": "FIXTURE",
+    "provider": "Open-Meteo",
+    "timezone": "GMT",
+    "utc_offset_seconds": 0,
+    "request_lat": 39.9075,
+    "request_lon": 116.39723,
+    "fetched_at": 1791937559.369737,
+    "revision": "release-labelled-weather-replay-1791937559",
+    "hours": [
+      {
+        "start": 1791936000,
+        "end": 1791939600,
+        "code": 0,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1791939600,
+        "end": 1791943200,
+        "code": 0,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1791943200,
+        "end": 1791946800,
+        "code": 0,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1791946800,
+        "end": 1791950400,
+        "code": 0,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1791950400,
+        "end": 1791954000,
+        "code": 2,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1791954000,
+        "end": 1791957600,
+        "code": 2,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1791957600,
+        "end": 1791961200,
+        "code": 2,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1791961200,
+        "end": 1791964800,
+        "code": 0,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1791964800,
+        "end": 1791968400,
+        "code": 0,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1791968400,
+        "end": 1791972000,
+        "code": 1,
+        "rain": 0,
+        "chance": 1
+      },
+      {
+        "start": 1791972000,
+        "end": 1791975600,
+        "code": 1,
+        "rain": 0,
+        "chance": 3
+      },
+      {
+        "start": 1791975600,
+        "end": 1791979200,
+        "code": 0,
+        "rain": 0,
+        "chance": 4
+      },
+      {
+        "start": 1791979200,
+        "end": 1791982800,
+        "code": 0,
+        "rain": 0,
+        "chance": 3
+      },
+      {
+        "start": 1791982800,
+        "end": 1791986400,
+        "code": 0,
+        "rain": 0,
+        "chance": 1
+      },
+      {
+        "start": 1791986400,
+        "end": 1791990000,
+        "code": 0,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1791990000,
+        "end": 1791993600,
+        "code": 0,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1791993600,
+        "end": 1791997200,
+        "code": 0,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1791997200,
+        "end": 1792000800,
+        "code": 0,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792000800,
+        "end": 1792004400,
+        "code": 0,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792004400,
+        "end": 1792008000,
+        "code": 0,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792008000,
+        "end": 1792011600,
+        "code": 0,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792011600,
+        "end": 1792015200,
+        "code": 0,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792015200,
+        "end": 1792018800,
+        "code": 0,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792018800,
+        "end": 1792022400,
+        "code": 0,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792022400,
+        "end": 1792026000,
+        "code": 0,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792026000,
+        "end": 1792029600,
+        "code": 61,
+        "rain": 2,
+        "chance": 80
+      },
+      {
+        "start": 1792029600,
+        "end": 1792033200,
+        "code": 0,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792033200,
+        "end": 1792036800,
+        "code": 0,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792036800,
+        "end": 1792040400,
+        "code": 0,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792040400,
+        "end": 1792044000,
+        "code": 0,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792044000,
+        "end": 1792047600,
+        "code": 0,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792047600,
+        "end": 1792051200,
+        "code": 61,
+        "rain": 2,
+        "chance": 80
+      },
+      {
+        "start": 1792051200,
+        "end": 1792054800,
+        "code": 0,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792054800,
+        "end": 1792058400,
+        "code": 0,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792058400,
+        "end": 1792062000,
+        "code": 0,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792062000,
+        "end": 1792065600,
+        "code": 0,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792065600,
+        "end": 1792069200,
+        "code": 1,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792069200,
+        "end": 1792072800,
+        "code": 1,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792072800,
+        "end": 1792076400,
+        "code": 1,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792076400,
+        "end": 1792080000,
+        "code": 3,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792080000,
+        "end": 1792083600,
+        "code": 3,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792083600,
+        "end": 1792087200,
+        "code": 3,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792087200,
+        "end": 1792090800,
+        "code": 3,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792090800,
+        "end": 1792094400,
+        "code": 3,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792094400,
+        "end": 1792098000,
+        "code": 3,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792098000,
+        "end": 1792101600,
+        "code": 3,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792101600,
+        "end": 1792105200,
+        "code": 3,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792105200,
+        "end": 1792108800,
+        "code": 3,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792108800,
+        "end": 1792112400,
+        "code": 3,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792112400,
+        "end": 1792116000,
+        "code": 3,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792116000,
+        "end": 1792119600,
+        "code": 3,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792119600,
+        "end": 1792123200,
+        "code": 3,
+        "rain": 0,
+        "chance": 1
+      },
+      {
+        "start": 1792123200,
+        "end": 1792126800,
+        "code": 3,
+        "rain": 0,
+        "chance": 3
+      },
+      {
+        "start": 1792126800,
+        "end": 1792130400,
+        "code": 3,
+        "rain": 0,
+        "chance": 6
+      },
+      {
+        "start": 1792130400,
+        "end": 1792134000,
+        "code": 3,
+        "rain": 0,
+        "chance": 10
+      },
+      {
+        "start": 1792134000,
+        "end": 1792137600,
+        "code": 3,
+        "rain": 0,
+        "chance": 14
+      },
+      {
+        "start": 1792137600,
+        "end": 1792141200,
+        "code": 3,
+        "rain": 0,
+        "chance": 20
+      },
+      {
+        "start": 1792141200,
+        "end": 1792144800,
+        "code": 3,
+        "rain": 0,
+        "chance": 30
+      },
+      {
+        "start": 1792144800,
+        "end": 1792148400,
+        "code": 3,
+        "rain": 0,
+        "chance": 41
+      },
+      {
+        "start": 1792148400,
+        "end": 1792152000,
+        "code": 3,
+        "rain": 0,
+        "chance": 49
+      },
+      {
+        "start": 1792152000,
+        "end": 1792155600,
+        "code": 3,
+        "rain": 0.1,
+        "chance": 50
+      },
+      {
+        "start": 1792155600,
+        "end": 1792159200,
+        "code": 51,
+        "rain": 0.5,
+        "chance": 49
+      },
+      {
+        "start": 1792159200,
+        "end": 1792162800,
+        "code": 53,
+        "rain": 0.2,
+        "chance": 49
+      },
+      {
+        "start": 1792162800,
+        "end": 1792166400,
+        "code": 51,
+        "rain": 0.3,
+        "chance": 54
+      },
+      {
+        "start": 1792166400,
+        "end": 1792170000,
+        "code": 51,
+        "rain": 1.5,
+        "chance": 61
+      },
+      {
+        "start": 1792170000,
+        "end": 1792173600,
+        "code": 80,
+        "rain": 1.1,
+        "chance": 67
+      },
+      {
+        "start": 1792173600,
+        "end": 1792177200,
+        "code": 55,
+        "rain": 0.3,
+        "chance": 71
+      },
+      {
+        "start": 1792177200,
+        "end": 1792180800,
+        "code": 51,
+        "rain": 0,
+        "chance": 74
+      },
+      {
+        "start": 1792180800,
+        "end": 1792184400,
+        "code": 3,
+        "rain": 0,
+        "chance": 78
+      },
+      {
+        "start": 1792184400,
+        "end": 1792188000,
+        "code": 3,
+        "rain": 0.2,
+        "chance": 83
+      },
+      {
+        "start": 1792188000,
+        "end": 1792191600,
+        "code": 51,
+        "rain": 0.2,
+        "chance": 90
+      },
+      {
+        "start": 1792191600,
+        "end": 1792195200,
+        "code": 51,
+        "rain": 1.2,
+        "chance": 94
+      },
+      {
+        "start": 1792195200,
+        "end": 1792198800,
+        "code": 55,
+        "rain": 4.4,
+        "chance": 96
+      },
+      {
+        "start": 1792198800,
+        "end": 1792202400,
+        "code": 81,
+        "rain": 4.9,
+        "chance": 96
+      },
+      {
+        "start": 1792202400,
+        "end": 1792206000,
+        "code": 81,
+        "rain": 4.7,
+        "chance": 96
+      },
+      {
+        "start": 1792206000,
+        "end": 1792209600,
+        "code": 81,
+        "rain": 4.1,
+        "chance": 97
+      },
+      {
+        "start": 1792209600,
+        "end": 1792213200,
+        "code": 63,
+        "rain": 6.9,
+        "chance": 97
+      },
+      {
+        "start": 1792213200,
+        "end": 1792216800,
+        "code": 81,
+        "rain": 5.6,
+        "chance": 98
+      },
+      {
+        "start": 1792216800,
+        "end": 1792220400,
+        "code": 81,
+        "rain": 5.9,
+        "chance": 99
+      },
+      {
+        "start": 1792220400,
+        "end": 1792224000,
+        "code": 81,
+        "rain": 5.9,
+        "chance": 100
+      },
+      {
+        "start": 1792224000,
+        "end": 1792227600,
+        "code": 81,
+        "rain": 5.9,
+        "chance": 100
+      },
+      {
+        "start": 1792227600,
+        "end": 1792231200,
+        "code": 81,
+        "rain": 1.1,
+        "chance": 99
+      },
+      {
+        "start": 1792231200,
+        "end": 1792234800,
+        "code": 55,
+        "rain": 1.1,
+        "chance": 96
+      },
+      {
+        "start": 1792234800,
+        "end": 1792238400,
+        "code": 55,
+        "rain": 1.1,
+        "chance": 90
+      },
+      {
+        "start": 1792238400,
+        "end": 1792242000,
+        "code": 55,
+        "rain": 0,
+        "chance": 80
+      },
+      {
+        "start": 1792242000,
+        "end": 1792245600,
+        "code": 2,
+        "rain": 0,
+        "chance": 67
+      },
+      {
+        "start": 1792245600,
+        "end": 1792249200,
+        "code": 1,
+        "rain": 0,
+        "chance": 53
+      },
+      {
+        "start": 1792249200,
+        "end": 1792252800,
+        "code": 0,
+        "rain": 0,
+        "chance": 37
+      },
+      {
+        "start": 1792252800,
+        "end": 1792256400,
+        "code": 0,
+        "rain": 0,
+        "chance": 19
+      },
+      {
+        "start": 1792256400,
+        "end": 1792260000,
+        "code": 0,
+        "rain": 0,
+        "chance": 6
+      },
+      {
+        "start": 1792260000,
+        "end": 1792263600,
+        "code": 0,
+        "rain": 0,
+        "chance": 1
+      },
+      {
+        "start": 1792263600,
+        "end": 1792267200,
+        "code": 0,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792267200,
+        "end": 1792270800,
+        "code": 1,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792270800,
+        "end": 1792274400,
+        "code": 2,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792274400,
+        "end": 1792278000,
+        "code": 1,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792278000,
+        "end": 1792281600,
+        "code": 1,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792281600,
+        "end": 1792285200,
+        "code": 0,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792285200,
+        "end": 1792288800,
+        "code": 1,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792288800,
+        "end": 1792292400,
+        "code": 3,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792292400,
+        "end": 1792296000,
+        "code": 3,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792296000,
+        "end": 1792299600,
+        "code": 2,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792299600,
+        "end": 1792303200,
+        "code": 1,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792303200,
+        "end": 1792306800,
+        "code": 0,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792306800,
+        "end": 1792310400,
+        "code": 0,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792310400,
+        "end": 1792314000,
+        "code": 0,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792314000,
+        "end": 1792317600,
+        "code": 0,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792317600,
+        "end": 1792321200,
+        "code": 0,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792321200,
+        "end": 1792324800,
+        "code": 0,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792324800,
+        "end": 1792328400,
+        "code": 0,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792328400,
+        "end": 1792332000,
+        "code": 0,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792332000,
+        "end": 1792335600,
+        "code": 0,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792335600,
+        "end": 1792339200,
+        "code": 0,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792339200,
+        "end": 1792342800,
+        "code": 0,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792342800,
+        "end": 1792346400,
+        "code": 0,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792346400,
+        "end": 1792350000,
+        "code": 0,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792350000,
+        "end": 1792353600,
+        "code": 0,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792353600,
+        "end": 1792357200,
+        "code": 0,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792357200,
+        "end": 1792360800,
+        "code": 0,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792360800,
+        "end": 1792364400,
+        "code": 0,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792364400,
+        "end": 1792368000,
+        "code": 0,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792368000,
+        "end": 1792371600,
+        "code": 0,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792371600,
+        "end": 1792375200,
+        "code": 0,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792375200,
+        "end": 1792378800,
+        "code": 0,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792378800,
+        "end": 1792382400,
+        "code": 0,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792382400,
+        "end": 1792386000,
+        "code": 0,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792386000,
+        "end": 1792389600,
+        "code": 1,
+        "rain": 0,
+        "chance": 0
+      },
+      {
+        "start": 1792389600,
+        "end": 1792393200,
+        "code": 1,
+        "rain": 0,
+        "chance": 2
+      },
+      {
+        "start": 1792393200,
+        "end": 1792396800,
+        "code": 2,
+        "rain": 0,
+        "chance": 6
+      },
+      {
+        "start": 1792396800,
+        "end": 1792400400,
+        "code": 3,
+        "rain": 0,
+        "chance": 8
+      },
+      {
+        "start": 1792400400,
+        "end": 1792404000,
+        "code": 3,
+        "rain": 0,
+        "chance": 8
+      },
+      {
+        "start": 1792404000,
+        "end": 1792407600,
+        "code": 3,
+        "rain": 0,
+        "chance": 8
+      },
+      {
+        "start": 1792407600,
+        "end": 1792411200,
+        "code": 3,
+        "rain": 0,
+        "chance": 8
+      },
+      {
+        "start": 1792411200,
+        "end": 1792414800,
+        "code": 3,
+        "rain": 0,
+        "chance": 9
+      },
+      {
+        "start": 1792414800,
+        "end": 1792418400,
+        "code": 3,
+        "rain": 0,
+        "chance": 10
+      },
+      {
+        "start": 1792418400,
+        "end": 1792422000,
+        "code": 3,
+        "rain": 0,
+        "chance": 11
+      },
+      {
+        "start": 1792422000,
+        "end": 1792425600,
+        "code": 3,
+        "rain": 0,
+        "chance": 12
+      },
+      {
+        "start": 1792425600,
+        "end": 1792429200,
+        "code": 3,
+        "rain": 0,
+        "chance": 13
+      },
+      {
+        "start": 1792429200,
+        "end": 1792432800,
+        "code": 3,
+        "rain": 0,
+        "chance": 14
+      },
+      {
+        "start": 1792432800,
+        "end": 1792436400,
+        "code": 3,
+        "rain": 0,
+        "chance": 15
+      },
+      {
+        "start": 1792436400,
+        "end": 1792440000,
+        "code": 3,
+        "rain": 0,
+        "chance": 15
+      },
+      {
+        "start": 1792440000,
+        "end": 1792443600,
+        "code": 3,
+        "rain": 0,
+        "chance": 15
+      },
+      {
+        "start": 1792443600,
+        "end": 1792447200,
+        "code": 3,
+        "rain": 0,
+        "chance": 15
+      },
+      {
+        "start": 1792447200,
+        "end": 1792450800,
+        "code": 3,
+        "rain": 0,
+        "chance": 15
+      },
+      {
+        "start": 1792450800,
+        "end": 1792454400,
+        "code": 3,
+        "rain": 0,
+        "chance": 14
+      },
+      {
+        "start": 1792454400,
+        "end": 1792458000,
+        "code": 3,
+        "rain": 0,
+        "chance": 13
+      },
+      {
+        "start": 1792458000,
+        "end": 1792461600,
+        "code": 3,
+        "rain": 0,
+        "chance": 12
+      },
+      {
+        "start": 1792461600,
+        "end": 1792465200,
+        "code": 3,
+        "rain": 0,
+        "chance": 11
+      },
+      {
+        "start": 1792465200,
+        "end": 1792468800,
+        "code": 3,
+        "rain": 0,
+        "chance": 10
+      },
+      {
+        "start": 1792468800,
+        "end": 1792472400,
+        "code": 3,
+        "rain": 0,
+        "chance": 9
+      },
+      {
+        "start": 1792472400,
+        "end": 1792476000,
+        "code": 3,
+        "rain": 0,
+        "chance": 8
+      },
+      {
+        "start": 1792476000,
+        "end": 1792479600,
+        "code": 3,
+        "rain": 0,
+        "chance": 7
+      },
+      {
+        "start": 1792479600,
+        "end": 1792483200,
+        "code": 3,
+        "rain": 0,
+        "chance": 7
+      },
+      {
+        "start": 1792483200,
+        "end": 1792486800,
+        "code": 2,
+        "rain": 0,
+        "chance": 7
+      },
+      {
+        "start": 1792486800,
+        "end": 1792490400,
+        "code": 2,
+        "rain": 0,
+        "chance": 7
+      },
+      {
+        "start": 1792490400,
+        "end": 1792494000,
+        "code": 1,
+        "rain": 0,
+        "chance": 8
+      },
+      {
+        "start": 1792494000,
+        "end": 1792497600,
+        "code": 1,
+        "rain": 0,
+        "chance": 8
+      },
+      {
+        "start": 1792497600,
+        "end": 1792501200,
+        "code": 1,
+        "rain": 0,
+        "chance": 9
+      },
+      {
+        "start": 1792501200,
+        "end": 1792504800,
+        "code": 0,
+        "rain": 0,
+        "chance": 9
+      },
+      {
+        "start": 1792504800,
+        "end": 1792508400,
+        "code": 0,
+        "rain": 0,
+        "chance": 10
+      },
+      {
+        "start": 1792508400,
+        "end": 1792512000,
+        "code": 0,
+        "rain": 0,
+        "chance": 11
+      },
+      {
+        "start": 1792512000,
+        "end": 1792515600,
+        "code": 0,
+        "rain": 0,
+        "chance": 11
+      },
+      {
+        "start": 1792515600,
+        "end": 1792519200,
+        "code": 0,
+        "rain": 0,
+        "chance": 12
+      },
+      {
+        "start": 1792519200,
+        "end": 1792522800,
+        "code": 0,
+        "rain": 0,
+        "chance": 12
+      },
+      {
+        "start": 1792522800,
+        "end": 1792526400,
+        "code": 0,
+        "rain": 0,
+        "chance": 12
+      },
+      {
+        "start": 1792526400,
+        "end": 1792530000,
+        "code": 0,
+        "rain": 0,
+        "chance": 12
+      },
+      {
+        "start": 1792530000,
+        "end": 1792533600,
+        "code": 0,
+        "rain": 0,
+        "chance": 12
+      },
+      {
+        "start": 1792533600,
+        "end": 1792537200,
+        "code": 0,
+        "rain": 0,
+        "chance": 12
+      }
+    ]
+  },
+  "rain_hours": [
+    1792026000,
+    1792047600
+  ],
+  "schedule_before": {
+    "schema": 3,
+    "event_id": "ripple-1791937514.6446695",
+    "title": "骑车",
+    "start": 1792047600,
+    "end": 1792051200,
+    "lat": 39.9075,
+    "lon": 116.39723,
+    "revision": 1,
+    "data_source": "ripple-local-activity",
+    "timezone": "Asia/Shanghai",
+    "location": {
+      "id": 1816670,
+      "name": "北京",
+      "country": "中国",
+      "country_code": "CN",
+      "admin1": "北京市",
+      "admin2": "北京市",
+      "lat": 39.9075,
+      "lon": 116.39723,
+      "timezone": "Asia/Shanghai",
+      "source": "Open-Meteo / GeoNames"
+    },
+    "availability": {
+      "min_start": 1792026000,
+      "max_end": 1792033200
+    },
+    "planning": {
+      "version": 1,
+      "instruction": "明天下午三点在北京骑车一小时，可调整到09:00至11:00，希望上午完成。另有固定客户会议10:00至11:00、固定内部会议13:00至14:00、室内交流14:00至15:00可移动到12:00至15:00。全部同日在北京，会议室内，骑车户外。",
+      "primary_movable": true,
+      "priority": 3,
+      "preference": "morning",
+      "plans": [
+        {
+          "id": "new-1",
+          "title": "固定客户会议",
+          "start": 1792029600,
+          "end": 1792033200,
+          "active": true,
+          "movable": false,
+          "outdoor": false,
+          "priority": 3,
+          "availability": null
+        },
+        {
+          "id": "new-2",
+          "title": "固定内部会议",
+          "start": 1792040400,
+          "end": 1792044000,
+          "active": true,
+          "movable": false,
+          "outdoor": false,
+          "priority": 3,
+          "availability": null
+        },
+        {
+          "id": "new-3",
+          "title": "室内交流",
+          "start": 1792044000,
+          "end": 1792047600,
+          "active": true,
+          "movable": true,
+          "outdoor": false,
+          "priority": 3,
+          "availability": {
+            "min_start": 1792036800,
+            "max_end": 1792047600
+          }
+        }
+      ]
+    }
+  },
+  "schedule_sha256": "089ecf78c8f4e9c002ab9659b2f002fc10bfd93039e614e99366c6b7e7797f25"
+}

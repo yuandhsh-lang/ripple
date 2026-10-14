@@ -1,6 +1,8 @@
 # 发布与回退
 
-只发布根 `bundle/`。拟用正式语义版本 `0.6.4` / `v0.6.4`，尚未创建公开标签或 Release。保留 `v0.1.0` 和所有历史标签。
+只发布根 `bundle/`。当前正式版 `0.6.4` / `v0.6.4` 已发布，固定 Commit `7e150404a3073a77688d5e1670de018083fe82a4`。保留 `v0.1.0` 和所有历史标签。以下流程用于未来版本，不表示当前发布尚未完成。
+
+2026-10-14 的展示修订仅改 `main` 文档及公开媒体。新增 MP4 使用独立附件名，旧视频保留；应用包、来源证明和 Tag 均不变。参见 [媒体清单](PRESENTATION.md) 和 [文档勘误](ERRATA.md)。
 
 发布前运行官方 `tools/octo check bundle`、`hub scan bundle --packet <仓库外路径>`，完成 `review/ANSWERS.md`；运行 SDK 严格串行、Web、隔离、lint、类型和构建，并在官方 RC6 空环境实际安装。`card-host` 不支持本应用的真实 Agent，不能代替 RC6 验收。
 

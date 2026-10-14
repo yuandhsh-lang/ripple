@@ -1,4 +1,6 @@
-# Ripple 0.6.4 正式交付核验
+# Ripple 0.6.4 首次正式交付核验
+
+本页保留首次发布及旧版视频的历史事实。当前主推视频、截图和文档修订见 [展示材料清单](PRESENTATION.md)；应用 Tag 与认证包不变。
 
 应用Tag v0.6.4固定在7e150404a3073a77688d5e1670de018083fe82a4；本次文档补充不改变该Tag或Bundle。
 
@@ -6,7 +8,7 @@
 - Actions：https://github.com/yuandhsh-lang/ripple/actions/runs/38481044405 ，prepare/publish均success，GitHub来源证明通过。
 - 实际下载pack SHA-256：60a4f96b18f0a95bf024da24aba83b1e57b10f8677128cd841969261386f90d4
 - Bundle BLAKE3：254c3298e4d4a470223a138f7c334b5eb580f2ae4b80add7b5b0a7058780e777
-- 唯一正式MP4：114秒，1920×1080，H.264，30fps，字幕版，无音轨。
+- 首次发布历史MP4：114秒，1920×1080，H.264，30fps，字幕版，无音轨。
 - 视频：https://github.com/yuandhsh-lang/ripple/releases/download/v0.6.4/Ripple-0.6.4-Real-Demo.mp4
 - 视频SHA-256：5d827aedb7cca7b2c202261d36c4492ae09d351be9872fe5e0334b60429c42ce
 - 6张实机截图：https://github.com/yuandhsh-lang/ripple/releases/download/v0.6.4/Ripple-0.6.4-Screenshots.zip
