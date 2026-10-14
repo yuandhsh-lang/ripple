@@ -15,14 +15,20 @@ fn init_thread_cpu_ms() -> Option<f64> {
 }
 #[cfg(not(windows))]
 fn init_thread_cpu_ms() -> Option<f64> { None }
+fn init_mark(vm: &mut ScriptVm, phase: &str) {
+    let Some(budget) = vm.bx.run_budget else { return; };
+    let now=makepad_widgets::makepad_script::ScriptRunBudget::from_durations(Duration::ZERO,Duration::ZERO,512).hard_deadline;
+    INIT_MARKS.with(|marks| marks.borrow_mut().push(json!({"phase":phase,"entry_elapsed_ms":(now-budget.hard_deadline+0.064)*1000.0,"thread_cpu_ms":init_thread_cpu_ms(),"instructions_until_sample":budget.instructions_until_sample})));
+}
+// An official granted-module hook runs inside the budget, before source parsing.
+// This observer grants no service and is registered only for opt-in diagnostics.
+fn init_before_source_probe(vm: &mut ScriptVm) { init_mark(vm,"before_source_eval"); }
 fn init_probe_module(vm: &mut ScriptVm) {
     let module = vm.new_module(id!(ripple_init_probe));
     vm.add_method(module, id_lut!(mark), script_args_def!(phase=NIL), |vm,args| {
         let v=script_value!(vm,args.phase); let mut phase=String::new();
         vm.string_with(v,|_,s|phase.push_str(s));
-        let now=makepad_widgets::makepad_script::ScriptRunBudget::from_durations(Duration::ZERO,Duration::ZERO,512).hard_deadline;
-        let budget=vm.bx.run_budget.unwrap();
-        INIT_MARKS.with(|marks| marks.borrow_mut().push(json!({"phase":phase,"entry_elapsed_ms":(now-budget.hard_deadline+0.064)*1000.0,"thread_cpu_ms":init_thread_cpu_ms(),"instructions_until_sample":budget.instructions_until_sample})));
+        init_mark(vm,&phase);
         NIL
     });
 }
@@ -33,6 +39,7 @@ fn initialization_phase_diagnostic() {
     let config:Value=read(std::env::var("RIPPLE_INIT_CONFIG").unwrap());
     makepad_widgets::widget_async::register_splash_isolate_mod(script_tools::script_mod);
     makepad_widgets::widget_async::register_splash_isolate_mod(init_probe_module);
+    makepad_widgets::widget_async::register_splash_isolate_mod_for("ripple-init-diagnostic",init_before_source_probe);
     let mut results=Vec::new();
     for iteration in 0..config["iterations"].as_u64().unwrap() {
         for case in config["sources"].as_array().unwrap() {
@@ -52,7 +59,7 @@ fn initialization_phase_diagnostic() {
             let ui=cx.with_vm(|vm| {makepad_widgets::script_mod(vm);let v=script_eval!(vm,{use mod.prelude.widgets.* View{card:=Splash{}}});WidgetRef::script_from_value(vm,v)});
             let card=ui.splash(&mut cx,ids!(card));
             let jail=evidence().join(format!("probe-{iteration}-{}",case["name"].as_str().unwrap()));std::fs::create_dir(&jail).unwrap();
-            card.set_host_tag(&mut cx,Some("ripple".into()));card.set_sandbox_dir(&mut cx,Some(jail.clone()));card.set_policy(&mut cx,Some(vec![]),Some(2_000_000));
+            card.set_host_tag(&mut cx,Some("ripple".into()));card.set_sandbox_dir(&mut cx,Some(jail.clone()));card.set_host_caps(&mut cx,vec!["ripple-init-diagnostic".into()]);card.set_policy(&mut cx,Some(vec![]),Some(2_000_000));
             for kind in ["cold_isolate_full_parse","warm_isolate_append_re_evaluation"] {
                 INIT_MARKS.with(|m|m.borrow_mut().clear());
                 let cpu_start=init_thread_cpu_ms();let start=std::time::Instant::now();card.set_text(&mut cx,&source);let total=start.elapsed().as_micros();let cpu_end=init_thread_cpu_ms();

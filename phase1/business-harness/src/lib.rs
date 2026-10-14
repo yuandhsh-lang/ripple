@@ -16,6 +16,19 @@ mod tests {
     }
     fn root() -> PathBuf { PathBuf::from(std::env::var("RIPPLE_TEST_ROOT").unwrap()) }
     fn evidence() -> PathBuf { PathBuf::from(std::env::var("RIPPLE_TEST_EVIDENCE").unwrap()) }
+    // Keep relative fixture offsets on one future Shanghai day, even at night.
+    fn future_fixture_base(now: u64) -> u64 { ((now + 28800) / 86400 + 1) * 86400 - 28800 + 5 * 3600 }
+    #[test]
+    fn fixture_dates_remain_future_and_same_day_at_every_hour() {
+        let day = 1791907200u64; // 2026-10-14 00:00 Asia/Shanghai.
+        for hour in 0..24 {
+            let now = day + hour * 3600 + 3599;
+            let base = future_fixture_base(now);
+            assert!(base - 3600 > now, "forecast and events must remain in the future");
+            assert_eq!((base - 3600 + 28800) / 86400, (base + 21600 + 28800) / 86400, "fixture activity must not cross midnight");
+            assert_eq!((base + 14400 + 28800) % 86400, 9 * 3600);
+        }
+    }
     fn write(name: &str, v: &Value) {
         let p=evidence().join(name);
         assert!(!p.exists(), "preserve previous evidence");
@@ -42,7 +55,11 @@ mod tests {
         // Opt-in diagnosis only; the ordinary strict suite uses the exact app source.
         let mut traced=String::new();
         if std::env::var_os("RIPPLE_INIT_PHASES").is_some() {
-            INIT_TRACE_READY.with(|ready| { if !ready.replace(true) { makepad_widgets::widget_async::register_splash_isolate_mod(init_probe_module); } });
+            INIT_TRACE_READY.with(|ready| { if !ready.replace(true) {
+                makepad_widgets::widget_async::register_splash_isolate_mod(init_probe_module);
+                makepad_widgets::widget_async::register_splash_isolate_mod_for("ripple-init-diagnostic",init_before_source_probe);
+            } });
+            card.set_host_caps(&mut cx,vec!["ripple-init-diagnostic".into()]);
             let mut app=source.to_string();
             if let Ok(path)=std::env::var("RIPPLE_INIT_BASELINE") {
                 let current=std::fs::read_to_string(root().join("bundle/main.splash")).unwrap();
@@ -138,7 +155,7 @@ mod tests {
         "#);
         let (mut cx,_ui,card,reg,jail)=fixture("editor-jail",&source,&bundle);
         let now=std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_secs();
-        let base=(now/3600+1)*3600;
+        let base=future_fixture_base(now);
         let call=|name:&str,args:Value,cx:&mut Cx|->Value{
             let replies:Replies=Default::default();let out=replies.clone();
             script_tools::submit("ripple",name,args,"device","editor-protocol-harness",Duration::from_secs(60),Box::new(move|r|out.lock().unwrap().push(r))).unwrap();
@@ -241,7 +258,7 @@ mod tests {
           fn weather_response(code,body){ let accepted=try { persist_weather(code.to_f64(),body,read_event()) } catch { false } fs.write("weather-report.json",{accepted:accepted message:weather_message}.to_json()) }
         "#);
         let (mut cx,_ui,card,reg,jail)=fixture("weather-jail",&source,&bundle);
-        let now=std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_secs();let base=(now/3600+1)*3600;
+        let now=std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_secs();let base=future_fixture_base(now);
         invoke(&mut cx,&card,id!(weather_clock),&[&(base+7200).to_string()]);let stamp=read(jail.join("clock.json"))["utc8"].as_str().unwrap().replace('T'," ");
         invoke(&mut cx,&card,id!(weather_save),&[&stamp[..16]]);let original=read(jail.join("schedule.txt"));
         let times:Vec<u64>=(0..48).map(|i|base+i*3600).collect();
@@ -409,7 +426,7 @@ mod tests {
         }
         write("current-time-vectors.json",&json!({"classification":"CURRENT_SPLASH_VM_VS_INDEPENDENT_PYTHON_DATETIME_GOLDEN","count":vectors.as_array().unwrap().len(),"passed":true,"vectors":vectors}));
         let now=std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_secs();
-        let base=(now/3600+1)*3600;
+        let base=future_fixture_base(now);
         invoke(&mut cx,&card,id!(fixture_clock),&[&(base+14400).to_string()]);
         let stamp=read(jail.join("clock.json"))["utc8"].as_str().unwrap().replace('T'," ");
         let start=&stamp[..16];
