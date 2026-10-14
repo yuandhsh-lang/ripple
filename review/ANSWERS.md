@@ -1,12 +1,12 @@
-# Ripple 0.6.4 · 当前 hub scan 八项回答
+# Ripple 0.6.5-rc.1 · 候选 hub scan 八项回答
 
-对应当前官方 Hub 386359153ed6377b5f047bd9ed2767a6a2ac2bc7；Bundle 路径 `bundle/`。结构检查 unsigned PASS 不等于来源证明、实机或正式收录。最终发布仍请求人工审核。
+对应官方 Hub 386359153ed6377b5f047bd9ed2767a6a2ac2bc7；Bundle 路径 `bundle/`。这是未发布候选的本地审核准备，不是 v0.6.5 正式提交。结构检查 unsigned PASS 不等于来源证明、实机或正式收录。已发布 v0.6.4 的回答保存在其固定 Tag 中。
 
-1. **描述是否属实？** `main.splash` 的 `interpret_input` / `save_reviewed_draft`（实际草稿入口）、`check_changes`、`app_tool`、`candidate_search`、`prepare_group` / `execute` 和 `finish_verify` / `group_readback` 实现理解、确认、变化规划及执行核验。工具只读。`AGENT.md` 明确不得执行。支持范围与 listing 一致：一个主活动、最多四项关联，最多两项移动，中国同城同日，15–240 分钟。模型、城市与天气必须网络/授权可用；无外部日历和全天后台监控。真实证据与受控故障分别列于验证说明。
+1. **描述是否属实？** `main.splash` 的 `interpret_input` / `save_reviewed_draft`（实际草稿入口）、`check_changes`、`app_tool`、`candidate_search`、`prepare_group` / `execute` 和 `finish_verify` / `group_readback` 实现理解、确认、变化规划及执行核验。工具只读。`AGENT.md` 明确不得执行。支持范围与 listing 一致：一个主活动、最多四项关联，最多两项移动，中国同城同日，15–240 分钟。候选另支持用户主动导入最多 32 项、32 KiB 的 ICS 只读占用快照，以及最近 32 条执行历史摘要。不是外部日历同步或不可篡改台账。模型、城市与天气必须网络/授权可用；无全天后台监控。真实证据与受控故障分别列于验证说明。
 
 2. **平台和分类？** productivity 对应计划管理和协调。只声明 windows，在官方原版 RC6 实机验收；不声称其他平台通过。card-host 不提供所需宿主 AI 服务，不能作为完整应用验收。
 
-3. **权限、宿主调用和域名？** storage 保存计划、快照、去重、审批及收据，1 MiB；runtime 用于宿主能力发现；octos.session.open / octos.turn.start / octos.turn.interrupt 用于同一个本应用 Agent 与取消；net 仅城市/天气；glance 发布、撤回、列举和消费本应用通知 route。`geocoding-api.open-meteo.com` 接收城市关键词，`api.open-meteo.com` 接收坐标和预报参数。Provider 网络由宿主管理，不是应用新增任意域名。无 shell、外部日历、GPS、邮箱或系统文件权限。源码 host.request 仅以上用途。用户可不授权 Agent，仍能手动建立/规则分析。
+3. **权限、宿主调用和域名？** storage 保存计划、快照、去重、审批、收据与有界历史，1 MiB；runtime 用于宿主能力发现；octos.session.open / octos.turn.start / octos.turn.interrupt 用于同一个本应用 Agent 与取消；net 仅城市/天气；glance 发布、撤回、列举和消费本应用通知 route。新增 files 权限仅用于用户主动选择 ICS 的 `files.import` v1，不扫描系统文件、不写回原日历文件。`geocoding-api.open-meteo.com` 接收城市关键词，`api.open-meteo.com` 接收坐标和预报参数。Provider 网络由宿主管理，不是应用新增任意域名。无 shell、外部日历账户、GPS 或邮箱权限。用户可不授权 Agent，仍能手动建立/规则分析。随包 PRIVACY.md 已说明 ICS 范围；正式发布前须将 listing 的公开隐私链接改为对应新版，当前 v0.6.4 链接不能作为新增权限的完整披露。
 
 4. **是否欺骗界面？** Splash 显示 Ripple；系统通知由真实 Glance 服务生成，应用本身不模仿登录/支付/系统授权页。建议、待批准、正在执行、部分/失败/待核对和已核验分别显示；只有独立读回匹配才完成。天气 FIXTURE 与 LIVE 有标签。listing 清楚披露本地计划和通知限制。
 
@@ -16,4 +16,4 @@
 
 7. **Agent 范围与工具风险？** 一个 read-only Agent、两个 implemented_by=app/risk=read/private_data=true 的工具 `ripple.context.read` 和 `ripple.slots.search`。返回相关计划、验证天气和合法候选，无发送、删除、消费、外部共享或写日程工具，未设置 shareable。Glance 由应用展示层调用，而非给模型执行权限。已有日程变化经原整组预览和显式批准后由唯一执行路径写入，不能将协商或通知点击当授权。无需 confirm=app 工具，但真实 UI 审批仍保护执行。
 
-8. **建议路由：human-review。** 此扫描回答由开发者完成，不冒充官方 reviewer 接纳。请审核未关闭 SDK 间歇预算风险、暖启动通知 route 限制、Provider 及天气依赖。GitHub attestation、下载正式包复验和实机 MP4 已完成，见 [当前验收](../docs/release/VALIDATION.md) 与 [媒体清单](../docs/release/PRESENTATION.md)。这些结果不代替 Hub 人工审核。历史 v0.1.0 初赛评审记录独立保留。
+8. **建议路由：human-review。** 此扫描回答由开发者完成，不冒充官方 reviewer 接纳。请审核未关闭 SDK 间歇预算风险、暖启动通知 route 限制、Provider 及天气依赖。本候选尚无 v0.6.5 GitHub attestation、下载正式包复验或正式 MP4。[已发布版本验收](../docs/release/VALIDATION.md) 与 [媒体清单](../docs/release/PRESENTATION.md) 属于 v0.6.4，不能证明新增功能。候选状态见 [ICS 与执行历史](../docs/development/ICS_AND_HISTORY.md)。历史 v0.1.0 初赛评审记录独立保留。

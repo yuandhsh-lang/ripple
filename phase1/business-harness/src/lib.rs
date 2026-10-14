@@ -511,4 +511,5 @@ mod tests {
     include!("stage4_tests.rs");
     include!("ux_tests.rs");
     include!("ics_tests.rs");
+    include!("initialization_diagnostic.rs");
 }
