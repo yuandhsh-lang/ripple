@@ -2,9 +2,9 @@
 
 计划变了，和 AI 一起找到可行安排。Ripple 检查日程与天气风险，提出调整，经您批准后改期，并重新读取保存结果。
 
-[![Ripple 原生软件演示](docs/media/cover.png)](https://github.com/yuandhsh-lang/ripple/releases/download/v0.6.4/Ripple-0.6.4-Product-Demo.mp4)
+[![Ripple 原生软件演示](docs/media/cover.png)](https://github.com/yuandhsh-lang/ripple/releases/download/v0.6.4/Ripple-0.6.4-Product-Demo-HQ.mp4)
 
-**[观看 114 秒演示](https://github.com/yuandhsh-lang/ripple/releases/download/v0.6.4/Ripple-0.6.4-Product-Demo.mp4) · [下载 v0.6.4](https://github.com/yuandhsh-lang/ripple/releases/tag/v0.6.4) · [安装与快速体验](docs/release/REPRODUCTION.md)**
+**[观看 105 秒演示](https://github.com/yuandhsh-lang/ripple/releases/download/v0.6.4/Ripple-0.6.4-Product-Demo-HQ.mp4) · [下载 v0.6.4](https://github.com/yuandhsh-lang/ripple/releases/tag/v0.6.4) · [安装与快速体验](docs/release/REPRODUCTION.md)**
 
 - **说清安排。** 自然语言生成中文草稿，确认城市、时间和可调整条件后保存，也支持手动编辑。
 - **发现变化。** 在打开应用、保存计划和刷新天气时检查冲突与降雨风险，通过原生 Glance 提醒您处理。
