@@ -20,11 +20,17 @@
     "octos.turn.start",
     "octos.turn.interrupt",
     "net",
-    "glance"
+    "glance",
+    "files"
   ],
+  "host_api": {
+    "optional": {
+      "files.import": 1
+    }
+  },
   "id": "ripple",
   "integrity": {
-    "bundle_blake3": "254c3298e4d4a470223a138f7c334b5eb580f2ae4b80add7b5b0a7058780e777"
+    "bundle_blake3": "6091a709dfff256d93f2fae5834f4ccd59e143b6cb538bac3e62e22d80c3d89a"
   },
   "name": "Ripple",
   "network": {
@@ -34,11 +40,12 @@
     ]
   },
   "requires": [
-    "script-tools-v1"
+    "script-tools-v1",
+    "host-api-v1"
   ],
   "schema": 1,
   "storage": {
     "max_bytes": 1048576
   },
-  "version": "0.6.4"
+  "version": "0.6.5-rc.1"
 }

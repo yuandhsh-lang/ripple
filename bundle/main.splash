@@ -75,6 +75,270 @@ fn record_evidence(line){
     if evidence_bytes + text.len() > 24000 { return }
     try { fs.append("agent-audit.log",text) evidence_bytes = evidence_bytes + text.len() } catch { evidence_bytes = -1 }
 }
+// ICS is a bounded, read-only snapshot, never part of the writable plan schema.
+let calendar_raw = nil
+let calendar_revision = "NONE"
+let calendar_events = []
+let calendar_bad = false
+let calendar_busy = false
+let calendar_job = nil
+let calendar_message = "尚未导入日历。导入快照只用于避开已有安排，不会同步或修改外部日历。"
+let calendar_open = false
+let history_open = false
+let history_rows = []
+let history_message = "仅保留最近 32 条摘要；不是完整或不可篡改的审计台账。"
+let history_queue = []
+let history_pending = false
+let history_failed = false
+let history_sequence = -1
+let history_last = ""
+let history_page = 0
+let history_loading = false
+let history_restoring = false
+
+fn short_text(text,max){ if !text.is_string() { return "" } if text.len() <= max { return text } "（文本过长，已省略）" }
+fn calendar_key(){ if calendar_bad { return "INVALID" } calendar_revision }
+fn calendar_current(key){ !calendar_bad && key == calendar_key() && read_text("external-calendar.json") == calendar_raw }
+fn calendar_clear(s,end){
+    if calendar_bad { return false }
+    for a in calendar_events { if overlap(s,end,a.start,a.end) { return false } }
+    true
+}
+fn calendar_summary(e){
+    let result = [] let day = local_day(e.start)*86400-28800
+    for a in calendar_events { if overlap(day,day+86400,a.start,a.end) { result.push({start:a.start end:a.end local_start:nice_time(a.start) local_end:nice_time(a.end) movable:false}) } }
+    result
+}
+fn valid_calendar(v){
+    if !v.is_object() || field(v,"version") != 1 || !field(v,"revision").is_string() || v.revision.len() > 96 || !valid_epoch(field(v,"imported_at")) || !field(v,"events").is_array() || v.events.len() > 32 || !field(v,"source").is_string() || v.source.len() > 160 { return false }
+    let ids = []
+    for a in v.events {
+        if !field(a,"all_day").is_bool() || !field(a,"uid").is_string() || a.uid.len() == 0 || a.uid.len() > 256 || !field(a,"title").is_string() || a.title.len() > 256 || !field(a,"location").is_string() || a.location.len() > 256 || !valid_epoch(field(a,"start")) || !valid_epoch(field(a,"end")) || a.end <= a.start || a.end-a.start > 86400 || local_day(a.start) != local_day(a.end-1) { return false }
+        for id in ids { if id == a.uid { return false } } ids.push(a.uid)
+    }
+    true
+}
+fn load_calendar(){
+    calendar_raw = read_text("external-calendar.json") calendar_events = [] calendar_bad = false calendar_revision = "NONE"
+    if calendar_raw == nil { if fs.exists("external-calendar.json") || fs.exists("external-calendar.backup.json") { calendar_bad = true calendar_message = "日历快照缺失或无法读取，外部占用未知；请重新导入。" } return }
+    let v = try { if calendar_raw.len() > 32768 { nil } else { calendar_raw.parse_json() } } catch { nil }
+    if calendar_raw.len() > 32768 || !valid_calendar(v) { calendar_bad = true calendar_message = "导入日历记录损坏，空闲情况未知。原计划保留；请重新导入有效文件后再规划。" return }
+    calendar_revision = v.revision calendar_events = v.events calendar_message = "已导入 "+calendar_events.len()+" 项只读安排 · "+v.source+" · "+nice_time(whole(v.imported_at))
+    if calendar_events.len() > 0 { let first = calendar_events[0].start let last = calendar_events[0].end for a in calendar_events { if a.start < first { first = a.start } if a.end > last { last = a.end } } calendar_message = calendar_message+" · 覆盖 "+nice_time(first)+" 至 "+nice_time(last) }
+}
+fn calendar_fail(reason){ calendar_job = nil calendar_busy = false calendar_message = reason+if calendar_bad { "；外部占用未知，旧文件与备份保留。Ripple 计划未改动。" } else { "；上次有效日历和 Ripple 计划保持不变。" } ui.calendar_panel.render() }
+fn ics_date(value,params){
+    let all_day = params == ";VALUE=DATE"
+    let utc = value.strip_suffix("Z") != value
+    if !all_day && params != "" && params != ";TZID=Asia/Shanghai" && params != ";TZID=\"Asia/Shanghai\"" && params != ";VALUE=DATE-TIME" { return nil }
+    if all_day && value.len() != 8 { return nil }
+    if !all_day && ((!utc && params != ";TZID=Asia/Shanghai" && params != ";TZID=\"Asia/Shanghai\"") || (utc && params != "" && params != ";VALUE=DATE-TIME")) { return nil }
+    let c = value.strip_suffix("Z").split("")
+    if (!all_day && c.len() != 17) || (all_day && c.len() != 10) { return nil }
+    for i in c.len() { if i > 0 && i < c.len()-1 && (all_day || i != 9) { if "0123456789".search(c[i]) < 0 { return nil } } }
+    if !all_day && c[9] != "T" { return nil }
+    let date = c[1]+c[2]+c[3]+c[4]+"-"+c[5]+c[6]+"-"+c[7]+c[8]
+    let hm = "00:00" let seconds = 0
+    if !all_day { hm = c[10]+c[11]+":"+c[12]+c[13] seconds = (c[14]+c[15]).to_f64() if !(seconds >= 0 && seconds < 60) { return nil } }
+    let epoch = parse_start(date+" "+hm) if epoch == nil { return nil }
+    if utc { epoch = epoch+28800 }
+    {epoch:epoch+seconds all_day:all_day}
+}
+fn ics_text(value){
+    // One pass preserves escaped backslashes before n; never evaluate text.
+    let out = "" let escaped = false
+    for c in value.split("") {
+        if escaped { if c == "n" || c == "N" { out = out+" " } else if c == "\\" || c == "," || c == ";" { out = out+c } else { return nil } escaped = false }
+        else if c == "\\" { escaped = true } else { out = out+c }
+    }
+    if escaped || out.len() > 256 { return nil } out
+}
+fn ics_upper(text){
+    let result = "" let upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("")
+    for c in text.split("") { if c != "" { let at = "abcdefghijklmnopqrstuvwxyz".search(c) if at >= 0 { result = result+upper[at+1] } else { result = result+c } } }
+    result
+}
+fn ics_line(job,line){
+    if line == "" { return "" }
+    let parts = line.split(":") if parts.len() < 2 { return "字段格式不正确" }
+    let head = parts[0] let value = line.strip_prefix(head+":") let raw_name = head.split(";")[0] if raw_name.len() > 64 { return "字段名称过长" } let name = ics_upper(raw_name) let params = head.strip_prefix(raw_name)
+    if (name == "BEGIN" || name == "END") && value.len() > 32 { return "组件名称过长" }
+    if name == "BEGIN" && ics_upper(value) == "VCALENDAR" { if job.phase != 0 { return "重复或嵌套日历" } job.phase = 1 return "" }
+    if name == "END" && ics_upper(value) == "VCALENDAR" { if job.phase != 1 || job.current != nil { return "日历结构未闭合" } job.phase = 2 return "" }
+    if job.phase != 1 { return "需要完整 VCALENDAR 结构" }
+    if name == "BEGIN" && ics_upper(value) == "VEVENT" { if job.current != nil { return "不支持嵌套事件" } job.current = {uid:"" title:"" location:"" start:nil end:nil all_day:false end_day:false sequence:"" stamp:"" seen:[]} return "" }
+    if name == "END" && ics_upper(value) == "VEVENT" {
+        let a = job.current if a == nil || a.uid == "" || a.start == nil || a.end == nil || a.all_day != a.end_day || a.end <= a.start || a.end-a.start > 86400 || local_day(a.start) != local_day(a.end-1) { return "事件缺少 UID 或有效的同日开始/结束时间" }
+        let next = {uid:a.uid title:if a.title == "" { "未命名安排" } else { a.title } location:a.location start:a.start end:a.end all_day:a.all_day sequence:a.sequence stamp:a.stamp}
+        let duplicate = false
+        for old in job.events { if old.uid == a.uid { if old.to_json() != next.to_json() { return "同一 UID 存在不同版本，请导出当前快照" } duplicate = true } }
+        if !duplicate { if job.events.len() >= 32 { return "一次最多导入 32 项事件" } job.events.push(next) }
+        job.current = nil return ""
+    }
+    if name == "BEGIN" || name == "END" { return "不支持嵌套组件（如时区定义、提醒或任务）" }
+    if name == "RRULE" || name == "RDATE" || name == "EXDATE" || name == "EXRULE" || name == "RECURRENCE-ID" { return "暂不支持重复规则或重复事件覆盖，请导出展开后的普通事件" }
+    if job.current == nil { if name == "VERSION" { if value != "2.0" || job.version { return "需要 ICS 2.0" } job.version = true } if name == "METHOD" && value != "PUBLISH" { return "不支持邀请或取消消息，请导出日历快照" } return "" }
+    let a = job.current
+    if name == "UID" || name == "SUMMARY" || name == "LOCATION" || name == "DTSTART" || name == "DTEND" || name == "SEQUENCE" || name == "DTSTAMP" || name == "STATUS" || name == "TRANSP" || name == "DURATION" {
+        for key in a.seen { if key == name { return "事件含重复字段" } } a.seen.push(name)
+        if name == "DURATION" { return "需要明确 DTEND，暂不支持 DURATION" }
+        if name == "STATUS" && ics_upper(value) == "CANCELLED" { return "含取消事件，请导出只包含当前有效事件的快照" }
+        if name == "TRANSP" && value != "OPAQUE" { return "含不占用时间的透明事件，请先从导出文件中排除" }
+        if name == "DTSTART" || name == "DTEND" {
+            let d = ics_date(value,params) if d == nil { return "日期或时区不支持；仅接受 UTC、Asia/Shanghai 和全天日期" }
+            if name == "DTSTART" { a.start = d.epoch a.all_day = d.all_day }
+            else { a.end = d.epoch a.end_day = d.all_day }
+        } else if name == "UID" { if params != "" || value.len() == 0 || value.len() > 256 { return "UID 无效" } a.uid = value }
+        else if name == "SUMMARY" || name == "LOCATION" { if params != "" && params != ";LANGUAGE=zh-CN" { return "不支持的文本参数" } let text = ics_text(value) if text == nil { return "文本过长或转义无效" } if name == "SUMMARY" { a.title = text } else { a.location = text } }
+        else if name == "SEQUENCE" { let n = value.to_f64() if !(n >= 0 && n <= 1000000000 && n%1 == 0) { return "事件版本无效" } a.sequence = value }
+        else if name == "DTSTAMP" { if ics_date(value,"") == nil { return "DTSTAMP 无效" } a.stamp = value }
+    }
+    ""
+}
+fn begin_calendar_import(text,source){
+    if !text.is_string() || text.len() == 0 || text.len() > 32768 { calendar_fail("文件为空或超过 32 KiB 限制") return }
+    let lines = text.strip_prefix("﻿").split("\n")
+    if lines.len() > 512 { calendar_fail("换行不合法或超过 512 行") return }
+    calendar_busy = true calendar_message = "正在检查 ICS，尚未替换已有日历…"
+    let job = {lines:lines at:0 pending:"" phase:0 version:false current:nil events:[] source:short_text(source,160) inputs:input_generation}
+    calendar_job = job ui.calendar_panel.render() start_timeout(0.01,|| calendar_parse_step(job))
+}
+fn calendar_parse_step(job){
+    if calendar_job != job { return }
+    for n in 8 {
+        if job.at >= job.lines.len() {
+            let error = ics_line(job,job.pending)
+            if error != "" || job.phase != 2 || job.current != nil || !job.version { calendar_fail(if error != "" { error } else { "ICS 结构不完整" }) return }
+            calendar_job = nil calendar_commit(job) return
+        }
+        let line = job.lines[job.at].strip_suffix("\r") job.at = job.at+1
+        if line.search("\r") >= 0 { calendar_fail("不支持单独 CR 换行") return }
+        if line.len() > 2048 { calendar_fail("单行超过 2048 字节") return }
+        if line.strip_prefix(" ") != line || line.strip_prefix("\t") != line {
+            if job.pending == "" { calendar_fail("无效的折叠行") return }
+            let tail = if line.strip_prefix(" ") != line { line.strip_prefix(" ") } else { line.strip_prefix("\t") }
+            job.pending = job.pending+tail if job.pending.len() > 2048 { calendar_fail("折叠后的字段过长") return }
+        } else {
+            let error = ics_line(job,job.pending) if error != "" { calendar_fail(error) return } job.pending = line
+        }
+    }
+    start_timeout(0.01,|| calendar_parse_step(job))
+}
+fn calendar_commit(job){
+    if busy || loading || execution_group != nil || job.inputs != input_generation { calendar_fail("操作期间计划或任务已改变，请重新导入") return }
+    // Compare by UID; reordered input is a no-op without sorting on the UI thread.
+    let sorted = job.events
+    let same = !calendar_bad && sorted.len() == calendar_events.len()
+    for a in sorted { let found = false for b in calendar_events { if a.uid == b.uid && a.start == b.start && a.end == b.end && a.title == b.title && a.location == b.location && a.all_day == b.all_day && a.sequence == b.sequence && a.stamp == b.stamp { found = true } } if !found { same = false } }
+    if same { calendar_busy = false calendar_message = "日历内容相同，没有重复创建事件，也没有重置批准。" ui.calendar_panel.render() return }
+    let next = {version:1 revision:"ics-"+time_now() source:job.source imported_at:whole(time_now()) events:sorted}.to_json()
+    if next.len() > 32768 { calendar_fail("展开后的快照超过容量限制") return }
+    // Retain last valid bytes before replacement; a failed read-back blocks planning.
+    if calendar_raw != nil && !calendar_bad { if !write_text("external-calendar.backup.json",calendar_raw) || read_text("external-calendar.backup.json") != calendar_raw { calendar_fail("无法保留上次快照") return } }
+    if !write_text("external-calendar.json",next) || read_text("external-calendar.json") != next { load_calendar() calendar_bad = true calendar_fail("日历写入未能核验，请重新导入；保留了之前的备份") return }
+    load_calendar() calendar_busy = false
+    input_generation = input_generation+1 task_generation = task_generation+1 last_read = nil last_search = nil proposal = nil planning_advice = nil
+    schedule_display_key = "UNRENDERED" move("STALE","外部日历快照已更新，旧建议与批准已失效。尚未修改任何 Ripple 计划。")
+    ui.calendar_panel.render() queue_change_check("calendar_import")
+}
+fn import_calendar(){
+    if busy || loading || calendar_busy || execution_group != nil || status == "PARTIAL" { return }
+    calendar_busy = true calendar_message = "请在文件选择器中选择 ICS；取消不会改变已导入日历。" ui.calendar_panel.render()
+    let path = "calendar-import.ics"
+    try { if fs.exists(path) { fs.remove(path) } } catch { calendar_fail("临时导入文件无法清理") return }
+    host.request("files.import",{path:path},fn(r){
+        if !r.is_ok { calendar_fail("宿主文件导入不可用："+short_text(r.error,256)) return }
+        if field(r.data,"cancelled") == true { calendar_busy = false calendar_message = "已取消选择，日历未改变。" ui.calendar_panel.render() return }
+        if field(r.data,"path") != path || !field(r.data,"bytes").is_number() || r.data.bytes > 32768 { try { fs.remove(path) } catch {} calendar_fail("文件返回异常或超过 32 KiB") return }
+        let text = read_text(path) try { fs.remove(path) } catch {}
+        begin_calendar_import(text,"用户选择的 ICS 文件")
+    })
+}
+fn toggle_calendar(){ calendar_open = !calendar_open ui.calendar_panel.render() }
+
+// Bounded read-only history summaries. Never grant execution authority.
+// Each deferred append reads only a tiny index and writes one of 32 slots.
+// Complete history slots are read only on explicit open, four per callback.
+fn history_label(state){
+    if state == "RISK" { return "发现风险" } if state == "PLAN_REVIEW" || state == "AWAITING_APPROVAL" { return "提出建议，未授权" }
+    if state == "EXECUTING" { return "用户批准，执行前仍需核验" } if state == "DECLINED" { return "用户保留或拒绝" }
+    if state == "CANCELLED" { return "用户取消分析" } if state == "COMPLETED" { return "执行已独立核验" }
+    if state == "PARTIAL" { return "部分完成或结果待核对" } if state == "FAILED" { return "未完成，请查看原因" } "建议已失效"
+}
+fn history_note(state,text){
+    if history_restoring { return }
+    if state != "RISK" && state != "PLAN_REVIEW" && state != "AWAITING_APPROVAL" && state != "DECLINED" && state != "CANCELLED" && state != "COMPLETED" && state != "PARTIAL" && state != "FAILED" && state != "STALE" { return }
+    let id = active_task+":"+state+":"+input_generation+":"+text
+    let changes = [] let receipt = "" let authorization = "未授权"
+    if proposal != nil { receipt = proposal.task_id authorization = "待批准" let old = proposal.before.parse_json() changes.push({title:short_text(old.title,256) before:old.start after:proposal.start result:"建议"}) if field(proposal,"steps") != nil { changes = [] for s in proposal.steps { changes.push({title:short_text(s.title,256) before:s.before_start after:s.start result:"建议"}) } } }
+    if execution_result != nil && execution_result.fingerprint == record(event) && (state == "COMPLETED" || state == "PARTIAL" || state == "FAILED") {
+        let j = execution_result.journal receipt = j.operation_id id = receipt+":"+state+":"+execution_result.checkpoint authorization = "来自执行收据"
+        for i in j.steps.len() { let s = j.steps[i] changes.push({title:short_text(s.title,256) before:s.before_start after:s.start result:execution_result.results[i].state}) }
+    } else if state == "COMPLETED" { receipt = active_task id = "verified:"+event.event_id+":"+event.revision authorization = "独立读回完成" }
+    history_enqueue({key:id at:whole(time_now()) state:state label:history_label(state) authorization:authorization message:short_text(text,1200) receipt:receipt changes:changes})
+}
+fn approval_changes(p){
+    let old = p.before.parse_json()
+    if field(p,"steps") == nil { return [{title:short_text(old.title,256) before:old.start after:p.start result:"已批准，尚未执行"}] }
+    let changes = []
+    for s in p.steps { changes.push({title:short_text(s.title,256) before:s.before_start after:s.start result:"已批准，尚未执行"}) }
+    changes
+}
+fn history_approval(p){
+    history_enqueue({key:p.task_id+":approved" at:whole(time_now()) state:"EXECUTING" label:"用户批准本次变更" authorization:"已明确批准" message:"批准不代表执行成功；结果以独立读回为准。" receipt:p.task_id changes:approval_changes(p)})
+}
+fn history_enqueue(row){
+    if row.key == history_last { return } history_last = row.key
+    if history_queue.len() >= 8 { history_failed = true return }
+    history_queue.push(row)
+    if !history_pending { history_pending = true start_timeout(0.05,|| history_flush()) }
+}
+fn history_flush(){
+    history_pending = false
+    if history_queue.len() == 0 { return }
+    if busy || loading { return }
+    let rows = [history_queue[0]] let rest = [] for i in history_queue.len() { if i > 0 { rest.push(history_queue[i]) } } history_queue = rest
+    if history_sequence < 0 {
+        let raw = read_text("history-index.json") let index = try { if raw == nil || raw.len() > 256 { nil } else { raw.parse_json() } } catch { nil }
+        if raw == nil && fs.exists("history-1.json") { history_failed = true return }
+        if raw != nil && (!index.is_object() || !field(index,"sequence").is_number() || index.sequence < 0 || index.sequence%1 != 0 || index.sequence > 1000000000) { history_failed = true return }
+        history_sequence = if index == nil { 0 } else { index.sequence }
+    }
+    for row in rows {
+        let last = read_json("history-"+(history_sequence%32)+".json")
+        if last.is_object() && field(last,"key") == row.key { continue }
+        let number = history_sequence+1 row.sequence = number let text = row.to_json()
+        if text.len() > 8192 || !write_text("history-"+(number%32)+".json",text) || read_text("history-"+(number%32)+".json") != text || !write_text("history-index.json",{sequence:number incomplete:history_failed}.to_json()) { history_failed = true return }
+        history_sequence = number
+    }
+    if history_queue.len() > 0 { history_pending = true start_timeout(0.05,|| history_flush()) }
+}
+fn open_history(){
+    if history_loading { return }
+    history_open = !history_open
+    if !history_open { ui.history_panel.render() return }
+    history_rows = [] history_page = 0 history_message = "正在读取最近历史…" history_loading = true ui.history_panel.render()
+    let index_raw = read_text("history-index.json")
+    let index = try { if index_raw == nil || index_raw.len() > 256 { nil } else { index_raw.parse_json() } } catch { nil }
+    if index == nil { history_loading = false history_message = "暂无可读取的历史摘要。不会为旧操作补造记录；可核对最近执行收据。" if fs.exists("history-index.json") || fs.exists("history-1.json") || history_failed { history_message = "历史索引缺失或损坏，记录不完整；执行结果请以独立读回为准。" } ui.history_panel.render() return }
+    let count = field(index,"sequence")
+    if !count.is_number() || count < 0 || count%1 != 0 || count > 1000000000 { history_loading = false history_message = "历史索引损坏，保留原文件；请核对最近执行收据。" ui.history_panel.render() return }
+    history_message = "最近 32 条摘要 · 仅记录此功能启用后的操作，不是不可篡改台账。"
+    if field(index,"incomplete") == true || history_failed { history_message = history_message+" 部分历史未成功保存。" }
+    history_read_step(count,0)
+}
+fn history_read_step(number,total){
+    for n in 4 {
+        if number < 1 || total >= 32 { history_loading = false ui.history_panel.render() return }
+        let raw = read_text("history-"+(number%32)+".json")
+        let row = try { if raw == nil || raw.len() > 8192 { nil } else { raw.parse_json() } } catch { nil }
+        if row.is_object() && field(row,"sequence") == number && valid_epoch(field(row,"at")) && field(row,"label").is_string() && field(row,"message").is_string() && field(row,"changes").is_array() && row.changes.len() <= 5 { history_rows.push(row) }
+        else { history_message = "部分历史缺失或损坏，展示可读取摘要；执行结果请核对实际收据。" }
+        number = number-1 total = total+1
+    }
+    start_timeout(0.01,|| history_read_step(number,total))
+}
+
 fn repaint(){
     // Rebuild the saved list only when its displayed facts or actions change.
     // This is a view cache; execution always reads the real schedule independently.
@@ -86,6 +350,8 @@ fn repaint(){
 }
 fn move(state,text){
     status = state message = text if state != "COMPLETED" { verified = false }
+    try { history_note(state,text) } catch { history_failed = true }
+    if !busy && !loading && history_queue.len() > 0 && !history_pending { history_pending = true start_timeout(0.05,|| history_flush()) }
     // Coalesce presentation after the business callback returns; never extend the VM budget.
     if !repaint_pending { repaint_pending = true start_timeout(0.01,||{ repaint_pending = false repaint() }) }
     if !glance_update_pending { glance_update_pending = true start_timeout(0.1,||{ glance_update_pending = false sync_glance() }) }
@@ -185,6 +451,7 @@ fn keep_risk(){
     if status != "RISK" && status != "NO_CANDIDATE" && status != "CANDIDATES" { return }
     let marker = read_json("change-response.json")
     if marker.is_object() { marker.outcome = "DECLINED" if !write_text("change-response.json",marker.to_json()) { move("FAILED","无法保存您的处理决定；安排未修改，请检查存储。") return } }
+    history_note("DECLINED","保留原计划，不再重复提醒相同风险。")
     proposal = nil planning_advice = nil move("DECLINED","保留原计划，不再重复提醒相同风险。")
 }
 fn review_risk(){
@@ -394,12 +661,13 @@ fn change_facts(e){
     let plans = plan_entries(e) let affected = [] let reasons = [] let mask = []
     let conflicts = plan_conflicts(e)
     for a in plans {
-        let hit = false
+        let hit = !calendar_clear(a.start,a.end)
         for c in conflicts { if c.a == a.id || c.b == a.id { hit = true } }
         if a.outdoor { let c = coverage(a.start,a.end) if !c.complete { return nil } if c.conflict { hit = true } }
         if hit { affected.push({id:a.id title:a.title}) }
     }
     if conflicts.len() > 0 { reasons.push("安排时间重叠，不调整会同时占用同一时段") }
+    for a in plans { if !calendar_clear(a.start,a.end) { reasons.push("与导入日历的只读占用重叠；Ripple 不会修改外部会议") break } }
     let impact = combined_impact(e)
     if !impact.complete { return nil }
     // Only the actual outdoor intervals and declared windows can affect options.
@@ -413,7 +681,7 @@ fn change_facts(e){
     }
     if impact.conflict && reasons.len() == 0 { reasons.push("户外活动存在降雨风险，不调整将保留该风险") }
     let p = planning_of(e) let preference = "none" if p != nil { preference = p.preference }
-    {key:{plans:plans lat:e.lat lon:e.lon timezone:field(e,"timezone") preference:preference weather:mask}.to_json() affected:affected reasons:reasons conflict:impact.conflict}
+    {key:{external:calendar_key() plans:plans lat:e.lat lon:e.lon timezone:field(e,"timezone") preference:preference weather:mask}.to_json() affected:affected reasons:reasons conflict:impact.conflict}
 }
 fn queue_change_check(trigger){
     let generation = input_generation let fingerprint = schedule_fingerprint()
@@ -482,6 +750,8 @@ fn change_agent_failed(generation,reason){
 fn combined_impact(e){
     let impact = coverage(e.start,e.end)
     let p = planning_of(e)
+    if calendar_bad { impact.complete = false impact.reason = "导入日历损坏，外部占用未知。" }
+    for a in plan_entries(e) { if !calendar_clear(a.start,a.end) { impact.conflict = true impact.reason = impact.reason+" 与导入日历的只读占用冲突。" } }
     if p != nil {
         if plan_conflicts(e).len() > 0 { impact.conflict = true impact.reason = impact.reason+" 已保存计划存在时间重叠。" }
         for a in p.plans { if a.active && a.outdoor && a.end > time_now() { let c = coverage(a.start,a.end) if !c.complete { impact.complete = false } if c.conflict { impact.conflict = true impact.reason = impact.reason+" 关联户外计划存在降雨风险。" } } }
@@ -496,6 +766,7 @@ fn plan_conflicts(e){
     found
 }
 fn related_clear(e,s,end){
+    if !calendar_clear(s,end) { return false }
     let p = planning_of(e) if p == nil { return true }
     for a in p.plans { if a.active && overlap(s,end,a.start,a.end) { return false } }
     true
@@ -506,6 +777,7 @@ fn entries_safe(plans,starts,now){
         if s != a.start {
             if !a.movable || a.availability == nil || s <= now || s < a.availability.min_start || end > a.availability.max_end || local_day(s) != local_day(a.start) || local_day(end) != local_day(a.start) { return false }
         }
+        if !calendar_clear(s,end) { return false }
         if a.outdoor && end > now { let c = coverage(s,end) if !c.complete || c.conflict { return false } }
         for j in i { if overlap(s,end,starts[j],starts[j]+plans[j].end-plans[j].start) { return false } }
     }
@@ -530,7 +802,7 @@ fn slot_times(a,now){
         if s != a.start {
             let allowed = true
             if a.outdoor { let c = coverage(s,end) allowed = c.complete && !c.conflict }
-            if allowed { found.push(s) }
+            if allowed && calendar_clear(s,end) { found.push(s) }
         }
     }
     found
@@ -553,7 +825,7 @@ fn option_for(job,starts){
     }
     let s = starts[0] let end = s+job.plans[0].end-job.plans[0].start
     let preference = planning_of(job.event).preference
-    {candidate_id:job.search_id+":"+job.sequence start:s end:end time_authority:authoritative_time(s,end) starts:starts related_changes:changes metrics:{moved_count:moved shift_minutes:shift priority_minutes:weighted preference_penalty:period_penalty(preference,s)} checks:{future:s>time_now() duration_seconds:end-s full_weather_coverage:true weather_safe:true time_bounds:true availability_declared:true calendar_scope:"saved Ripple plans only; external commitments unknown"}}
+    {candidate_id:job.search_id+":"+job.sequence start:s end:end time_authority:authoritative_time(s,end) starts:starts related_changes:changes metrics:{moved_count:moved shift_minutes:shift priority_minutes:weighted preference_penalty:period_penalty(preference,s)} checks:{future:s>time_now() duration_seconds:end-s full_weather_coverage:true weather_safe:true time_bounds:true availability_declared:true calendar_scope:"saved Ripple plans plus imported read-only snapshot; unimported commitments unknown"}}
 }
 fn consider_option(job,starts){
     if !entries_safe(job.plans,starts,time_now()) { return }
@@ -567,21 +839,22 @@ fn consider_option(job,starts){
 fn start_search(args,done){
     let e = read_event()
     if planning_of(e) == nil { done(candidate_search(args,time_now())) return }
-    if !busy || last_read == nil || args.task_id != active_task || args.read_token != last_read.read_token || args.min_start != last_read.bounds.min_start || args.max_end != last_read.bounds.max_end || args.max_candidates != 3 || last_read.fingerprint != schedule_fingerprint() || last_read.weather_fingerprint != read_text("weather.json") { done(nil) return }
+    if !busy || last_read == nil || args.task_id != active_task || args.read_token != last_read.read_token || args.min_start != last_read.bounds.min_start || args.max_end != last_read.bounds.max_end || args.max_candidates != 3 || last_read.fingerprint != schedule_fingerprint() || last_read.weather_fingerprint != read_text("weather.json") || !calendar_current(field(last_read,"calendar_key")) { done(nil) return }
     let w = read_weather_snapshot(e,time_now()) if w == nil { done(nil) return }
     weather = w.hours search_sequence = search_sequence+1
     let plans = plan_entries(e) let times = [] for a in plans { times.push(slot_times(a,time_now())) }
-    let job = {event:e plans:plans times:times at:0 branch:0 slot:0 sequence:0 min_moves:99 closest:nil earliest:nil preferred:nil generation:task_generation inputs:input_generation fingerprint:last_read.fingerprint weather_fingerprint:last_read.weather_fingerprint args:args w:w search_id:active_task+":"+task_generation+":"+search_sequence+":multi" done:done}
+    let job = {event:e plans:plans times:times at:0 branch:0 slot:0 sequence:0 min_moves:99 closest:nil earliest:nil preferred:nil generation:task_generation inputs:input_generation fingerprint:last_read.fingerprint calendar_key:calendar_key() weather_fingerprint:last_read.weather_fingerprint args:args w:w search_id:active_task+":"+task_generation+":"+search_sequence+":multi" done:done}
     coordinated_job = job start_timeout(0.01,|| search_step(job))
 }
 fn search_step(job){
     if coordinated_job != job { return }
-    if !busy || job.generation != task_generation || job.inputs != input_generation || job.fingerprint != schedule_fingerprint() || job.weather_fingerprint != read_text("weather.json") || read_weather_snapshot(job.event,time_now()) == nil {
+    if !busy || job.generation != task_generation || job.inputs != input_generation || job.calendar_key != calendar_key() || calendar_bad || job.fingerprint != schedule_fingerprint() || job.weather_fingerprint != read_text("weather.json") || read_weather_snapshot(job.event,time_now()) == nil {
         coordinated_job = nil job.done(nil) return
     }
     // At most 16 placements/cursor steps per VM entry. The host's 64ms
     // budget is unchanged; the maximum four-plan case yields between batches.
-    for work in 16 {
+    let batch_size = if calendar_events.len() == 0 { 16 } else { 4 }
+    for work in batch_size {
         if job.at >= job.times[0].len() { break }
         let starts = original_starts(job.plans) starts[0] = job.times[0][job.at]
         if job.branch == 0 { consider_option(job,starts) job.branch = 1 }
@@ -803,6 +1076,9 @@ fn finish_save(before,was_pending){
     if !dirty { queue_change_check("saved_plan") }
 }
 fn boot(){
+    load_calendar() history_restoring = true boot_state() history_restoring = false ui.calendar_panel.render()
+}
+fn boot_state(){
     take_risk_open()
     repaint()
     proposal = nil execution_group = nil execution_result = nil busy = false
@@ -903,7 +1179,7 @@ fn read_weather_snapshot(event,now){
 }
 fn candidate_search(args, now){
     if !busy || last_read == nil || last_read.events.len() != 1 { return nil }
-    if args.task_id != active_task || args.read_token != last_read.read_token || last_read.fingerprint != schedule_fingerprint() || last_read.weather_fingerprint != read_text("weather.json") { return nil }
+    if args.task_id != active_task || args.read_token != last_read.read_token || last_read.fingerprint != schedule_fingerprint() || last_read.weather_fingerprint != read_text("weather.json") || !calendar_current(field(last_read,"calendar_key")) { return nil }
     if args.min_start != last_read.bounds.min_start || args.max_end != last_read.bounds.max_end || args.max_candidates != last_read.bounds.max_candidates { return nil }
     if !valid_epoch(args.min_start) || !valid_epoch(args.max_end) || args.max_end - args.min_start > 604800 { return nil }
     if !(args.max_candidates >= 1 && args.max_candidates <= 3 && whole(args.max_candidates) == args.max_candidates) { return nil }
@@ -923,8 +1199,8 @@ fn candidate_search(args, now){
         if s <= now { continue }
         if s < w.hours[0].start { continue }
         let c = coverage(s, e)
-        if c.complete && !c.conflict && within_window(target,s,e) {
-            found.push({candidate_id:search_id + ":" + found.len() start:s end:e time_authority:authoritative_time(s,e) checks:{future:true duration_seconds:duration full_weather_coverage:true weather_safe:true time_bounds:true availability_declared:true calendar_scope:"single Ripple-managed activity; other personal commitments unknown"}})
+        if c.complete && !c.conflict && within_window(target,s,e) && calendar_clear(s,e) {
+            found.push({candidate_id:search_id + ":" + found.len() start:s end:e time_authority:authoritative_time(s,e) checks:{future:true duration_seconds:duration full_weather_coverage:true weather_safe:true time_bounds:true availability_declared:true calendar_scope:"Ripple plan plus imported read-only snapshot; unimported commitments unknown"}})
             if found.len() >= args.max_candidates { break }
         }
     }
@@ -932,7 +1208,7 @@ fn candidate_search(args, now){
 }
 fn validate_candidate(search_id,candidate_id,now){
     if !busy || last_search == nil || last_read == nil || last_search.task_id != active_task || last_search.search_id != search_id { return nil }
-    if last_read.fingerprint != schedule_fingerprint() || now > last_search.expires_at || last_read.weather_fingerprint != read_text("weather.json") { return nil }
+    if last_read.fingerprint != schedule_fingerprint() || now > last_search.expires_at || last_read.weather_fingerprint != read_text("weather.json") || !calendar_current(field(last_read,"calendar_key")) { return nil }
     let w = read_weather_snapshot(last_read.events[0],now)
     if w == nil || w.revision != last_search.weather_revision { return nil }
     weather = w.hours
@@ -944,7 +1220,7 @@ fn validate_candidate(search_id,candidate_id,now){
                 return nil
             }
             let c = coverage(item.start,item.end)
-            if c.complete && !c.conflict && within_window(last_read.events[0],item.start,item.end) { return item }
+            if c.complete && !c.conflict && within_window(last_read.events[0],item.start,item.end) && calendar_clear(item.start,item.end) { return item }
         }
     }
     nil
@@ -997,7 +1273,7 @@ fn abandon_task(reason){ task_generation = task_generation + 1 active_task = "" 
 fn read_context(token){
     if agent_task_kind == "interpret" { return interpret_context(token) }
     let fingerprint = schedule_fingerprint() let e = read_event()
-    if e == nil { return nil }
+    if e == nil || !calendar_current(calendar_key()) { return nil }
     let w = read_weather_snapshot(e,time_now()) if w == nil { return nil }
     weather = w.hours let impact = combined_impact(e)
     if !impact.complete { return nil }
@@ -1007,10 +1283,10 @@ fn read_context(token){
         min_start = a.min_start max_end = a.max_end
         if min_start <= time_now() { min_start = whole(time_now()/60)*60+60 }
     }
-    let result = {task_id:active_task read_token:token events:[e] retrieved_at:time_now() data_source:"ripple-local-activity" impact:impact weather_source:w.source weather_revision:w.revision weather_fetched_at:w.fetched_at time_authority:authoritative_time(e.start,e.end) local_planning_facts:local_plan_facts(e) search_bounds:{min_start:min_start max_end:max_end max_candidates:3} calendar_scope:"Saved primary and related plans share one city/date; all other personal commitments unknown"}
+    let result = {task_id:active_task read_token:token events:[e] retrieved_at:time_now() data_source:"ripple-local-activity" impact:impact weather_source:w.source weather_revision:w.revision weather_fetched_at:w.fetched_at time_authority:authoritative_time(e.start,e.end) local_planning_facts:local_plan_facts(e) external_occupancy:calendar_summary(e) external_snapshot:calendar_key() search_bounds:{min_start:min_start max_end:max_end max_candidates:3} calendar_scope:"Saved Ripple plans and imported same-date read-only occupancy; snapshot is not live sync"}
     if change_context != nil { result.change = change_context }
     if fingerprint != schedule_fingerprint() { return nil }
-    last_read = {read_token:token events:[e] fingerprint:fingerprint bounds:result.search_bounds weather_fingerprint:read_text("weather.json")}
+    last_read = {read_token:token events:[e] fingerprint:fingerprint bounds:result.search_bounds calendar_key:calendar_key() weather_fingerprint:read_text("weather.json")}
     result
 }
 fn app_tool(name,call_id){
@@ -1044,7 +1320,7 @@ fn accept_choice(generation,text){
     let count = 0
     for k v in d { if k == "explanation" { continue } if k != "task_id" && k != "read_token" && k != "decision" && k != "search_id" && k != "candidate_id" { return "REJECTED unexpected model field" } count = count + 1 }
     if count != 5 || field(d,"task_id") != active_task || field(d,"read_token") != last_read.read_token { return "REJECTED uncorrelated choice" }
-    if last_read.fingerprint != schedule_fingerprint() || last_read.weather_fingerprint != read_text("weather.json") { return "STALE context changed" }
+    if last_read.fingerprint != schedule_fingerprint() || last_read.weather_fingerprint != read_text("weather.json") || !calendar_current(field(last_read,"calendar_key")) { return "STALE context changed" }
     let e = read_event() let w = read_weather_snapshot(e,time_now())
     if w == nil { return "STALE weather expired" }
     weather = w.hours let impact = combined_impact(e)
@@ -1063,11 +1339,11 @@ fn accept_choice(generation,text){
     let c = validate_candidate(d.search_id,d.candidate_id,time_now())
     if c == nil { return "STALE invalid candidate" }
     if field(c,"related_changes") != nil && c.related_changes.len() > 0 {
-        proposal = nil planning_advice = {before:schedule_fingerprint() weather_fingerprint:last_read.weather_fingerprint expires_at:last_search.expires_at candidate:c task_id:active_task read_token:d.read_token search_id:d.search_id}
+        proposal = nil planning_advice = {before:schedule_fingerprint() calendar_key:calendar_key() weather_fingerprint:last_read.weather_fingerprint expires_at:last_search.expires_at candidate:c task_id:active_task read_token:d.read_token search_id:d.search_id}
         return "PLAN_REVIEW"
     }
     let next = rescheduled(e,c.start,c.end)
-    proposal = {task_id:active_task read_token:d.read_token search_id:d.search_id candidate_id:d.candidate_id before:schedule_fingerprint() expected:record(next) start:c.start end:c.end created:time_now() expires_at:last_search.expires_at weather_fingerprint:last_read.weather_fingerprint reason:impact.reason source:w.source weather_revision:w.revision weather_fetched_at:w.fetched_at input_generation:input_generation}
+    proposal = {task_id:active_task read_token:d.read_token search_id:d.search_id candidate_id:d.candidate_id before:schedule_fingerprint() expected:record(next) start:c.start end:c.end created:time_now() expires_at:last_search.expires_at calendar_key:calendar_key() weather_fingerprint:last_read.weather_fingerprint reason:impact.reason source:w.source weather_revision:w.revision weather_fetched_at:w.fetched_at input_generation:input_generation}
     if proposal.expires_at > workflow_started + 1200 { proposal.expires_at = workflow_started + 1200 }
     "AWAITING_APPROVAL"
 }
@@ -1214,6 +1490,7 @@ fn decline(){ if !busy && (status == "AWAITING_APPROVAL" || status == "PLAN_REVI
             if !write_text("change-response.json",marker.to_json()) { proposal = nil planning_advice = nil move("FAILED","建议未执行，但无法保存拒绝记录；请检查存储。") return }
         }
     }
+    history_note("DECLINED","已拒绝这组建议；没有写入任何计划。")
     proposal = nil planning_advice = nil move("DECLINED","已拒绝这组建议；没有写入任何计划。")
 } }
 fn interrupt_task(){ if busy && status == "ANALYZING" { abandon_task("已停止分析，安排没有修改。") host.request("octos.turn.interrupt",{},fn(r){}) } }
@@ -1253,12 +1530,12 @@ fn execute(){
     if proposal != nil && field(proposal,"steps") != nil && status == "EXECUTING" {
         let p = proposal proposal = nil
         let e = read_event() let w = read_weather_snapshot(e,time_now())
-        if e == nil || w == nil || schedule_fingerprint() != p.before || read_text("weather.json") != p.weather_fingerprint || time_now() > p.expires_at || time_now()-p.created > 600 || p.input_generation != input_generation || read_text("execution.json") != p.receipt_fingerprint { busy = false move("STALE","批准后事实或执行记录已变化；这组改期未执行，请重新规划并批准。") return }
+        if e == nil || w == nil || !calendar_current(field(p,"calendar_key")) || schedule_fingerprint() != p.before || read_text("weather.json") != p.weather_fingerprint || time_now() > p.expires_at || time_now()-p.created > 600 || p.input_generation != input_generation || read_text("execution.json") != p.receipt_fingerprint { busy = false move("STALE","批准后事实或执行记录已变化；这组改期未执行，请重新规划并批准。") return }
         weather = w.hours
         let steps = try { group_steps(p.before,p.candidate) } catch { nil }
         if steps == nil || steps.to_json() != p.steps.to_json() || steps[steps.len()-1].expected != p.expected { busy = false move("STALE","整组变更未通过独立预校验，没有写入。") return }
         group_cancelled = false group_receipt_text = p.receipt_fingerprint execution_result = nil
-        execution_group = {kind:"RESCHEDULE_GROUP" version:1 operation_id:p.task_id before:p.before expected:p.expected steps:steps cursor:0 status:"EXECUTING" created:p.created expires_at:p.expires_at input_generation:p.input_generation weather_fingerprint:p.weather_fingerprint weather_revision:p.weather_revision candidate:p.candidate origin:p.origin read_token:p.read_token search_id:p.search_id candidate_id:p.candidate_id}
+        execution_group = {kind:"RESCHEDULE_GROUP" version:1 operation_id:p.task_id before:p.before expected:p.expected steps:steps cursor:0 status:"EXECUTING" created:p.created expires_at:p.expires_at input_generation:p.input_generation calendar_key:p.calendar_key weather_fingerprint:p.weather_fingerprint weather_revision:p.weather_revision candidate:p.candidate origin:p.origin read_token:p.read_token search_id:p.search_id candidate_id:p.candidate_id}
         let operation = p.task_id
         start_timeout(0.05,|| { if execution_group != nil && execution_group.operation_id == operation && status == "EXECUTING" { execute() } })
         return
@@ -1267,7 +1544,7 @@ fn execute(){
     if proposal == nil || status != "EXECUTING" { busy = false return }
     let p = proposal proposal = nil
     let current = read_event()
-    if current == nil || schedule_fingerprint() != p.before || time_now() > p.expires_at || time_now()-p.created > 600 || p.start <= time_now() || read_text("weather.json") != p.weather_fingerprint || p.input_generation != input_generation { busy = false move("STALE","Preflight rejected the old suggestion. No write; replan once and approve again.") return }
+    if current == nil || !calendar_current(field(p,"calendar_key")) || schedule_fingerprint() != p.before || time_now() > p.expires_at || time_now()-p.created > 600 || p.start <= time_now() || read_text("weather.json") != p.weather_fingerprint || p.input_generation != input_generation { busy = false move("STALE","Preflight rejected the old suggestion. No write; replan once and approve again.") return }
     let w = read_weather_snapshot(current,time_now())
     if w == nil || w.revision != p.weather_revision { busy = false move("STALE","Weather no longer valid. Replan and approve again.") return }
     weather = w.hours let dry = coverage(p.start,p.end)
@@ -1320,11 +1597,11 @@ fn group_steps(before,c){
 fn prepare_group(){
     if busy || loading || dirty || status != "PLAN_REVIEW" || planning_advice == nil { return }
     let a = planning_advice let e = read_event() let w = read_weather_snapshot(e,time_now())
-    if e == nil || a.before != schedule_fingerprint() || a.weather_fingerprint != read_text("weather.json") || w == nil || time_now() > a.expires_at { planning_advice = nil move("STALE","计划或天气已变化，请重新规划。未修改任何计划。") return }
+    if e == nil || a.before != schedule_fingerprint() || a.weather_fingerprint != read_text("weather.json") || !calendar_current(field(a,"calendar_key")) || w == nil || time_now() > a.expires_at { planning_advice = nil move("STALE","计划或天气已变化，请重新规划。未修改任何计划。") return }
     weather = w.hours
     let steps = try { group_steps(a.before,a.candidate) } catch { nil }
     if steps == nil { move("STALE","这组建议不能按安全顺序执行，或约束已变化。请重新规划；不采用临时占用或未经批准的改动。") return }
-    proposal = {task_id:active_task before:a.before expected:steps[steps.len()-1].expected start:a.candidate.start end:a.candidate.end created:time_now() expires_at:a.expires_at weather_fingerprint:a.weather_fingerprint weather_revision:w.revision weather_fetched_at:w.fetched_at source:w.source input_generation:input_generation steps:steps candidate:a.candidate reason:combined_impact(e).reason origin:planning_mode receipt_fingerprint:read_text("execution.json") read_token:field(a,"read_token") search_id:field(a,"search_id") candidate_id:field(a.candidate,"candidate_id")}
+    proposal = {task_id:active_task before:a.before expected:steps[steps.len()-1].expected start:a.candidate.start end:a.candidate.end created:time_now() expires_at:a.expires_at calendar_key:calendar_key() weather_fingerprint:a.weather_fingerprint weather_revision:w.revision weather_fetched_at:w.fetched_at source:w.source input_generation:input_generation steps:steps candidate:a.candidate reason:combined_impact(e).reason origin:planning_mode receipt_fingerprint:read_text("execution.json") read_token:field(a,"read_token") search_id:field(a,"search_id") candidate_id:field(a.candidate,"candidate_id")}
     if proposal.expires_at > workflow_started+1200 { proposal.expires_at = workflow_started+1200 }
     move("AWAITING_APPROVAL","请核对以下完整变更集合，再决定是否批准。仅写 Ripple 本地计划；未列入变更的计划保持原样。")
 }
@@ -1391,7 +1668,7 @@ fn stop_group(reason){
     else { busy = false execution_result = nil move("PARTIAL","执行已停止；收据保存未确认，不能继续写入。请只读检查实际结果。") }
 }
 fn group_preflight(j){
-    if group_cancelled || j.input_generation != input_generation || time_now() > j.expires_at || time_now()-j.created > 600 || read_text("weather.json") != j.weather_fingerprint { return false }
+    if !calendar_current(field(j,"calendar_key")) || group_cancelled || j.input_generation != input_generation || time_now() > j.expires_at || time_now()-j.created > 600 || read_text("weather.json") != j.weather_fingerprint { return false }
     let original = j.before.parse_json() let w = read_weather_snapshot(original,time_now())
     if w == nil || w.revision != j.weather_revision { return false }
     weather = w.hours
@@ -1423,13 +1700,13 @@ fn finish_group_step(){
     j.status = "EXECUTING" if j.cursor == j.steps.len() { j.status = "COMPLETED" }
     if !persist_group(j) { execution_group = nil busy = false move("PARTIAL","本项实际写入已读回，但进度收据未确认。停止后续写入，请只读检查结果。") return }
     if j.cursor == j.steps.len() { execution_group = nil show_group_result(j) return }
-    if group_cancelled || j.input_generation != input_generation { stop_group("CANCELLED_OR_INPUT_CHANGED") return }
+    if !calendar_current(field(j,"calendar_key")) || group_cancelled || j.input_generation != input_generation { stop_group("CANCELLED_OR_INPUT_CHANGED") return }
     move("EXECUTING","本项已独立核验；下一项写入前会重新检查完整日程和授权。")
     let index = j.cursor let operation = j.operation_id
     start_timeout(0.25,|| { if execution_group != nil && execution_group.operation_id == operation && execution_group.cursor == index && status == "EXECUTING" { execute() } })
 }
 fn cancel_group(){
-    if execution_group != nil { group_cancelled = true if status == "EXECUTING" { stop_group("USER_CANCELLED") } return }
+    if execution_group != nil { history_note("CANCELLED","用户停止后续修改；已执行项目以收据为准。") group_cancelled = true if status == "EXECUTING" { stop_group("USER_CANCELLED") } return }
     if status == "EXECUTING" && proposal != nil && field(proposal,"steps") != nil { proposal = nil busy = false move("DECLINED","授权已取消，没有执行这组改期。") }
 }
 fn close_group_result(){
@@ -1455,8 +1732,9 @@ fn group_deadline(operation,before){
     else { move("PARTIAL","执行检查中断，当前结果尚未核实。保留原始日程和收据，不自动重试。") }
 }
 fn confirm(){
-    if busy || loading || dirty || status != "AWAITING_APPROVAL" || proposal == nil { return }
+    if calendar_busy || busy || loading || dirty || status != "AWAITING_APPROVAL" || proposal == nil { return }
     if field(proposal,"steps") != nil { let operation = proposal.task_id let before = proposal.before start_timeout(10,|| group_deadline(operation,before)) }
+    try { history_approval(proposal) } catch { history_failed = true }
     busy = true move("EXECUTING","已收到您的批准，正在重新核对计划与天气，然后执行…")
     start_timeout(0.25,|| execute())
 }
@@ -1766,6 +2044,7 @@ ui := SolidView{width:Fill height:Fill flow:Down padding:18 spacing:12 draw_bg.c
                             Label{width:Fill text:local_clock(first.start)+"–"+local_clock(first.end)+"   "+first.title draw_text.color:ink draw_text.text_style.font_size:15}
                             Hint{text:local_date(first.start)+" · "+if field(event,"location") == nil { "已保存地点" } else { event.location.name }+" · "+movable_label(first.movable)}
                             Body{text:weather_detail(first)}
+                            if !calendar_clear(first.start,first.end) { Body{text:if calendar_bad { "外部日历损坏，占用未知" } else { "与导入的只读日历占用重叠" } draw_text.color:#x916125} }
                             for b in plans { if b.id != first.id && overlap(first.start,first.end,b.start,b.end) { Body{text:"与「"+b.title+"」时间重叠" draw_text.color:#x916125} } }
                         }
                     }
@@ -1782,7 +2061,38 @@ ui := SolidView{width:Fill height:Fill flow:Down padding:18 spacing:12 draw_bg.c
             Action{text:"请 AI 重新分析" on_click:|| analyze_with_agent()}
             Action{text:"不用 AI，查看可行方案" on_click:|| check_availability()}
             Hint{text:"天气来源 Open-Meteo；测试重放会标为 FIXTURE。天气缺失或过期时风险未知。"}
-            Hint{text:"仅在打开、保存、刷新或主动分析时检查；关闭后不监测。不连接外部日历。"}
+            Hint{text:"仅在打开、保存、刷新或主动分析时检查；关闭后不监测。导入日历仅为文件快照，不是实时同步。"}
+        }
+        SolidView{width:Fill height:Fit flow:Down padding:16 spacing:8 draw_bg.color:#xffffff
+            Heading{text:"已有日历 · 只读占用"}
+            Action{text:"导入已有日历（ICS）" on_click:|| import_calendar()}
+            Action{text:"查看 / 收起已导入安排" on_click:|| toggle_calendar()}
+            calendar_panel := View{width:Fill height:Fit flow:Down spacing:6 on_render:||{
+                Body{text:calendar_message}
+                Hint{text:"一次最多 32 项、32 KiB；仅 UTC / Asia/Shanghai 同日事件和单日全天事件。不支持重复规则；重新导入会替换整个快照。"}
+                if calendar_open { for a in calendar_events {
+                    Body{text:a.title+" · 只读"}
+                    Hint{text:nice_time(a.start)+" → "+nice_time(a.end)+if a.all_day { " · 全天占用" } else { "" }}
+                    if a.location != "" { Hint{text:a.location} }
+                } }
+            }}
+            Action{text:"执行历史" on_click:|| open_history()}
+            history_panel := View{width:Fill height:Fit flow:Down spacing:8 on_render:||{
+                if history_open {
+                    Heading{text:"审批与执行历史"} Hint{text:history_message}
+                    for index in history_rows.len() { if index >= history_page*8 && index < (history_page+1)*8 { let row = history_rows[index]
+                        Body{text:nice_time(row.at)+" · "+short_text(row.label,160)}
+                        Hint{text:short_text(row.authorization,160)+" · "+short_text(row.message,1200)}
+                        for c in row.changes {
+                            if valid_epoch(field(c,"before")) && valid_epoch(field(c,"after")) { Body{text:short_text(field(c,"title"),256)+"："+nice_time(c.before)+" → "+nice_time(c.after)+" · "+if field(c,"result") == "CONFIRMED" { "已独立核验" } else if field(c,"result") == "FAILED" { "未生效" } else if field(c,"result") == "UNKNOWN" { "结果待核对" } else if field(c,"result") == "NOT_STARTED" { "未执行" } else { short_text(field(c,"result"),160) }} }
+                        }
+                    }
+                    }
+                    if history_page > 0 { Action{text:"较新的记录" on_click:||{history_page = history_page-1 ui.history_panel.render()}} }
+                    if (history_page+1)*8 < history_rows.len() { Action{text:"更早的记录" on_click:||{history_page = history_page+1 ui.history_panel.render()}} }
+                    Action{text:"核对最近执行收据" on_click:|| inspect_result()}
+                }
+            }}
         }
         Hint{text:"支持中国城市、北京时间、同日 15–240 分钟活动，最多四项关联计划。"}
         Hint{text:"使用帮助：先描述并核对草稿，再确认保存；收到建议后另行批准改期。未保存草稿不在重启后保留。模型配置在宿主设置中管理。"}

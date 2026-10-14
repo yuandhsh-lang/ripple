@@ -510,4 +510,5 @@ mod tests {
     include!("stage3_tests.rs");
     include!("stage4_tests.rs");
     include!("ux_tests.rs");
+    include!("ics_tests.rs");
 }

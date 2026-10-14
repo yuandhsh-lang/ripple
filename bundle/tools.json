@@ -3,7 +3,7 @@
   "tools": [
     {
       "name": "ripple.context.read",
-      "description": "Read actual saved primary/linked plans, fixed constraints, preferences and validated weather; in interpretation mode read the person request and current input facts for a review-only draft. No write authority.",
+      "description": "Read actual saved primary/linked plans, fixed constraints, preferences and validated weather; in interpretation mode read the person request and current input facts for a review-only draft. No write authority. Imported ICS occupancy is read-only, bounded and not live calendar synchronization.",
       "implemented_by": "app",
       "risk": "read",
       "private_data": true,
@@ -383,6 +383,17 @@
               ],
               "additionalProperties": false
             }
+          },
+          "external_occupancy": {
+            "type": "array",
+            "maxItems": 32,
+            "items": {
+              "type": "object"
+            }
+          },
+          "external_snapshot": {
+            "type": "string",
+            "maxLength": 96
           }
         },
         "required": [

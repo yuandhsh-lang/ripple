@@ -12,7 +12,7 @@ fn stage3_group_execution_and_recovery() {
       fn s3_edit(){ draft_changed() }
       fn s3_tamper(){ proposal.expected=proposal.expected.replace("Stage3 cycle","Unapproved title") }
       fn s3_expire(){ proposal.expires_at=time_now()-1 }
-      fn s3_fixture_advice(text){ let raw=text.parse_json() let e=read_event() let c=option_for({plans:plan_entries(e) event:e search_id:"executor-fixture" sequence:1},raw.starts) workflow_started=time_now() active_task="s3-bounded-executor-fixture" planning_advice={before:schedule_fingerprint() weather_fingerprint:read_text("weather.json") expires_at:time_now()+500 candidate:c} busy=false move("PLAN_REVIEW","Explicit executor fixture; not an AI search result") }
+      fn s3_fixture_advice(text){ let raw=text.parse_json() let e=read_event() let c=option_for({plans:plan_entries(e) event:e search_id:"executor-fixture" sequence:1},raw.starts) workflow_started=time_now() active_task="s3-bounded-executor-fixture" planning_advice={before:schedule_fingerprint() calendar_key:calendar_key() weather_fingerprint:read_text("weather.json") expires_at:time_now()+500 candidate:c} busy=false move("PLAN_REVIEW","Explicit executor fixture; not an AI search result") }
     "#);
     let now=std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_secs();
     let day=((now+28800)/86400+1)*86400-28800;
@@ -120,6 +120,16 @@ fn stage3_group_execution_and_recovery() {
         if case=="concurrent-receipt" {std::fs::write(&journal,"{\"kind\":\"SAVE\",\"operation_id\":\"other-writer\"}").unwrap();}
         invoke(&mut cx,&card,id!(execute),&[]);invoke(&mut cx,&card,id!(finish_verify),&[]);
         let final_state=report(&mut cx);
+        if case=="success" || case=="write-denied" {
+            for _ in 0..8 {invoke(&mut cx,&card,id!(history_flush),&[]);}
+            let count=read(jail.join("history-index.json"))["sequence"].as_u64().unwrap();
+            let rows=(1..=count).map(|n|read(jail.join(format!("history-{}.json",n%32)))).collect::<Vec<_>>();
+            assert!(rows.iter().any(|r|r["authorization"]=="已明确批准"));
+            let completed=rows.iter().find(|r|r["state"]=="COMPLETED");
+            if case=="success" {let c=completed.unwrap();assert_eq!(c["changes"].as_array().unwrap().len(),2);assert!(c["changes"].as_array().unwrap().iter().all(|v|v["result"]=="CONFIRMED"));}
+            else {assert!(completed.is_none());assert!(rows.iter().any(|r|r["state"]=="PARTIAL"));}
+            write(&format!("history-execution-{case}.json"),&json!({"classification":"ACTUAL_EXECUTOR_CONTROLLED_WEATHER_MODEL","rows":rows}));
+        }
         if case=="success" {
             assert_eq!(final_state["status"],"COMPLETED");assert_eq!(read(&schedule),expected);assert_eq!(read(&journal)["status"],"COMPLETED");
             for i in 1..4 {assert_eq!(read(&schedule)["planning"]["plans"][i],input["planning"]["plans"][i]);}
