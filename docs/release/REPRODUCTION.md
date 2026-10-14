@@ -1,11 +1,6 @@
-# Ripple 0.6.4 独立复现
+# Ripple 0.6.5 独立复现
 
-本指南对应已发布的 `v0.6.4`，Commit `7e150404a3073a77688d5e1670de018083fe82a4`。认证包已下载、验证并在本机多个独立空 RC6 环境安装。2026-10-14 的新版演示再次使用该包，未修改 Bundle；这不是第二台设备测试。
-
-- [正式发布包](https://github.com/yuandhsh-lang/ripple/releases/download/v0.6.4/app.bundle.pack.json)
-- [来源证明工作流](https://github.com/yuandhsh-lang/ripple/actions/runs/38481044405)
-- Pack SHA-256：`60a4f96b18f0a95bf024da24aba83b1e57b10f8677128cd841969261386f90d4`
-- Bundle BLAKE3：`254c3298e4d4a470223a138f7c334b5eb580f2ae4b80add7b5b0a7058780e777`
+本指南对应 `v0.6.5`。使用该 Tag 的 `app.bundle.pack.json` 与 `release-receipt.json`，核对完整 Commit、Pack SHA-256 和工作流运行地址。下载包复验完成后更新本页；不得沿用旧版哈希。旧版指南保留在 [v0.6.4 固定源码](https://github.com/yuandhsh-lang/ripple/blob/v0.6.4/docs/release/REPRODUCTION.md)。
 
 公开商店收录仍以 [App Hub #94](https://github.com/OctoSense-org/OctoSense-App-Hub/issues/94) 的实际审核结果为准。
 
@@ -27,6 +22,12 @@
 
 查看 AI 方案或无解说明。没有合法候选时可以明确修改允许窗口/时长；确认新条件后必须重新规划。核对完整变更：活动、原时间、新时间、影响范围。单独点击“批准并执行以上全部调整”。只在逐项独立读回匹配后接受“已核验”。
 
+## 导入已有日历与查看历史
+
+点击“导入已有日历（ICS）”，用系统文件选择器选择 UTF-8 ICS。核对事件数量、来源与时间范围。最多 32 项、32 KiB；UTC / Asia/Shanghai 普通同日事件和单日全天事件。复杂重复规则、未知时区或非法文件会整体拒绝并保留原快照。导入是只读占用，不会改写外部会议。新导入改变相关事实后，旧批准失效。
+
+批准一次实际改期并完成独立读回后，打开“执行历史”，核对授权、原/新时间和核验结果。重启后再次打开查看。最近 32 条摘要不是完整台账；历史不完整时以执行收据和实际计划为准。
+
 ## 核验与异常
 
 隔离测试的应用数据位于所指定 APP_DATA 下的 `ripple/`：`schedule.txt` 是权威计划，`execution.json` 是逐项收据，`weather.json` 是天气依据。比较收据最终 expected 与重新读取的 schedule 字节；完成项应有真实读回结果。不要在默认用户数据上注入测试。
@@ -45,13 +46,13 @@ LIVE 需要 Open-Meteo 网络；真实 AI 需要 Provider 授权。不能保证�
 
 ```powershell
 # 在新的工作目录执行，hub.exe 在 PATH 中
-Invoke-WebRequest https://github.com/yuandhsh-lang/ripple/releases/download/v0.6.4/app.bundle.pack.json -OutFile app.bundle.pack.json
+Invoke-WebRequest https://github.com/yuandhsh-lang/ripple/releases/download/v0.6.5/app.bundle.pack.json -OutFile app.bundle.pack.json
 (Get-FileHash .\app.bundle.pack.json -Algorithm SHA256).Hash
 hub publisher-unpack .\app.bundle.pack.json --out .\verified-bundle
 hub publisher-verify .\verified-bundle
 ```
 
-哈希必须与本页一致；每个命令的退出码必须为 0。继续按照官方文档的“在本地演练商店流程”建立一次性 catalog：
+哈希必须与所下载的 release-receipt.json 和 GitHub Release 资产 digest 一致；每个命令的退出码必须为 0。继续按照官方文档的“在本地演练商店流程”建立一次性 catalog：
 
 ```powershell
 New-Item -ItemType Directory mirror, mirror-keys, runtime

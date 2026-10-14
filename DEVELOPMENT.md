@@ -1,6 +1,6 @@
 # Ripple 开发与验证
 
-唯一正式目录为本仓库，唯一原生应用入口为 `bundle/`。已发布版本仍为 v0.6.4；`dev/ics-audit-v0.6.5` 中的 Bundle 是 0.6.5-rc.1 开发候选，增加 ICS 只读占用与执行历史，尚未正式发布。`stage1/bundle/`、阶段脚本、React 原型保留历史含义，不作为新发布入口。候选范围和验收状态见 [ICS 与执行历史](docs/development/ICS_AND_HISTORY.md)。
+唯一正式目录为本仓库，唯一原生应用入口为 `bundle/`。新版 Bundle 为 0.6.5，增加 ICS 只读占用与执行历史；实际认证发布状态以对应 Tag 的 Release 和收据为准，旧 v0.6.4 保留。`stage1/bundle/`、阶段脚本、React 原型保留历史含义，不作为新发布入口。候选范围和验收状态见 [ICS 与执行历史](docs/development/ICS_AND_HISTORY.md)。
 
 本机准备依赖：Rust1.97.1 / MSVC；`phase1/toolchain/` 为官方固定源快照（忽略，不发布）：makepad32d6415fb7476345ad36ee4f98d6f844d1f07fd2、octoscript2e37d9e657a246f16718d9a475e167ccd2d5b5fa、octoscript-makepad33dea2f1f3ad3f1346a219aa8cf6e91b31361e23、AppHub95e4831afca7227b640f075b252c04355bb63865。此SDK测试版本与RC6实机运行分别记录。
 

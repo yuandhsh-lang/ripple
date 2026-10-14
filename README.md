@@ -4,11 +4,13 @@
 
 [![Ripple 原生软件演示](docs/media/cover.png)](https://github.com/yuandhsh-lang/ripple/releases/download/v0.6.4/Ripple-0.6.4-Product-Demo-HQ.mp4)
 
-**[观看 105 秒演示](https://github.com/yuandhsh-lang/ripple/releases/download/v0.6.4/Ripple-0.6.4-Product-Demo-HQ.mp4) · [下载 v0.6.4](https://github.com/yuandhsh-lang/ripple/releases/tag/v0.6.4) · [安装与快速体验](docs/release/REPRODUCTION.md)**
+**[观看 v0.6.4 历史演示（105 秒）](https://github.com/yuandhsh-lang/ripple/releases/download/v0.6.4/Ripple-0.6.4-Product-Demo-HQ.mp4) · [下载 v0.6.5](https://github.com/yuandhsh-lang/ripple/releases/tag/v0.6.5) · [安装与快速体验](docs/release/REPRODUCTION.md)**
 
 - **说清安排。** 自然语言生成中文草稿，确认城市、时间和可调整条件后保存，也支持手动编辑。
 - **发现变化。** 在打开应用、保存计划和刷新天气时检查冲突与降雨风险，通过原生 Glance 提醒您处理。
 - **批准后落实。** AI 用工具寻找方案；无解时协商新条件。实际改期须单独审批，逐项写入并独立读回。
+
+**v0.6.5 新增：** 导入 ICS 日历，让规划避开已有会议；打开“执行历史”，查看最近的批准、改期与核验结果。外部日历是只读快照，不会被 Ripple 改写。
 
 ## 一次计划协调
 
@@ -29,7 +31,7 @@
 ## 安装与第一次使用
 
 1. 使用 Windows 官方 [OctoSense RC6](https://github.com/OctoSense-org/OctoSense/releases/tag/desktop-v0.1.0-rc.6)。这是已验证的预发布宿主版本。
-2. 从 [Release](https://github.com/yuandhsh-lang/ripple/releases/tag/v0.6.4) 下载 `app.bundle.pack.json`，按 [复现指南](docs/release/REPRODUCTION.md) 验证来源并安装。App Hub 收录前使用官方隔离镜像流程。
+2. 从 [Release](https://github.com/yuandhsh-lang/ripple/releases/tag/v0.6.5) 下载 `app.bundle.pack.json`，按 [复现指南](docs/release/REPRODUCTION.md) 验证来源并安装。App Hub 收录前使用官方隔离镜像流程。
 3. 在宿主配置自己的 DeepSeek Provider，授权 Ripple 后输入需求；没有模型时仍可手动建立计划、使用规则分析。
 4. 核对中文草稿，搜索并选择城市，明确保存。后续风险会在受支持的检查时机出现。
 
@@ -37,7 +39,7 @@
 
 ## 应用画面
 
-均来自未改动的 v0.6.4 认证包在官方 RC6 中运行。演示先读取 LIVE 天气，再用标为 FIXTURE 的快照验证降雨变化；模型、工具、Glance、审批、保存和读回来自同一次任务。
+以下为 v0.6.4 历史核心流程画面；不作为新增 ICS 和历史功能的证明。v0.6.5 的正式包实测媒体将在 Release 后补充，并记录版本对应关系。演示先读取 LIVE 天气，再用标为 FIXTURE 的快照验证降雨变化；模型、工具、Glance、审批、保存和读回来自同一次任务。
 
 | 已保存的安排 | 中文草稿 |
 |---|---|
@@ -56,9 +58,9 @@
 ## 支持范围
 
 - `Asia/Shanghai`，同城同日，活动 15–240 分钟；一个主活动、最多四项关联计划，单次最多移动两项。
-- 管理 Ripple 内部计划，不同步外部日历；关闭应用后不监测。
+- 管理 Ripple 内部计划；可导入最多 32 项、32 KiB 的 ICS 只读占用，不做日历账户同步；关闭应用后不监测。
 - 天气缺失、过期或位置不匹配时显示未知，不当作安全。
-- 暖态 Glance 路由可能需要额外点击“查看系统提醒状态”。历史 SDK 间歇时间预算问题尚未完全归因。
+- 宿主提醒受系统通知设置影响；暖态 Glance 路由可能需要额外点击“查看系统提醒状态”。
 
 详见 [已知限制](docs/release/KNOWN_LIMITATIONS.md)。发布包验证、App Hub 审核与赛事评审是不同状态，不以 GitHub Release 代表官方收录。
 
@@ -72,6 +74,6 @@
 | `src/`、npm 工程 | 保留的早期 React 原型，不是原生应用入口 |
 | `stage1/`–`stage4/`、`phase*/` | 历史实现与验证资料，不作为新的发布入口 |
 
-应用固定在 [`v0.6.4`](https://github.com/yuandhsh-lang/ripple/tree/v0.6.4)，Commit `7e150404a3073a77688d5e1670de018083fe82a4`。`main` 的文档和媒体可以后续修订，签署 Bundle 不变；历史 `v0.1.0` 和比赛材料保留。[文档勘误](docs/release/ERRATA.md)。
+新版应用固定在 [`v0.6.5`](https://github.com/yuandhsh-lang/ripple/tree/v0.6.5)，完整 Commit 由 Tag 和 Release 收据共同核对。旧 `v0.6.4` 及其媒体保留。`main` 的文档和媒体可以后续修订，签署 Bundle 不变；历史 `v0.1.0` 和比赛材料保留。[文档勘误](docs/release/ERRATA.md)。
 
 Apache-2.0，见 [LICENSE](LICENSE) 和 [NOTICE](NOTICE)。开发环境与测试命令见 [DEVELOPMENT.md](DEVELOPMENT.md)。
