@@ -1,0 +1,166 @@
+{
+  "classification": "OFFICIAL_RC6_REAL_DEEPSEEK_SYNTHETIC_DEMO_DATA",
+  "app_version": "0.6.5",
+  "commit": "f27f0682ee31530967240d4016eba005cec4078f",
+  "tag": "v0.6.5",
+  "pack_sha256": "75030807fa1ca6e6f93b52eb44a6ba794956fbdd8145720092f795b440592360",
+  "bundle_blake3": "fe2075c01cf545bc1c191ba0453d6d85b8e8ba3c1b6fbc7b8b1447dbc51bf1cd",
+  "model": {
+    "lane": "primary",
+    "model": "deepseek-flash",
+    "provider": "deepseek"
+  },
+  "tools": [
+    {
+      "ts": "2026-10-14T04:05:44.714623500+00:00",
+      "tool": "ripple.context.read",
+      "risk": "read",
+      "decision": "allowed",
+      "outcome": "ok",
+      "duration_ms": 71,
+      "args_bytes": 46,
+      "result_bytes": 809
+    },
+    {
+      "ts": "2026-10-14T04:09:13.074398700+00:00",
+      "tool": "ripple.context.read",
+      "risk": "read",
+      "decision": "allowed",
+      "outcome": "ok",
+      "duration_ms": 104,
+      "args_bytes": 46,
+      "result_bytes": 3230
+    },
+    {
+      "ts": "2026-10-14T04:09:14.958850300+00:00",
+      "tool": "ripple.slots.search",
+      "risk": "read",
+      "decision": "allowed",
+      "outcome": "ok",
+      "duration_ms": 166,
+      "args_bytes": 138,
+      "result_bytes": 1418
+    },
+    {
+      "ts": "2026-10-14T04:10:56.846221200+00:00",
+      "tool": "ripple.context.read",
+      "risk": "read",
+      "decision": "allowed",
+      "outcome": "ok",
+      "duration_ms": 152,
+      "args_bytes": 45,
+      "result_bytes": 3232
+    },
+    {
+      "ts": "2026-10-14T04:10:58.687170900+00:00",
+      "tool": "ripple.slots.search",
+      "risk": "read",
+      "decision": "allowed",
+      "outcome": "ok",
+      "duration_ms": 161,
+      "args_bytes": 137,
+      "result_bytes": 2306
+    }
+  ],
+  "weather": {
+    "live": "Open-Meteo: 167-hour real response, fetched 2026-10-14T12:07:16+08:00",
+    "fixture": "Only the original 09:00-10:00 outdoor period is replayed as rain (2mm, 80%, code 61). Other hours retain the acquired baseline. Explicit FIXTURE label; not a live weather change."
+  },
+  "ics": {
+    "native_file_picker": true,
+    "events": 2,
+    "external_read_only": true,
+    "busy_Asia_Shanghai": [
+      "2026-10-15 13:00-14:00",
+      "2026-10-15 17:00-18:00"
+    ]
+  },
+  "execution": {
+    "tag": "v0.6.5",
+    "commit": "f27f0682ee31530967240d4016eba005cec4078f",
+    "event_id": "ripple-1791950834.9040484",
+    "status": "COMPLETED",
+    "cursor": 2,
+    "independent_bytes_equal_expected": true,
+    "fixed_internal_meeting_unchanged": true,
+    "external_calendar_bytes_unchanged": true,
+    "steps": [
+      {
+        "title": "阅读",
+        "before_start": 1792036800,
+        "before_end": 1792040400,
+        "start": 1792044000,
+        "end": 1792047600,
+        "state": "CONFIRMED"
+      },
+      {
+        "title": "户外骑行",
+        "before_start": 1792026000,
+        "before_end": 1792029600,
+        "start": 1792036800,
+        "end": 1792040400,
+        "state": "CONFIRMED"
+      }
+    ],
+    "history_count": 8,
+    "hashes": {
+      "schedule.txt": "5569115e0edbc0e1d344824d86293e429296ac687f32ca8268513b2d708c1bea",
+      "execution.json": "510188a0f64e971ef92d4cc665431a0cd6552cb500417484bb8a4a185c7b2cb0",
+      "external-calendar.json": "7adca1d4762999b37ec7a97f3cc846f45cc92d1183e9667e63a00d0bded3a317",
+      "history-index.json": "3b39bca336606322e5b94c0e39c3b4c51808360bda34fbef5fd1c60d574bf1ac",
+      "history-1.json": "e5078081104e9378f69ceaa14779a4d3187efa4bcba7701dbc9066edc4b21d52",
+      "history-2.json": "8a1b66ae672efc871cb151df3075406266bce90cedfb521b97779ed0802c05fc",
+      "history-3.json": "00c09da041741cf93813352b9f6d5a01315e823449a04da30fa1a880718da348",
+      "history-4.json": "07236ed19e2ffe1fb339a9940bad8dd750cb89f3a0d7536e3a2b78dc823f0b2e",
+      "history-5.json": "b14fdec88bc18560097b817693dcd94e2e7b2033cad536b19192cfed26d15890",
+      "history-6.json": "ec001f5aeb2665bd9c55d15a303efcbb7795a8279abd2d5d8c191d28bc8603a9",
+      "history-7.json": "81921f774380e50b0f91a78b4bb7fe317c5ca80ad71fbf80979edd17d2bc626a",
+      "history-8.json": "0e4e5b57b059a0b14e31928028c83f8db9f978a71477815f0bfa98be9240fac4"
+    }
+  },
+  "restart": {
+    "result": "PASS",
+    "whole_host_restart": true,
+    "all_schedule_receipt_calendar_history_bytes_unchanged": true,
+    "no_reexecution": true,
+    "hashes": {
+      "schedule.txt": "5569115e0edbc0e1d344824d86293e429296ac687f32ca8268513b2d708c1bea",
+      "execution.json": "510188a0f64e971ef92d4cc665431a0cd6552cb500417484bb8a4a185c7b2cb0",
+      "external-calendar.json": "7adca1d4762999b37ec7a97f3cc846f45cc92d1183e9667e63a00d0bded3a317",
+      "history-index.json": "3b39bca336606322e5b94c0e39c3b4c51808360bda34fbef5fd1c60d574bf1ac",
+      "history-1.json": "e5078081104e9378f69ceaa14779a4d3187efa4bcba7701dbc9066edc4b21d52",
+      "history-2.json": "8a1b66ae672efc871cb151df3075406266bce90cedfb521b97779ed0802c05fc",
+      "history-3.json": "00c09da041741cf93813352b9f6d5a01315e823449a04da30fa1a880718da348",
+      "history-4.json": "07236ed19e2ffe1fb339a9940bad8dd750cb89f3a0d7536e3a2b78dc823f0b2e",
+      "history-5.json": "b14fdec88bc18560097b817693dcd94e2e7b2033cad536b19192cfed26d15890",
+      "history-6.json": "ec001f5aeb2665bd9c55d15a303efcbb7795a8279abd2d5d8c191d28bc8603a9",
+      "history-7.json": "81921f774380e50b0f91a78b4bb7fe317c5ca80ad71fbf80979edd17d2bc626a",
+      "history-8.json": "0e4e5b57b059a0b14e31928028c83f8db9f978a71477815f0bfa98be9240fac4"
+    }
+  },
+  "glance": {
+    "native_card_and_toast_observed_this_run": true,
+    "card_click_observed": true,
+    "warm_route_requires_return_to_app": true,
+    "withdrawal_observed": true
+  },
+  "video": {
+    "filename": "Ripple-0.6.5-Product-Demo-HQ.mp4",
+    "sha256": "799a801f9720082efcac062a9e2def380932b7ada4ffde72819b0dbae79e1d42",
+    "duration_seconds": 112,
+    "resolution": [
+      1920,
+      1080
+    ],
+    "fps": 30,
+    "codecs": [
+      "H.264",
+      "AAC"
+    ],
+    "subtitles": "Burned-in Chinese",
+    "narration": "Microsoft Huihui Desktop, local authorized Windows TTS",
+    "source": "Two raw WGC captures of one continuous task and its host restart; no old-version footage or generated UI",
+    "approval_action": "Explicitly labelled local slow motion of actual approval action; no synthetic frame interpolation"
+  },
+  "verification_scope": "Developer operation acceptance in a clean isolated environment on the same Windows machine; not an independent second device or participant study"
+}

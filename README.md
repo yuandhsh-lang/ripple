@@ -2,9 +2,9 @@
 
 计划变了，和 AI 一起找到可行安排。Ripple 检查日程与天气风险，提出调整，经您批准后改期，并重新读取保存结果。
 
-[![Ripple 原生软件演示](docs/media/cover.png)](https://github.com/yuandhsh-lang/ripple/releases/download/v0.6.4/Ripple-0.6.4-Product-Demo-HQ.mp4)
+[![Ripple 原生软件演示](docs/media/v0.6.5/cover.png)](https://github.com/yuandhsh-lang/ripple/releases/download/v0.6.5/Ripple-0.6.5-Product-Demo-HQ.mp4)
 
-**[观看 v0.6.4 历史演示（105 秒）](https://github.com/yuandhsh-lang/ripple/releases/download/v0.6.4/Ripple-0.6.4-Product-Demo-HQ.mp4) · [下载 v0.6.5](https://github.com/yuandhsh-lang/ripple/releases/tag/v0.6.5) · [安装与快速体验](docs/release/REPRODUCTION.md)**
+**[观看 112 秒高清实机演示](https://github.com/yuandhsh-lang/ripple/releases/download/v0.6.5/Ripple-0.6.5-Product-Demo-HQ.mp4) · [下载 v0.6.5](https://github.com/yuandhsh-lang/ripple/releases/tag/v0.6.5) · [安装与快速体验](docs/release/REPRODUCTION.md)**
 
 - **说清安排。** 自然语言生成中文草稿，确认城市、时间和可调整条件后保存，也支持手动编辑。
 - **发现变化。** 在打开应用、保存计划和刷新天气时检查冲突与降雨风险，通过原生 Glance 提醒您处理。
@@ -14,9 +14,9 @@
 
 ## 一次计划协调
 
-明天下午在北京骑行，但天气预报出现降雨；上午又有不能移动的会议。Ripple 发现原窗口内没有合法时段，询问是否愿意补充允许的时间。
+导入已有会议后，在北京安排上午骑行、阅读和固定项目会议。天气出现降雨风险，上午的固定会议又占用了可调整时段。Ripple 说明原窗口内没有合法候选，询问是否愿意补充允许的时间。
 
-您确认新的窗口后，AI 重新规划：把交流提前到中午，骑行改到下午两点，两场固定会议保持不变。核对两项变更并批准后，Ripple 保存调整，显示各项核验结果，撤回风险提醒。
+您确认新的窗口后，AI 重新规划：把骑行改到中午十二点，阅读改到下午两点，内部固定会议和导入的外部会议保持不变。核对两项变更并批准后，Ripple 保存调整，显示各项核验结果，撤回风险提醒。
 
 **同意新条件不等于批准改期。** AI 建议、用户授权、实际执行和读回结果分别呈现。
 
@@ -39,19 +39,21 @@
 
 ## 应用画面
 
-以下为 v0.6.4 历史核心流程画面；不作为新增 ICS 和历史功能的证明。v0.6.5 的正式包实测媒体将在 Release 后补充，并记录版本对应关系。演示先读取 LIVE 天气，再用标为 FIXTURE 的快照验证降雨变化；模型、工具、Glance、审批、保存和读回来自同一次任务。
+以下来自下载并验证的 v0.6.5 正式包，在官方 Windows RC6 中完成同一次任务。先读取 LIVE 天气，再用标为 FIXTURE 的快照验证降雨变化；Agent、工具、Glance、审批、保存、读回与重启均为实际操作。
 
 | 已保存的安排 | 中文草稿 |
 |---|---|
-| ![计划列表](docs/media/01-plans.png) | ![草稿审核](docs/media/02-drafts.png) |
+| ![计划列表](docs/media/v0.6.5/01-plans.png) | ![草稿审核](docs/media/v0.6.5/02-drafts.png) |
 | 原生风险提醒 | 无解时协商 |
-| ![Glance](docs/media/03-glance.png) | ![AI 协商](docs/media/04-negotiation.png) |
+| ![Glance](docs/media/v0.6.5/03-glance.png) | ![AI 协商](docs/media/v0.6.5/04-negotiation.png) |
 | 整组变更审批 | 独立读回结果 |
-| ![审批](docs/media/05-approval.png) | ![已核验](docs/media/06-verified.png) |
+| ![审批](docs/media/v0.6.5/05-approval.png) | ![已核验](docs/media/v0.6.5/06-verified.png) |
+| 导入的外部会议 | 审批与执行历史 |
+| ![ICS 只读占用](docs/media/v0.6.5/07-ics.png) | ![执行历史](docs/media/v0.6.5/08-history.png) |
 
 ## 复现与安全
 
-[安装及任务复现](docs/release/REPRODUCTION.md) · [版本与媒体校验](docs/release/PRESENTATION.md) · [验收记录](docs/release/VALIDATION.md) · [审核回答](review/ANSWERS.md)
+[安装及任务复现](docs/release/REPRODUCTION.md) · [版本与媒体校验](docs/release/PRESENTATION-0.6.5.md) · [验收记录](docs/release/VALIDATION-0.6.5.md) · [审核回答](review/ANSWERS.md)
 
 批准绑定完整变更与计划版本；陈旧批准、重复请求不能再次写入。执行过程中逐项记录收据，只有持久化读回匹配才显示已核验。部分完成或结果未知时停止进一步操作，重启只读核对，不自动重放旧批准。
 

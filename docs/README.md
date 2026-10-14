@@ -9,8 +9,8 @@
 
 ## 演示与验证
 
-- [当前视频、截图和版本对应](release/PRESENTATION.md)
-- [验收结果](release/VALIDATION.md)
+- [当前视频、截图和版本对应](release/PRESENTATION-0.6.5.md)
+- [验收结果](release/VALIDATION-0.6.5.md)
 - [脱敏原始证据](release/evidence/)
 - [审核回答](../review/ANSWERS.md)
 - [v0.6.4 文档勘误](release/ERRATA.md)
